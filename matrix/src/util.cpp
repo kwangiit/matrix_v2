@@ -107,11 +107,34 @@ string getHostName(string type)
 
 vector<string> readFromFile(string file_name)
 {
-	return NULL;
+	ifstream file_stream(file_name.c_str());
+	vector<string> file_vector;
+	string line;
+
+	if (!file_stream.good())
+	{
+		return NULL;
+	}
+
+	while(file_stream >> line)
+	{
+		file_vector.push_back(line);
+	}
+
+	return file_vector;
 }
 
 int getSelfIndex(string str, vector<string> str_vec)
 {
-	return -1;
+	int index = -1;
+	for (int i = 0; i < str_vec.size(); i++)
+	{
+		if (!str.compare(str_vec.at(i)))
+		{
+			index = i;
+			break;
+		}
+	}
+	return index;
 }
 
