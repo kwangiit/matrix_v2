@@ -36,6 +36,7 @@ class Configuration
 		string scheduler_memList_file;
 		string net_prot;
 		string dag_type;
+		string host_identity_type;
 		string submission_mode;
 		string workload_file;
 		string client_log;

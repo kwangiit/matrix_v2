@@ -44,13 +44,17 @@ class MatrixClient
 		int getIndex(void);
 		void setNumAllTask(long);
 		long getNumAllTask(void);
+		void setNumTaskPerClient(long);
+		long getNumTaskPerClient(void);
 
 		Configuration *config;
+		vector<string> host_vector;
 
 	private:
 		string hostname;
 		int index;
 		long num_all_task;
+		long num_task_per_client;
 };
 
 

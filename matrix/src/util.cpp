@@ -82,7 +82,7 @@ string exec(char* cmd)
 	return result;
 }
 
-string getHostName(string type)
+string getHostIdentity(string type)
 {
 	string hostname;
 

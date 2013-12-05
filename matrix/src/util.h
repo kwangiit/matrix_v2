@@ -27,7 +27,7 @@ extern long getLong(string);
 
 extern int getIP(char*);
 extern string exec(char*);
-extern string getHostName(string);
+extern string getHostIdentity(string);
 extern vector<string> readFromFile(string);
 extern int getSelfIndex(string, vector<string>);
 
