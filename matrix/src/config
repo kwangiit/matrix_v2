@@ -1,0 +1,23 @@
+NumTaskPerClient	10
+NumAllTask	100
+MaxTaskPerPkg	10
+MonitorInterval	1000
+SchedulerPortNo	60000
+SleepLength	1000
+WorkStealPollIntervalStart	1
+WorkStealPollIntervalUpperBound	1000
+
+#hello
+
+
+#kjfldajof fkjdliel
+SchedulerMemlistFile	./hello.txt
+NetworkProtocol	TCP
+SubmissionMode	bestcase
+WorkloadFile	workload.txt
+ClientLog	yes
+SchedulerLog	yes
+ZhtMemlistFile	./zhtmem;
+ZhtConfigFile ./zhtconfig;
+
+NumCorePerExecutor	4
