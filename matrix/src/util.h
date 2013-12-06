@@ -22,6 +22,12 @@
 
 using namespace std;
 
+typedef map<int, vector<int>> adj_list; 	// vertex ---> list of vertices
+typedef map<int, int> degree; 		// vertex ---> Indegree of the vertex
+
+typedef pair<int, vector<int>> dag_value;	// mapping info of each vertex in DAG
+typedef map<int, dag_value> task_dag;	// vertex ---> indegree of vertex, adjlist in string format as above
+s
 extern int getInt(string);
 extern long getLong(string);
 

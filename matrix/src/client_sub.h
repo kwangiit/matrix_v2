@@ -23,12 +23,6 @@
 
 #include "config.h"
 
-typedef map<int, vector<int> > adj_list; 	// vertex ---> list of vertices
-typedef map<int, int> in_degree; 		// vertex ---> Indegree of the vertex
-//typedef map<int, string> AdjListString; 	// vertex ---> list of vertices delimited by \' with a final \"
-typedef pair<int, string> TaskDAG_Value;	// mapping info of each vertex in DAG
-typedef map<int, TaskDAG_Value> TaskDAG;	// vertex ---> indegree of vertex, adjlist in string format as above
-
 class MatrixClient
 {
 	public:
