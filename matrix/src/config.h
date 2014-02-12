@@ -8,11 +8,8 @@
 #ifndef CONFIGURE_H_
 #define CONFIGURE_H_
 
-#include <string>
-#include <iostream>
 #include <fstream>
-#include <map>
-#include <util.h>
+#include "util.h"
 
 using namespace std;
 
@@ -36,6 +33,7 @@ class Configuration
 		string scheduler_memList_file;
 		string net_prot;
 		string dag_type;
+		int dag_argu;
 		string host_identity_type;
 		string submission_mode;
 		string workload_file;

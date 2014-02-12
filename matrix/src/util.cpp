@@ -138,3 +138,154 @@ int getSelfIndex(string str, vector<string> str_vec)
 	return index;
 }
 
+void genBOTDagAdjlist(adj_list &dag_adj_list, long num_task)
+{
+	for (int i = 0; i < num_task; i++)
+	{
+		vector<int> new_list;
+		dag_adj_list.insert(make_pair(i, new_list));
+	}
+}
+
+void genFanOutDagAdjlist(adj_list &dag_adj_list, int dag_aug, long num_task)
+{
+	int next = -1;
+	for (int i = 0; i < num_task; i++)
+	{
+		vector<int> new_list;
+		for (int j = 1; j <= dag_aug; j++)
+		{
+			next = i * dag_aug + j;
+			if (next >= num_task)
+			{
+				break;
+			}
+			else
+			{
+				new_list.push_back(next);
+			}
+		}
+		dag_adj_list.insert(make_pair(i, new_list));
+	}
+}
+
+void genFanInDagAdjlist(adj_list &dag_adj_list, int dag_aug, long num_task)
+{
+	adj_list tmp_adj_list;
+	genFanOutDagAdjlist(tmp_adj_list, dag_aug, num_task);
+	for (int i = 0; i < num_task; i++)
+	{
+		int reverse_id = num_task - 1 - i;
+		vector<int> new_list;
+		new_list.push_back(num_task - 1 - i);
+		vector<int> tmp_list = tmp_adj_list.find(i)->second;
+		for (int j = 0; j < tmp_list.size(); j++)
+		{
+			dag_adj_list.insert(make_pair(num_task - 1 -
+					tmp_list.at(tmp_list.size() - 1 - j), new_list));
+		}
+	}
+}
+
+void genPipelineDagAdjlist(adj_list &dag_adj_list, int dag_aug, long num_task)
+{
+	int num_pipe = num_task / dag_aug;
+	int index = -1, next = -1;
+	for (int i = 0; i < num_pipe; i++)
+	{
+		for (int j = 0; j < dag_aug; j++)
+		{
+			index = i * dag_aug + j;
+			next = index + 1;
+			vector<int> new_list;
+			if (next % dag_aug != 0 && next < num_task)
+			{
+				new_list.push_back(next);
+			}
+			dag_adj_list.insert(make_pair(index, new_list));
+		}
+	}
+	for (index = num_pipe * dag_aug; index < num_task; index++)
+	{
+		next = index + 1;
+		vector<int> new_list;
+		if (next % dag_aug != 0 && next < num_task)
+		{
+			new_list.push_back(next);
+		}
+		dag_adj_list.insert(make_pair(index, new_list));
+	}
+}
+
+void print_AdjList(adj_list &dag_adj_list)
+{
+	for(adj_list::iterator it = dag_adj_list.begin();
+			it != dag_adj_list.end(); ++it)
+	{
+		vector<int> exist_list = it->second;
+        cout << " " << it->first << " -> ";
+        for(int i = 0; i < exist_list.size(); i++)
+        {
+        	cout << " " << exist_list[i] << ",";
+        }
+        cout << endl;
+	}
+}
+
+void genDagAdjlist(adj_list &dag_adj_list, string dag_type,
+							int dag_aug, long num_task)
+{
+	if (!dag_type.compare("BOT"))
+	{
+		genBOTDagAdjlist(dag_adj_list, num_task);
+	}
+	else if (!dag_type.compare("FanOut"))
+	{
+		genFanOutDagAdjlist(dag_adj_list, dag_aug, num_task);
+	}
+	else if (!dag_type.compare("FanIn"))
+	{
+		genFanInDagAdjlist(dag_adj_list, dag_aug, num_task);
+	}
+	else if (!dag_type.compare("Pipeline"))
+	{
+		genPipelineDagAdjlist(dag_adj_list, dag_aug, num_task);
+	}
+}
+
+void genDagInDegree(adj_list &dag_adj_list, in_degree &dag_in_degree)
+{
+	for (int i = 0; i < dag_adj_list.size(); i++)
+	{
+		dag_in_degree[i] = 0;
+	}
+	for(adj_list::iterator it = dag_adj_list.begin();
+						it != dag_adj_list.end(); ++it)
+	{
+		int index = it->first;
+		vector<int> existList = it->second;
+		for (int j = 0; j < existList.size(); j++)
+		{
+			dag_in_degree[existList.at(j)]++;
+		}
+	}
+}
+
+bool initZHTClient(ZHTClient &zc, string zhtcfgFile, string neighFile)
+{
+	if (zhtcfgFile.empty() || neighFile.empty())
+	{
+		return false;
+	}
+	else
+	{
+		if (zc.init(zhtcfgFile, neighFile) != 0)
+		{
+			return false;
+		}
+		else
+		{
+			return true;
+		}
+	}
+}

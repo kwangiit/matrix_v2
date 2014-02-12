@@ -58,6 +58,7 @@ void Configuration::parseConfig(string config_file)
 	scheduler_memList_file = config_map.find("SchedulerMemlistFile")->second;
 	net_prot = config_map.find("NetworkProtocol")->second;
 	dag_type = config_map.find("DagType")->second;
+	dag_argu = getInt(config_map.find("DagArgu")->second);
 	host_identity_type = config_map.find("HostIdentityType")->second;
 	submission_mode = config_map.find("SubmissionMode")->second;
 	workload_file = config_map.find("WorkloadFile")->second;
