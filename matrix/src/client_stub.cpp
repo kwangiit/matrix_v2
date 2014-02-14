@@ -6,6 +6,7 @@
  */
 
 #include "client_stub.h"
+#include "ZHT/src/meta.pb.h"
 
 MatrixClient::MatrixClient(string config_file)
 {
@@ -14,8 +15,6 @@ MatrixClient::MatrixClient(string config_file)
 	scheduler_vector = readFromFile(config->scheduler_memList_file);
 	task_vector = readFromFile(config->workload_file);
 	setIndex(getSelfIndex(getHostname(), scheduler_vector));
-	setNumAllTask(config->num_all_task);
-	setNumTaskPerClient(config->num_task_per_client);
 }
 
 void MatrixClient::setHostname(string hostname)
@@ -36,26 +35,6 @@ void MatrixClient::setIndex(int index)
 int MatrixClient::getIndex()
 {
 	return index;
-}
-
-void MatrixClient::setNumAllTask(long num_all_task)
-{
-	this->num_all_task = num_all_task;
-}
-
-long MatrixClient::getNumAllTask()
-{
-	return num_all_task;
-}
-
-void MatrixClient::setNumTaskPerClient(long num_task_per_client)
-{
-	this->num_task_per_client = num_task_per_client;
-}
-
-long MatrixClient::getNumTaskPerClient()
-{
-	return num_task_per_client;
 }
 
 void MatrixClient::insertTaskInfoToZHT(ZHTClient &zc,
@@ -104,41 +83,104 @@ void MatrixClient::waitAllScheduler(ZHTClient &zc)
 	}
 }
 
+void MatrixClient::initTask()
+{
+	int numTask = config->num_task_per_client;
+	for (int i = 0; i < numTask; i++)
+	{
+		stringstream ss;
+		ss << index << i;
+		string taskId(ss.str());
+		task_vector.at(i) = taskId + "->" + task_vector.at(i);
+	}
+}
+
 void MatrixClient::submitTask()
 {
 	if (config->submission_mode.compare("best case"))
 	{
-
+		submitTaskBC();
 	}
 	else if (config->submission_mode.compare("worst case"))
 	{
-		long numTaskLeft = getNumTaskPerClient();
-		long numTaskSent = config->max_task_per_pkg;
-
-		while (numTaskLeft > 0)
-		{
-			if (numTaskLeft <= config->max_task_per_pkg)
-			{
-				numTaskSent = numTaskLeft;
-			}
-			string tasks;
-			for (int i = 0; i < numTaskSent; i++)
-			{
-				tasks += this->task_vector.at(i + (
-						config->num_task_per_client - numTaskLeft));
-				tasks += "<part>";
-			}
-
-		}
+		int toScheIdx = rand() % scheduler_vector.size();
+		submitTaskWC(task_vector, toScheIdx);
 	}
 }
 
 void MatrixClient::submitTaskBC()
 {
+	int toScheIdx = -1, numSche = scheduler_vector.size();
+	vector<vector<string>> task_vectors(numSche);
 
+	for (int i = 0; i < config->num_task_per_client; i++)
+	{
+		toScheIdx = i % numSche;
+		task_vectors.at(toScheIdx).push_back(task_vector.at(i));
+	}
+
+	for (int i = 0; i < numSche; i++)
+	{
+		submitTaskWC(task_vectors.at(i), i);
+	}
 }
 
-void MatrixClient::submitTaskWC()
+void MatrixClient::submitTaskWC(const vector<string> &taskVec, int toScheIdx)
 {
-	int
+	long numTaskLeft = taskVec.size();
+	long numTaskBeenSent = 0;
+	long numTaskSendPerPkg = config->max_task_per_pkg;
+
+	while (numTaskLeft > 0)
+	{
+		if (numTaskLeft <= config->max_task_per_pkg)
+		{
+			numTaskSendPerPkg = numTaskLeft;
+		}
+		string tasks;
+		numTaskBeenSent = config->num_task_per_client - numTaskLeft;
+		for (int i = 0; i < numTaskSendPerPkg; i++)
+		{
+			tasks += taskVec.at(i + numTaskBeenSent);
+			tasks += "eot";
+		}
+		Package taskPkg;
+		taskPkg.set_virtualpath("send tasks");
+		taskPkg.set_realfullpath(tasks);
+		string taskPkgStr = taskPkg.SerializeAsString();
+		// send the taskPkgStr to the server scheduler_vector.at(toScheIdx)
+		numTaskLeft -= numTaskSendPerPkg;
+	}
+}
+
+void* MatrixClient::monitoring(void* args)
+{
+	ZHTClient *zc = (ZHTClient*)args;
+	string key("num tasks done");
+	stringstream ss;
+	ss << config->num_all_task;
+	string expValue(ss.str());
+
+	while (zc->state_change_callback(key, expValue, config->sleep_lengh) != 0)
+	{
+		usleep(1);
+	}
+	return NULL;
+}
+
+void MatrixClient::doMonitoring(ZHTClient &zc)
+{
+	if (index != 1)
+	{
+		return;
+	}
+
+	pthread_t monThread;
+
+	while (pthread_create(&monThread, NULL, monitoring, &zc) != 0)
+	{
+		sleep(1);
+	}
+
+	pthread_join(monThread, NULL);
 }

@@ -24,18 +24,17 @@ class MatrixClient
 
 		void insertTaskInfoToZHT(ZHTClient&, adj_list&, in_degree&);
 		void waitAllScheduler(ZHTClient&);
+		void initTask(void);
 		void submitTask(void);
 		void submitTaskBC(void);
-		void submitTaskWC(void);
+		void submitTaskWC(const vector<string>&, int);
+		void *monitoring(void*);
+		void doMonitoring(ZHTClient&);
 
 		void setHostname(string);
 		string getHostname(void);
 		void setIndex(int);
 		int getIndex(void);
-		void setNumAllTask(long);
-		long getNumAllTask(void);
-		void setNumTaskPerClient(long);
-		long getNumTaskPerClient(void);
 
 		Configuration *config;
 		vector<string> scheduler_vector;
@@ -44,8 +43,6 @@ class MatrixClient
 	private:
 		string hostname;
 		int index;
-		long num_all_task;
-		long num_task_per_client;
 };
 
 

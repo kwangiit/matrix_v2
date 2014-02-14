@@ -22,7 +22,11 @@ int main(int argc, char* argv[])
 		exit(-1);
 	}
 
-	MatrixClient mc = new MatrixClient(argv[1]); // create a new matrix client
+	srand(time(NULL));
+
+	/* create a new matrix client */
+	MatrixClient mc = new MatrixClient(argv[1]);
+
 	/* generate task dag adjecent list (children) */
 	adj_list dag_adj_list;
 	genDagAdjlist(dag_adj_list, mc.config->dag_type, mc.config->dag_argu,
@@ -41,6 +45,13 @@ int main(int argc, char* argv[])
 	/* wait until all schedulers have registered to ZHT */
 	mc.waitAllScheduler(zc);
 
+	/* initalize tasks by assigning taskId information to each task */
+	mc.initTask();
 
+	/* submit tasks to the schedulers */
+	mc.submitTask();
+
+	/* do the monitoring to watch th executing progress */
+	mc.doMonitoring(zc);
 }
 
