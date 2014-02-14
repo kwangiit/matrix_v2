@@ -24,8 +24,9 @@ class MatrixClient
 
 		void insertTaskInfoToZHT(ZHTClient&, adj_list&, in_degree&);
 		void waitAllScheduler(ZHTClient&);
-
 		void submitTask(void);
+		void submitTaskBC(void);
+		void submitTaskWC(void);
 
 		void setHostname(string);
 		string getHostname(void);

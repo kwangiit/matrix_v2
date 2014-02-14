@@ -132,3 +132,13 @@ void MatrixClient::submitTask()
 		}
 	}
 }
+
+void MatrixClient::submitTaskBC()
+{
+
+}
+
+void MatrixClient::submitTaskWC()
+{
+	int
+}

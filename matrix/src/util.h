@@ -15,6 +15,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <stropts.h>
+#include <time.h>
 #include <linux/netdevice.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>

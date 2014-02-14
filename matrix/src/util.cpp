@@ -289,3 +289,4 @@ bool initZHTClient(ZHTClient &zc, const string &zhtcfgFile, const string &neighF
 		}
 	}
 }
+
