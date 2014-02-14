@@ -11,8 +11,9 @@ MatrixClient::MatrixClient(string config_file)
 {
 	config = new Configuration(config_file);
 	setHostname(getHostIdentity(config->host_identity_type));
-	host_vector = readFromFile(config->scheduler_memList_file);
-	setIndex(getSelfIndex(getHostname(), host_vector));
+	scheduler_vector = readFromFile(config->scheduler_memList_file);
+	task_vector = readFromFile(config->workload_file);
+	setIndex(getSelfIndex(getHostname(), scheduler_vector));
 	setNumAllTask(config->num_all_task);
 	setNumTaskPerClient(config->num_task_per_client);
 }
@@ -87,5 +88,47 @@ void MatrixClient::insertTaskInfoToZHT(ZHTClient &zc,
 		value.set_fintime(0);
 		string seriValue = value.SerializeAsString();
 		zc.insert(taskId, seriValue);
+	}
+}
+
+void MatrixClient::waitAllScheduler(ZHTClient &zc)
+{
+	string key("number of scheduler registered");
+	stringstream ss;
+	ss <<  scheduler_vector.size();
+	string expValue(ss.str());
+
+	while (zc.state_change_callback(key, expValue, config->sleep_lengh) != 0)
+	{
+		usleep(1);
+	}
+}
+
+void MatrixClient::submitTask()
+{
+	if (config->submission_mode.compare("best case"))
+	{
+
+	}
+	else if (config->submission_mode.compare("worst case"))
+	{
+		long numTaskLeft = getNumTaskPerClient();
+		long numTaskSent = config->max_task_per_pkg;
+
+		while (numTaskLeft > 0)
+		{
+			if (numTaskLeft <= config->max_task_per_pkg)
+			{
+				numTaskSent = numTaskLeft;
+			}
+			string tasks;
+			for (int i = 0; i < numTaskSent; i++)
+			{
+				tasks += this->task_vector.at(i + (
+						config->num_task_per_client - numTaskLeft));
+				tasks += "<part>";
+			}
+
+		}
 	}
 }

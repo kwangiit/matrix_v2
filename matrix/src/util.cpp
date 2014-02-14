@@ -7,7 +7,7 @@
 
 #include "util.h"
 
-int getInt(string str)
+int getInt(string &str)
 {
 	if (str.empty())
 	{
@@ -19,7 +19,7 @@ int getInt(string str)
 	}
 }
 
-long getLong(string str)
+long getLong(string &str)
 {
 	if (str.empty())
 	{
@@ -82,7 +82,7 @@ string exec(char* cmd)
 	return result;
 }
 
-string getHostIdentity(string type)
+string getHostIdentity(string &type)
 {
 	string hostname;
 
@@ -105,7 +105,7 @@ string getHostIdentity(string type)
 	return hostname;
 }
 
-vector<string> readFromFile(string file_name)
+vector<string> readFromFile(string &file_name)
 {
 	ifstream file_stream(file_name.c_str());
 	vector<string> file_vector;
@@ -124,7 +124,7 @@ vector<string> readFromFile(string file_name)
 	return file_vector;
 }
 
-int getSelfIndex(string str, vector<string> str_vec)
+int getSelfIndex(const string &str, vector<string> str_vec)
 {
 	int index = -1;
 	for (int i = 0; i < str_vec.size(); i++)
@@ -232,7 +232,7 @@ void print_AdjList(adj_list &dag_adj_list)
 	}
 }
 
-void genDagAdjlist(adj_list &dag_adj_list, string dag_type,
+void genDagAdjlist(adj_list &dag_adj_list, string &dag_type,
 							int dag_aug, long num_task)
 {
 	if (!dag_type.compare("BOT"))
@@ -271,7 +271,7 @@ void genDagInDegree(adj_list &dag_adj_list, in_degree &dag_in_degree)
 	}
 }
 
-bool initZHTClient(ZHTClient &zc, string zhtcfgFile, string neighFile)
+bool initZHTClient(ZHTClient &zc, const string &zhtcfgFile, const string &neighFile)
 {
 	if (zhtcfgFile.empty() || neighFile.empty())
 	{

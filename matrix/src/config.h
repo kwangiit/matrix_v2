@@ -16,10 +16,10 @@ using namespace std;
 class Configuration
 {
 	public:
-		Configuration(string);
+		Configuration(const string&);
 		virtual ~Configuration();
 
-		void parseConfig(string);
+		void parseConfig(const string&);
 
 		long num_task_per_client;
 		long num_all_task;

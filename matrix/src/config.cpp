@@ -10,7 +10,7 @@
 #include <stdlib.h>
 #include <sstream>
 
-Configuration::Configuration(string config_file)
+Configuration::Configuration(const string &config_file)
 {
 	parseConfig(config_file);
 }
@@ -20,7 +20,7 @@ Configuration::~Configuration()
 
 }
 
-void Configuration::parseConfig(string config_file)
+void Configuration::parseConfig(const string &config_file)
 {
 	map<string, string> config_map;
 	fstream file_stream(config_file.c_str());
