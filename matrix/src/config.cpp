@@ -52,6 +52,7 @@ void Configuration::parseConfig(const string &config_file)
 	monitor_interval = getLong(config_map.find("MonitorInterval")->second);
 	scheduler_port_num = getLong(config_map.find("SchedulerPortNo")->second);
 	sleep_lengh = getLong(config_map.find("SleepLength")->second);
+	work_stealing_on = getInt(config_map.find("WorkStealOn")->second);
 	ws_poll_interval_start = getLong(config_map.find("WorkStealPollIntervalStart")->second);
 	ws_poll_interval_ub = getLong(config_map.find("WorkStealPollIntervalUpperBound")->second);
 

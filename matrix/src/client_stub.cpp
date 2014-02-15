@@ -8,7 +8,7 @@
 #include "client_stub.h"
 #include "ZHT/src/meta.pb.h"
 
-MatrixClient::MatrixClient(string config_file)
+MatrixClient::MatrixClient(const string &config_file)
 {
 	config = new Configuration(config_file);
 	setHostname(getHostIdentity(config->host_identity_type));
@@ -161,7 +161,7 @@ void* MatrixClient::monitoring(void* args)
 	ss << config->num_all_task;
 	string expValue(ss.str());
 
-	while (zc->state_change_callback(key, expValue, config->sleep_lengh) != 0)
+	while (zc->state_change_callback(key, expValue, config->monitor_interval) != 0)
 	{
 		usleep(1);
 	}

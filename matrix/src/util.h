@@ -46,4 +46,15 @@ extern void genDagAdjlist(adj_list&, const string&, int, long);
 extern void genDagInDegree(adj_list&, in_degree&);
 
 extern bool initZHTClient(ZHTClient&, const string&, const string&);
+
+class Mutex
+{
+	private:
+		pthread_mutex_t mutex;
+	public:
+		Mutex();
+		virtual ~Mutex();
+		int Lock();
+		int Unlock();
+};
 #endif /* UTIL_H_ */

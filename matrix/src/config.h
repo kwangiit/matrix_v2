@@ -27,6 +27,7 @@ class Configuration
 		long monitor_interval;
 		long scheduler_port_num;
 		long sleep_lengh;
+		int work_stealing_on;
 		long ws_poll_interval_start;
 		long ws_poll_interval_ub;
 

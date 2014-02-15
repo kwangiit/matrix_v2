@@ -290,3 +290,21 @@ bool initZHTClient(ZHTClient &zc, const string &zhtcfgFile, const string &neighF
 	}
 }
 
+Mutex::Mutex()
+{
+	int ret = pthread_mutex_init (&mutex, NULL);
+}
+
+Mutex::~Mutex()
+{
+}
+
+int Mutex::Lock()
+{
+	return (pthread_mutex_lock (&mutex));
+}
+
+int Mutex::Unlock()
+{
+	return (pthread_mutex_unlock (&mutex));
+}

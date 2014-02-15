@@ -19,7 +19,7 @@
 class MatrixClient
 {
 	public:
-		MatrixClient(string);
+		MatrixClient(const string&);
 		virtual ~MatrixClient();
 
 		void insertTaskInfoToZHT(ZHTClient&, adj_list&, in_degree&);
