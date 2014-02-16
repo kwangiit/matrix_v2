@@ -18,6 +18,11 @@ class MatrixScheduler
 
 		void regist(ZHTClient&);
 
+		void resetChooseBM();
+		void chooseNeigh();
+		void findMostLoadedNeigh();
+		bool stealTask();
+
 		void* workstealing(void*);
 		void forkWSThread(void);
 
@@ -39,6 +44,12 @@ class MatrixScheduler
 
 		Configuration *config;
 		vector<string> scheduler_vector;
+
+		bool *chooseBitMap;
+		int numNeigh;
+		int *neighIdx;
+		int maxLoadedIdx;
+		long pollInterval;
 
 		Mutex wqMutex;
 		Mutex rqMutex;
