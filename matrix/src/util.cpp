@@ -290,6 +290,33 @@ bool initZHTClient(ZHTClient &zc, const string &zhtcfgFile, const string &neighF
 	}
 }
 
+vector<string> tokenize(const string &source, const char *delimiter)
+{
+	vector<string> results;
+	size_t prev = 0, next = 0;
+
+	if (source.empty())
+	{
+		return NULL;
+	}
+
+	while ((next = source.find_first_of(delimiter, prev)) != string::npos)
+	{
+		if (next - prev != 0)
+		{
+			results.push_back(source.substr(prev, next - prev));
+		}
+		prev = next + 1;
+	}
+
+	if (prev < source.size())
+	{
+		results.push_back(source.substr(prev));
+	}
+
+	return results;
+}
+
 Mutex::Mutex()
 {
 	int ret = pthread_mutex_init (&mutex, NULL);
@@ -299,12 +326,12 @@ Mutex::~Mutex()
 {
 }
 
-int Mutex::Lock()
+int Mutex::lock()
 {
 	return (pthread_mutex_lock (&mutex));
 }
 
-int Mutex::Unlock()
+int Mutex::unlock()
 {
 	return (pthread_mutex_unlock (&mutex));
 }

@@ -46,6 +46,7 @@ extern void genDagAdjlist(adj_list&, const string&, int, long);
 extern void genDagInDegree(adj_list&, in_degree&);
 
 extern bool initZHTClient(ZHTClient&, const string&, const string&);
+extern vector<string> tokenize(const string&, const char*);
 
 class Mutex
 {
@@ -54,7 +55,7 @@ class Mutex
 	public:
 		Mutex();
 		virtual ~Mutex();
-		int Lock();
-		int Unlock();
+		int lock();
+		int unlock();
 };
 #endif /* UTIL_H_ */

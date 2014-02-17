@@ -26,6 +26,7 @@ class MatrixScheduler
 		void* workstealing(void*);
 		void forkWSThread(void);
 
+		bool checkAReadyTask(const string&, ZHTClient*);
 		void* checkingReadyTask(void*);
 		void forkCRTThread();
 
@@ -45,19 +46,30 @@ class MatrixScheduler
 		Configuration *config;
 		vector<string> scheduler_vector;
 
+		Mutex numIdleCoreMutex;
+		Mutex numTaskFinMutex;
+
+		int numIdleCore;
+		int numTaskFin;
+		int numTaskSteal;
+		int numTaskStolen;
+		long numWS;
+		long numWSFail;
+
 		bool *chooseBitMap;
 		int numNeigh;
 		int *neighIdx;
 		int maxLoadedIdx;
+		int maxLoad;
 		long pollInterval;
 
 		Mutex wqMutex;
 		Mutex rqMutex;
 		Mutex cqMutex;
 
-		queue<string> waitQueue;
-		queue<string> readyQueue;
-		queue<string> completeQueue;
+		deque<string> waitQueue;
+		deque<string> readyQueue;
+		deque<string> completeQueue;
 
 	private:
 		string hostname;

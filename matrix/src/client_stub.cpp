@@ -91,7 +91,7 @@ void MatrixClient::initTask()
 		stringstream ss;
 		ss << index << i;
 		string taskId(ss.str());
-		task_vector.at(i) = taskId + "->" + task_vector.at(i);
+		task_vector.at(i) = taskId + " " + task_vector.at(i);
 	}
 }
 
