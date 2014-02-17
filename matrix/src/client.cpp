@@ -25,7 +25,8 @@ int main(int argc, char* argv[])
 	srand(time(NULL));
 
 	/* create a new matrix client */
-	MatrixClient mc = new MatrixClient(argv[1]);
+	string configFileStr(argv[1]);
+	MatrixClient mc = new MatrixClient(configFileStr);
 
 	/* generate task dag adjecent list (children) */
 	adj_list dag_adj_list;

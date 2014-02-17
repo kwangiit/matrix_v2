@@ -34,26 +34,28 @@ MatrixScheduler::MatrixScheduler(const string &config_file)
 
 void MatrixScheduler::regist(ZHTClient &zc)
 {
-	string key("number of scheduler registered");
+	string regKey("number of scheduler registered");
+	string taskFinKey("num tasks done");
 	if (index == 1)
 	{
-		zc.insert(key, "1");
+		zc.insert(regKey, "1");
+		zc.insert(taskFinKey, "0");
 	}
 	else
 	{
 		string value;
-		zc.lookup(key, value);
+		zc.lookup(regKey, value);
 		while (value.empty())
 		{
 			usleep(config->sleep_lengh);
-			zc.lookup(key, value);
+			zc.lookup(regKey, value);
 		}
 		int newValNum = getInt(value) + 1;
 		stringstream ss;
 		ss << newValNum;
 		string newVal(ss.str());
 		string queryVal;
-		while (zc.compare_swap(key, value, newVal, queryVal) != 0)
+		while (zc.compare_swap(regKey, value, newVal, queryVal) != 0)
 		{
 			ss.str("");
 			value = queryVal;
@@ -61,6 +63,19 @@ void MatrixScheduler::regist(ZHTClient &zc)
 			ss << newValNum;
 			newVal = ss.str();
 		}
+	}
+}
+
+void MatrixScheduler::waitAllScheduler(ZHTClient &zc)
+{
+	string key("number of scheduler registered");
+	stringstream ss;
+	ss <<  scheduler_vector.size();
+	string expValue(ss.str());
+
+	while (zc.state_change_callback(key, expValue, config->sleep_lengh) != 0)
+	{
+		usleep(1);
 	}
 }
 
@@ -317,17 +332,140 @@ void* MatrixScheduler::checkingReadyTask(void *args)
 	return NULL;
 }
 
-void MatrixScheduler::forkCRTThread()
+void MatrixScheduler::forkCRTThread(ZHTClient &zc)
 {
 	pthread_t crtThread;
 
-	while (pthread_create(&crtThread, NULL, checkingReadyTask, NULL))
+
+	while (pthread_create(&crtThread, NULL, checkingReadyTask, &zc))
 	{
 		sleep(1);
 	}
 }
 
+void MatrixScheduler::decreaseIndegree(const string &taskId, ZHTClient *zc)
+{
+	string taskDetail;
+	zc->lookup(taskId, taskDetail);
 
+	Value taskDetailVal;
+	taskDetailVal.ParseFromString(taskDetail);
+
+	int numChildren = taskDetailVal.children_size();
+	string childTaskId, childTaskDetail;
+	for (int i = 0; i < numChildren; i++)
+	{
+		childTaskId = taskDetailVal.children(i);
+		zc->lookup(childTaskId, childTaskDetail);
+		Value childTaskDetailVal;
+		childTaskDetailVal.ParseFromString(childTaskDetail);
+		childTaskDetailVal.set_indegree(childTaskDetailVal.indegree() - 1);
+		childTaskDetail = childTaskDetailVal.SerializeAsString();
+		zc->insert(childTaskId, childTaskDetail);
+	}
+}
+
+void* MatrixScheduler::checkingCompleteTask(void *args)
+{
+	ZHTClient *zc = (ZHTClient*)args;
+	string taskId;
+
+	while (1)
+	{
+		while (completeQueue.size() > 0)
+		{
+			cqMutex.lock();
+			if (completeQueue.size() > 0)
+			{
+				taskId = completeQueue.front();
+				completeQueue.pop_back();
+				cqMutex.unlock();
+			}
+			else
+			{
+				cqMutex.unlock();
+				continue;
+			}
+			decreaseIndegree(taskId, zc);
+		}
+	}
+
+	pthread_exit(NULL);
+	return NULL;
+}
+
+void MatrixScheduler::forkCCTThread(ZHTClient &zc)
+{
+	pthread_t cctThread;
+
+	while (pthread_create(&cctThread, NULL, checkingCompleteTask, &zc))
+	{
+		sleep(1);
+	}
+}
+
+void* MatrixScheduler::recordingStat(void *args)
+{
+	ZHTClient *zc = (ZHTClient*)args;
+
+	while (1)
+	{
+		Value recordVal;
+		recordVal.set_id(getHostName());
+		recordVal.set_numtaskfin(numTaskFin);
+		recordVal.set_numtaskwait(waitQueue.size());
+		recordVal.set_numtaskready(readyQueue.size());
+		recordVal.set_numcoreavilable(numIdleCore);
+		recordVal.set_numallcore(config->num_core_per_executor);
+		recordVal.set_numworksteal(numWS);
+		recordVal.set_numworkstealfail(numWSFail);
+		string recordValStr = recordVal.SerializeAsString();
+		zc->insert(getHostName(), recordValStr);
+
+		string key("num tasks done");
+		string numTaskDoneStr;
+		zc->lookup(key, numTaskDoneStr);
+		long numTaskDone = getLong(numTaskDoneStr);
+		if (numTaskDone == config->num_all_task)
+		{
+			break;
+		}
+		numTaskDone += (numTaskFin - prevNumTaskFin);
+		stringstream ss;
+		ss << numTaskDone;
+		string numTaskDoneStrNew = ss.str();
+		string query_value;
+		while (zc->compare_swap(key, numTaskDoneStr,
+				numTaskDoneStrNew, query_value) != 0)
+		{
+			numTaskDoneStr = query_value;
+			numTaskDone = getLong(numTaskDoneStr);
+			if (numTaskDone == config->num_all_task)
+			{
+				break;
+			}
+			numTaskDone += (numTaskFin - prevNumTaskFin);
+			ss.str("");
+			ss << numTaskDone;
+			numTaskDoneStrNew = ss.str();
+		}
+		prevNumTaskFin = numTaskFin;
+		usleep(config->sleep_lengh);
+	}
+
+	pthread_exit(NULL);
+	return NULL;
+}
+
+void MatrixScheduler::forkRecordStatThread(ZHTClient &zc)
+{
+	pthread_t rsThread;
+
+	while (pthread_create(&rsThread, NULL, recordingStat, &zc))
+	{
+		sleep(1);
+	}
+}
 
 void MatrixScheduler::setHostName(string hostname)
 {

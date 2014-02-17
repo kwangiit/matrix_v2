@@ -17,6 +17,8 @@ class MatrixScheduler
 		virtual ~MatrixScheduler();
 
 		void regist(ZHTClient&);
+		void waitAllScheduler(ZHTClient&);
+
 
 		void resetChooseBM();
 		void chooseNeigh();
@@ -28,14 +30,18 @@ class MatrixScheduler
 
 		bool checkAReadyTask(const string&, ZHTClient*);
 		void* checkingReadyTask(void*);
-		void forkCRTThread();
+		void forkCRTThread(ZHTClient &zc);
 
 		void execOneTask(string&);
 		void* executingTask(void*);
 		void forkETThread();
 
+		void decreaseIndegree(const string&, ZHTClient*);
 		void* checkingCompleteTask(void*);
-		void forkCCTThread();
+		void forkCCTThread(ZHTClient &zc);
+
+		void* recordingStat(void*);
+		void forkRecordStatThread(ZHTClient &zc);
 
 		void setHostName(string);
 		string getHostName();
@@ -50,9 +56,10 @@ class MatrixScheduler
 		Mutex numTaskFinMutex;
 
 		int numIdleCore;
-		int numTaskFin;
-		int numTaskSteal;
-		int numTaskStolen;
+		long prevNumTaskFin;
+		long numTaskFin;
+		long numTaskSteal;
+		long numTaskStolen;
 		long numWS;
 		long numWSFail;
 
