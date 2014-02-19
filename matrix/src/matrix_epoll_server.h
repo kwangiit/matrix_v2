@@ -12,6 +12,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <queue>
+#include "scheduler_stub.h"
 
 using namespace std;
 
@@ -51,28 +52,29 @@ class MatrixEpollData
 class MatrixEpollServer
 {
 	public:
-		MatrixEpollServer(const char*, const string&);
+		MatrixEpollServer(const char*, MatrixScheduler*);
 		virtual ~MatrixEpollServer();
 
 		void serve();
+		int serve_request(int, void*, sockaddr);
 
 	private:
-		int create_and_bind(const char *port);
-		int create_and_bind(const char *host, const char *port);
-		int make_socket_non_blocking(const int& sfd);
+		int create_and_bind(const char*);
+		int create_and_bind(const char*, const char*);
+		int make_socket_non_blocking(const int&);
 		int makeSvrSocket();
-		int reuseSock(int sock);
+		int reuseSock(int);
 		void init_thread();
 
 	private:
-		static void* threadedServe(void *arg);
+		static void* threadedServe(void*);
 
 	private:
 		MatrixEpollServer();
 
 	private:
+		MatrixScheduler *_ms;
 		char* _port;
-		string _protoc;
 		queue<MatrixEventData> _eventQueue;
 
 	private:

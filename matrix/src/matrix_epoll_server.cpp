@@ -83,7 +83,7 @@ const sockaddr* const MatrixEpollData::sender() const
 const int MatrixEpollServer::MAX_EVENTS = 4096;
 
 MatrixEpollServer::MatrixEpollServer(const char *port,
-		const string &protoc) : _port(port), _protoc(protoc), _eventQueue()
+		MatrixScheduler *ms) : _port(port), _ms(ms), _eventQueue()
 {
 
 }
@@ -180,7 +180,7 @@ int MatrixEpollServer::makeSvrSocket()
 		svrAdd_in.sin_addr.s_addr = INADDR_ANY; /* set our address to any interface */
 		svrAdd_in.sin_port = htons(port); /* set the server port number */
 
-		if (_protoc.compare("TCP") == 0) //make socket
+		if (_ms->config->net_prot.compare("TCP") == 0) //make socket
 		{
 			svrSock = socket(AF_INET, SOCK_STREAM, 0); /* OS will return a fd for network stream connection*/
 		}
@@ -210,7 +210,7 @@ int MatrixEpollServer::makeSvrSocket()
 			return -1;
 		}
 
-		if (_protoc.compare("TCP") == 0) //TCP needs listen, UDP does not.
+		if (_ms->config->net_prot.compare("TCP") == 0) //TCP needs listen, UDP does not.
 		{
 			/* start listening, allowing a queue of up to 1 pending connection */
 			if (listen(svrSock, SOMAXCONN) < 0)
@@ -246,6 +246,17 @@ int MatrixEpollServer::reuseSock(int sock)
 		return 0;
 }
 
+/*int MatrixEpollServer::serve_request(int client_sock,
+		void *buff, sockaddr fromAddr)
+{
+	Package pkg;
+	pkg.ParseFromArray(buff, _BUF_SIZE);
+
+	string msg = pkg.virtualpath();
+	if (msg.)
+	return -1;
+}*/
+
 void* MatrixEpollServer::threadedServe(void *arg)
 {
 	MatrixEpollServer *mes = (MatrixEpollServer*) arg;
@@ -258,8 +269,9 @@ void* MatrixEpollServer::threadedServe(void *arg)
 
 			/*pes->_ZProcessor->process(eventData.fd(), eventData.buf(),
 					eventData.fromaddr()); replace this part with matrix logic */
-
+			mes->serve_request(eventData.fd(), eventData.buf(), eventData.fromaddr());
 			mes->_eventQueue.pop();
+
 		}
 	}
 
@@ -336,7 +348,7 @@ void MatrixEpollServer::serve()
 			}
 			else if (sfd == edata->fd())
 			{
-				if (_protoc.compare("TCP") == 0)
+				if (_ms->config->net_prot.compare("TCP") == 0)
 				{
 					/* We have a notification on the listening socket, which
 					 means one or more incoming connections. */
@@ -453,7 +465,7 @@ void MatrixEpollServer::serve()
 			}
 			else
 			{
-				if (_protoc.compare("TCP") == 0)
+				if (_ms->config->net_prot.compare("TCP") == 0)
 				{
 					/* We have data on the fd waiting to be read. Read and
 					 display it. We must read whatever data is available

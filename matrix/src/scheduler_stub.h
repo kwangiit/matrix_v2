@@ -19,6 +19,9 @@ class MatrixScheduler
 		void regist(ZHTClient&);
 		void waitAllScheduler(ZHTClient&);
 
+		int procReq(int, void*, sockaddr);
+		void* epollServing(void*);
+		void forkESThread();
 
 		void resetChooseBM();
 		void chooseNeigh();

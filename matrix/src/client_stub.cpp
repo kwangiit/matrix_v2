@@ -145,7 +145,7 @@ void MatrixClient::submitTaskWC(const vector<string> &taskVec, int toScheIdx)
 			tasks += "eot";
 		}
 		Package taskPkg;
-		taskPkg.set_virtualpath("send tasks");
+		taskPkg.set_virtualpath("send task");
 		taskPkg.set_realfullpath(tasks);
 		string taskPkgStr = taskPkg.SerializeAsString();
 		// send the taskPkgStr to the server scheduler_vector.at(toScheIdx)

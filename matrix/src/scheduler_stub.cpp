@@ -79,6 +79,51 @@ void MatrixScheduler::waitAllScheduler(ZHTClient &zc)
 	}
 }
 
+int MatrixScheduler::procReq(int sockfd, void *buf, sockaddr fromAddr)
+{
+	Package pkg;
+	pkg.ParseFromArray(buf, _BUF_SIZE);
+
+	string msg = pkg.virtualpath();
+	if (msg.compare("query_load") == 0)
+	{
+		int load = readyQueue.size() - numIdleCore;
+		/* do a send back the load */
+	}
+	else if (msg.compare("steal task") == 0)
+	{
+		/* pack tasks to send */
+	}
+	else if (msg.compare("send task") == 0)
+	{
+		/* add tasks and then send ack back */
+	}
+
+	return 1;
+}
+
+void* MatrixScheduler::epollServing(void *args)
+{
+	MatrixEpollServer *mes = (MatrixEpollServer*)args;
+	mes->serve();
+	pthread_exit(NULL);
+	return NULL;
+}
+
+void MatrixScheduler::forkESThread()
+{
+	int portNum = config->scheduler_port_num;
+	stringstream ss;
+	ss << portNum;
+	char *port = ss.str().c_str();
+	MatrixEpollServer mes = new MatrixEpollServer(port, this);
+	pthread_t esThread;
+	while (pthread_create(&esThread, NULL, epollServing, &mes) != 0)
+	{
+		sleep(1);
+	}
+}
+
 void MatrixScheduler::resetChooseBM()
 {
 	for (int i = 0; i < scheduler_vector.size(); i++)
