@@ -7,6 +7,8 @@
 
 #include "util.h"
 
+uint _BUF_SIZE = 512 + 38;
+
 int getInt(string &str)
 {
 	if (str.empty())

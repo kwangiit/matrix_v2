@@ -33,6 +33,7 @@ typedef map<int, int> in_degree; 		// vertex ---> Indegree of the vertex
 //typedef pair<int, vector<int>> dag_value;	// mapping info of each vertex in DAG
 //typedef map<int, dag_value> task_dag;	// vertex ---> indegree of vertex, adjlist in string format as above
 
+extern uint _Buf_SIZE;
 extern int getInt(const string&);
 extern long getLong(const string&);
 
