@@ -62,12 +62,12 @@ class MatrixEpollServer
 		int create_and_bind(const char*);
 		int create_and_bind(const char*, const char*);
 		int make_socket_non_blocking(const int&);
-		int makeSvrSocket();
-		int reuseSock(int);
+		int make_svr_socket();
+		int reuse_sock(int);
 		void init_thread();
 
 	private:
-		static void* threadedServe(void*);
+		static void* threaded_serve(void*);
 
 	private:
 		MatrixEpollServer();

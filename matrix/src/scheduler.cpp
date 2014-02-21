@@ -26,15 +26,15 @@ int main(int argc, char *argv)
 
 	ms.regist(zc);
 
-	ms.waitAllScheduler(zc);
+	ms.wait_all_scheduler(zc);
 
-	ms.forkCRTThread(zc);
+	ms.fork_crt_thread(zc);
 
-	ms.forkETThread();
+	ms.fork_exec_task_thread();
 
-	ms.forkCCTThread(zc);
+	ms.fork_cct_thread(zc);
 
-	ms.forkWSThread();
+	ms.fork_ws_thread();
 
-	ms.forkRecordStatThread(zc);
+	ms.fork_record_stat_thread(zc);
 }

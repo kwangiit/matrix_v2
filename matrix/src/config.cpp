@@ -10,9 +10,9 @@
 #include <stdlib.h>
 #include <sstream>
 
-Configuration::Configuration(const string &config_file)
+Configuration::Configuration(const string &configFile)
 {
-	parseConfig(config_file);
+	parse_config(configFile);
 }
 
 Configuration::~Configuration()
@@ -20,53 +20,52 @@ Configuration::~Configuration()
 
 }
 
-void Configuration::parseConfig(const string &config_file)
+void Configuration::parse_config(const string &configFile)
 {
-	map<string, string> config_map;
-	fstream file_stream(config_file.c_str());
+	map<string, string> configMap;
+	fstream fileStream(configFile.c_str());
 
-	if (!file_stream.good())
+	if (!fileStream.good())
 	{
 		return;
 	}
 
 	string line, key, value;
 
-	while (getline(file_stream, line))
+	while (getline(fileStream, line))
 	{
 		stringstream ss(line);
 		ss >> key >> value;
 		if (!key.empty() && key[0] != '#')
 		{
-			config_map.insert(make_pair(key, value));
+			configMap.insert(make_pair(key, value));
 		}
 		key.clear();
 		value.clear();
 	}
 
-	file_stream.close();
+	fileStream.close();
 
-	num_task_per_client = getLong(config_map.find("NumTaskPerClient")->second);
-	num_all_task = getLong(config_map.find("NumAllTask")->second);
-	max_task_per_pkg = getLong(config_map.find("MaxTaskPerPkg")->second);
-	monitor_interval = getLong(config_map.find("MonitorInterval")->second);
-	scheduler_port_num = getLong(config_map.find("SchedulerPortNo")->second);
-	sleep_lengh = getLong(config_map.find("SleepLength")->second);
-	work_stealing_on = getInt(config_map.find("WorkStealOn")->second);
-	ws_poll_interval_start = getLong(config_map.find("WorkStealPollIntervalStart")->second);
-	ws_poll_interval_ub = getLong(config_map.find("WorkStealPollIntervalUpperBound")->second);
+	numTaskPerClient = str_to_num<long>(configMap.find("NumTaskPerClient")->second);
+	numAllTask = str_to_num<long>(configMap.find("NumAllTask")->second);
+	numCorePerExecutor = str_to_num<int>(configMap.find("NumCorePerExecutor")->second);
+	maxTaskPerPkg = str_to_num<long>(configMap.find("MaxTaskPerPkg")->second);
+	monitorInterval = str_to_num<long>(configMap.find("MonitorInterval")->second);
+	schedulerPortNo = str_to_num<long>(configMap.find("SchedulerPortNo")->second);
+	sleepLength = str_to_num<long>(configMap.find("SleepLength")->second);
+	workStealingOn = str_to_num<int>(configMap.find("WorkStealOn")->second);
+	wsPollIntervalStart = str_to_num<long>(configMap.find("WorkStealPollIntervalStart")->second);
+	wsPollIntervalUb = str_to_num<long>(configMap.find("WorkStealPollIntervalUpperBound")->second);
 
-	scheduler_memList_file = config_map.find("SchedulerMemlistFile")->second;
-	net_prot = config_map.find("NetworkProtocol")->second;
-	dag_type = config_map.find("DagType")->second;
-	dag_argu = getInt(config_map.find("DagArgu")->second);
-	host_identity_type = config_map.find("HostIdentityType")->second;
-	submission_mode = config_map.find("SubmissionMode")->second;
-	workload_file = config_map.find("WorkloadFile")->second;
-	client_log = config_map.find("ClientLog")->second;
-	scheduler_log = config_map.find("SchedulerLog")->second;
-	zht_memList_file = config_map.find("ZhtMemlistFile")->second;
-	zht_config_file = config_map.find("ZhtConfigFile")->second;
-
-	num_core_per_executor = getInt(config_map.find("NumCorePerExecutor")->second);
+	schedulerMemFile = configMap.find("SchedulerMemlistFile")->second;
+	netProtoc = configMap.find("NetworkProtocol")->second;
+	dagType = configMap.find("DagType")->second;
+	dagArg = str_to_num<int>(configMap.find("DagArgument")->second);
+	hostIdType = configMap.find("HostIdentityType")->second;
+	submitMode = configMap.find("SubmissionMode")->second;
+	workloadFile = configMap.find("WorkloadFile")->second;
+	clientLog = configMap.find("ClientLog")->second;
+	schedulerLog = configMap.find("SchedulerLog")->second;
+	zhtMemFile = configMap.find("ZhtMemlistFile")->second;
+	zhtConfigFile = configMap.find("ZhtConfigFile")->second;
 }

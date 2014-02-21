@@ -167,7 +167,7 @@ int MatrixEpollServer::make_socket_non_blocking(const int& sfd)
 	return 0;
 }
 
-int MatrixEpollServer::makeSvrSocket()
+int MatrixEpollServer::make_svr_socket()
 {
 	int port = atoi(_port);
 	struct sockaddr_in svrAdd_in; /* socket info about our server */
@@ -180,7 +180,7 @@ int MatrixEpollServer::makeSvrSocket()
 		svrAdd_in.sin_addr.s_addr = INADDR_ANY; /* set our address to any interface */
 		svrAdd_in.sin_port = htons(port); /* set the server port number */
 
-		if (_ms->config->net_prot.compare("TCP") == 0) //make socket
+		if (_ms->config->netProtoc.compare("TCP") == 0) //make socket
 		{
 			svrSock = socket(AF_INET, SOCK_STREAM, 0); /* OS will return a fd for network stream connection*/
 		}
@@ -210,7 +210,7 @@ int MatrixEpollServer::makeSvrSocket()
 			return -1;
 		}
 
-		if (_ms->config->net_prot.compare("TCP") == 0) //TCP needs listen, UDP does not.
+		if (_ms->config->netProtoc.compare("TCP") == 0) //TCP needs listen, UDP does not.
 		{
 			/* start listening, allowing a queue of up to 1 pending connection */
 			if (listen(svrSock, SOMAXCONN) < 0)
@@ -232,7 +232,7 @@ int MatrixEpollServer::makeSvrSocket()
 	return svrSock;
 }
 
-int MatrixEpollServer::reuseSock(int sock)
+int MatrixEpollServer::reuse_sock(int sock)
 {
 	int reuse_addr = 1;
 	int ret = setsockopt(sock, SOL_SOCKET, SO_REUSEADDR,
@@ -257,7 +257,7 @@ int MatrixEpollServer::reuseSock(int sock)
 	return -1;
 }*/
 
-void* MatrixEpollServer::threadedServe(void *arg)
+void* MatrixEpollServer::threaded_serve(void *arg)
 {
 	MatrixEpollServer *mes = (MatrixEpollServer*) arg;
 
@@ -281,7 +281,7 @@ void* MatrixEpollServer::threadedServe(void *arg)
 void MatrixEpollServer::init_thread()
 {
 	pthread_t thread;
-	while (pthread_create(&thread, NULL, threadedServe, this) != 0)
+	while (pthread_create(&thread, NULL, threaded_serve, this) != 0)
 	{
 		sleep(1);
 	}
@@ -296,7 +296,7 @@ void MatrixEpollServer::serve()
 	struct epoll_event event;
 	struct epoll_event *events;
 
-	sfd = makeSvrSocket();
+	sfd = make_svr_socket();
 	if (sfd == -1)
 		abort();
 
@@ -304,7 +304,7 @@ void MatrixEpollServer::serve()
 	if (s == -1)
 		abort();
 
-	reuseSock(sfd);
+	reuse_sock(sfd);
 
 	efd = epoll_create(1);
 	if (efd == -1)
@@ -348,7 +348,7 @@ void MatrixEpollServer::serve()
 			}
 			else if (sfd == edata->fd())
 			{
-				if (_ms->config->net_prot.compare("TCP") == 0)
+				if (_ms->config->netProtoc.compare("TCP") == 0)
 				{
 					/* We have a notification on the listening socket, which
 					 means one or more incoming connections. */
@@ -384,7 +384,7 @@ void MatrixEpollServer::serve()
 							abort();
 						}
 
-						reuseSock(infd);
+						reuse_sock(infd);
 
 						event.data.ptr = new MatrixEpollData(infd, in_addr);
 						event.events = EPOLLIN | EPOLLET;
@@ -465,7 +465,7 @@ void MatrixEpollServer::serve()
 			}
 			else
 			{
-				if (_ms->config->net_prot.compare("TCP") == 0)
+				if (_ms->config->netProtoc.compare("TCP") == 0)
 				{
 					/* We have data on the fd waiting to be read. Read and
 					 display it. We must read whatever data is available

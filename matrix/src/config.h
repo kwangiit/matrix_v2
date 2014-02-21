@@ -19,32 +19,30 @@ class Configuration
 		Configuration(const string&);
 		virtual ~Configuration();
 
-		void parseConfig(const string&);
+		void parse_config(const string&);
 
-		long num_task_per_client;
-		long num_all_task;
-		long max_task_per_pkg;
-		long monitor_interval;
-		long scheduler_port_num;
-		long sleep_lengh;
-		int work_stealing_on;
-		long ws_poll_interval_start;
-		long ws_poll_interval_ub;
+		long numTaskPerClient;
+		long numAllTask;
+		int numCorePerExecutor;
+		long maxTaskPerPkg;
+		long monitorInterval;
+		long schedulerPortNo;
+		long sleepLength;
+		int workStealingOn;
+		long wsPollIntervalStart;
+		long wsPollIntervalUb;
 
-		string scheduler_memList_file;
-		string net_prot;
-		string dag_type;
-		int dag_argu;
-		string host_identity_type;
-		string submission_mode;
-		string workload_file;
-		string client_log;
-		string scheduler_log;
-		string zht_memList_file;
-		string zht_config_file;
-
-		int num_core_per_executor;
+		string schedulerMemFile;
+		string netProtoc;
+		string dagType;
+		int dagArg;
+		string hostIdType;
+		string submitMode;
+		string workloadFile;
+		string clientLog;
+		string schedulerLog;
+		string zhtMemFile;
+		string zhtConfigFile;
 };
-
 
 #endif /* CONFIGURE_H_ */

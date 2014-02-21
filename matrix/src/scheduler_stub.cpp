@@ -9,20 +9,20 @@
 #include "math.h"
 #include <algorithm>
 
-MatrixScheduler::MatrixScheduler(const string &config_file)
+MatrixScheduler::MatrixScheduler(const string &configFile)
 {
-	config = new Configuration(config_file);
-	setHostName(getHostIdentity(config->host_identity_type));
-	scheduler_vector = readFromFile(config->scheduler_memList_file);
-	setIndex(getSelfIndex(getHostName(), scheduler_vector));
+	config = new Configuration(configFile);
+	set_id(get_host_id(config->hostIdType));
+	schedulerVec = read_from_file(config->schedulerMemFile);
+	set_index(get_self_idx(get_id(), schedulerVec));
 
-	numNeigh = (int)(sqrt(scheduler_vector.size()));
+	numNeigh = (int)(sqrt(schedulerVec.size()));
 	neighIdx = new int[numNeigh];
 	maxLoadedIdx = -1;
 	maxLoad = -1000000;
-	pollInterval = config->ws_poll_interval_start;
-	chooseBitMap = new bool[scheduler_vector.size()];
-	resetChooseBM();
+	pollInterval = config->wsPollIntervalStart;
+	chooseBitMap = new bool[schedulerVec.size()];
+	reset_choosebm();
 
 	numIdleCoreMutex = new Mutex();
 	numTaskFinMutex = new Mutex();
@@ -47,10 +47,10 @@ void MatrixScheduler::regist(ZHTClient &zc)
 		zc.lookup(regKey, value);
 		while (value.empty())
 		{
-			usleep(config->sleep_lengh);
+			usleep(config->sleepLength);
 			zc.lookup(regKey, value);
 		}
-		int newValNum = getInt(value) + 1;
+		int newValNum = str_to_num<int>(value) + 1;
 		stringstream ss;
 		ss << newValNum;
 		string newVal(ss.str());
@@ -59,27 +59,27 @@ void MatrixScheduler::regist(ZHTClient &zc)
 		{
 			ss.str("");
 			value = queryVal;
-			newValNum = getInt(value) + 1;
+			newValNum = str_to_num<int>(value) + 1;
 			ss << newValNum;
 			newVal = ss.str();
 		}
 	}
 }
 
-void MatrixScheduler::waitAllScheduler(ZHTClient &zc)
+void MatrixScheduler::wait_all_scheduler(ZHTClient &zc)
 {
 	string key("number of scheduler registered");
 	stringstream ss;
-	ss <<  scheduler_vector.size();
+	ss <<  schedulerVec.size();
 	string expValue(ss.str());
 
-	while (zc.state_change_callback(key, expValue, config->sleep_lengh) != 0)
+	while (zc.state_change_callback(key, expValue, config->sleepLength) != 0)
 	{
 		usleep(1);
 	}
 }
 
-int MatrixScheduler::procReq(int sockfd, void *buf, sockaddr fromAddr)
+int MatrixScheduler::proc_req(int sockfd, void *buf, sockaddr fromAddr)
 {
 	Package pkg;
 	pkg.ParseFromArray(buf, _BUF_SIZE);
@@ -102,7 +102,7 @@ int MatrixScheduler::procReq(int sockfd, void *buf, sockaddr fromAddr)
 	return 1;
 }
 
-void* MatrixScheduler::epollServing(void *args)
+void* MatrixScheduler::epoll_serving(void *args)
 {
 	MatrixEpollServer *mes = (MatrixEpollServer*)args;
 	mes->serve();
@@ -110,46 +110,46 @@ void* MatrixScheduler::epollServing(void *args)
 	return NULL;
 }
 
-void MatrixScheduler::forkESThread()
+void MatrixScheduler::fork_es_thread()
 {
-	int portNum = config->scheduler_port_num;
+	int portNum = config->schedulerPortNo;
 	stringstream ss;
 	ss << portNum;
 	char *port = ss.str().c_str();
 	MatrixEpollServer mes = new MatrixEpollServer(port, this);
 	pthread_t esThread;
-	while (pthread_create(&esThread, NULL, epollServing, &mes) != 0)
+	while (pthread_create(&esThread, NULL, epoll_serving, &mes) != 0)
 	{
 		sleep(1);
 	}
 }
 
-void MatrixScheduler::resetChooseBM()
+void MatrixScheduler::reset_choosebm()
 {
-	for (int i = 0; i < scheduler_vector.size(); i++)
+	for (int i = 0; i < schedulerVec.size(); i++)
 	{
 		chooseBitMap[i] = false;
 	}
 }
 
-void MatrixScheduler::chooseNeigh()
+void MatrixScheduler::choose_neigh()
 {
 	srand(time(NULL));
 	int idx = -1;
 	for (int i = 0; i < numNeigh; i++)
 	{
-		idx = rand() % scheduler_vector.size();
-		while (idx == getIndex() || chooseBitMap[idx])
+		idx = rand() % schedulerVec.size();
+		while (idx == get_index() || chooseBitMap[idx])
 		{
-			idx = rand() % scheduler_vector.size();
+			idx = rand() % schedulerVec.size();
 		}
 		neighIdx[i] = idx;
 		chooseBitMap[idx] = true;
 	}
-	resetChooseBM();
+	reset_choosebm();
 }
 
-void MatrixScheduler::findMostLoadedNeigh()
+void MatrixScheduler::find_most_loaded_neigh()
 {
 	Package loadQueryPkg;
 	loadQueryPkg.set_virtualpath("query load");
@@ -163,7 +163,8 @@ void MatrixScheduler::findMostLoadedNeigh()
 //		recv(scheduler_vecotr.at[neighIdx[i]], config->scheduler_port_num, result, ***);
 		Package loadPkg;
 		loadPkg.ParseFromString(result);
-		load = getInt(loadPkg.realfullpath());
+		string loadStr = loadPkg.realfullpath();
+		load = str_to_num<int>(loadStr);
 		if (maxLoad < load)
 		{
 			maxLoad = load;
@@ -172,7 +173,7 @@ void MatrixScheduler::findMostLoadedNeigh()
 	}
 }
 
-bool MatrixScheduler::stealTask()
+bool MatrixScheduler::steal_task()
 {
 	if (maxLoad <= 0)
 	{
@@ -210,14 +211,14 @@ void* MatrixScheduler::workstealing(void*)
 {
 	while (1)
 	{
-		 while (readyQueue.size() == 0 && pollInterval < config->ws_poll_interval_ub)
+		 while (readyQueue.size() == 0 && pollInterval < config->wsPollIntervalUb)
 		 {
-			 chooseNeigh();
-			 findMostLoadedNeigh();
-			 bool success = stealTask();
+			 choose_neigh();
+			 find_most_loaded_neigh();
+			 bool success = steal_task();
 			 if (success)
 			 {
-				 pollInterval = config->ws_poll_interval_start;
+				 pollInterval = config->wsPollIntervalStart;
 			 }
 			 else
 			 {
@@ -226,7 +227,7 @@ void* MatrixScheduler::workstealing(void*)
 			 }
 		 }
 
-		 if (pollInterval >= config->ws_poll_interval_ub)
+		 if (pollInterval >= config->wsPollIntervalUb)
 		 {
 			 break;
 		 }
@@ -235,9 +236,9 @@ void* MatrixScheduler::workstealing(void*)
 	return NULL;
 }
 
-void MatrixScheduler::forkWSThread()
+void MatrixScheduler::fork_ws_thread()
 {
-	if (config->work_stealing_on == 1)
+	if (config->workStealingOn == 1)
 	{
 		pthread_t wsThread;
 		while (pthread_create(&wsThread, NULL, workstealing, NULL))
@@ -247,7 +248,7 @@ void MatrixScheduler::forkWSThread()
 	}
 }
 
-void MatrixScheduler::execOneTask(string &taskStr)
+void MatrixScheduler::exec_a_task(string &taskStr)
 {
 	/*
 	 * taskStrVec.at(0) = taskId
@@ -268,7 +269,7 @@ void MatrixScheduler::execOneTask(string &taskStr)
 	cqMutex.unlock();
 }
 
-void* MatrixScheduler::executingTask(void*)
+void* MatrixScheduler::executing_task(void*)
 {
 	string taskStr;
 
@@ -292,7 +293,7 @@ void* MatrixScheduler::executingTask(void*)
 			numIdleCore--;
 			numIdleCoreMutex.unlock();
 
-			execOneTask(taskStr);
+			exec_a_task(taskStr);
 
 			numIdleCoreMutex.lock();
 			numIdleCore++;
@@ -304,20 +305,20 @@ void* MatrixScheduler::executingTask(void*)
 	return NULL;
 }
 
-void MatrixScheduler::forkETThread()
+void MatrixScheduler::fork_exec_task_thread()
 {
-	pthread_t *execThread = new pthread_t[config->num_core_per_executor];
+	pthread_t *execThread = new pthread_t[config->numCorePerExecutor];
 
-	for (int i = 0; i < config->num_core_per_executor; i++)
+	for (int i = 0; i < config->numCorePerExecutor; i++)
 	{
-		while (pthread_create(&execThread[i], NULL, executingTask, NULL))
+		while (pthread_create(&execThread[i], NULL, executing_task, NULL))
 		{
 			sleep(1);
 		}
 	}
 }
 
-bool MatrixScheduler::checkAReadyTask(const string &taskStr, ZHTClient *zc)
+bool MatrixScheduler::check_a_ready_task(const string &taskStr, ZHTClient *zc)
 {
 	vector<string> taskStrVec = tokenize(taskStr, " ");
 	string taskDetail;
@@ -340,7 +341,7 @@ bool checkEmpty(string &str)
 	return str.empty();
 }
 
-void* MatrixScheduler::checkingReadyTask(void *args)
+void* MatrixScheduler::checking_ready_task(void *args)
 {
 	ZHTClient *zc = (ZHTClient*)args;
 	int size = 0;
@@ -355,7 +356,7 @@ void* MatrixScheduler::checkingReadyTask(void *args)
 				taskStr = waitQueue[i];
 				if (!taskStr.empty())
 				{
-					if (checkAReadyTask(taskStr, zc))
+					if (check_a_ready_task(taskStr, zc))
 					{
 						rqMutex.lock();
 						readyQueue.push_back(taskStr);
@@ -377,18 +378,18 @@ void* MatrixScheduler::checkingReadyTask(void *args)
 	return NULL;
 }
 
-void MatrixScheduler::forkCRTThread(ZHTClient &zc)
+void MatrixScheduler::fork_crt_thread(ZHTClient &zc)
 {
 	pthread_t crtThread;
 
 
-	while (pthread_create(&crtThread, NULL, checkingReadyTask, &zc))
+	while (pthread_create(&crtThread, NULL, checking_ready_task, &zc))
 	{
 		sleep(1);
 	}
 }
 
-void MatrixScheduler::decreaseIndegree(const string &taskId, ZHTClient *zc)
+void MatrixScheduler::decrease_indegree(const string &taskId, ZHTClient *zc)
 {
 	string taskDetail;
 	zc->lookup(taskId, taskDetail);
@@ -410,7 +411,7 @@ void MatrixScheduler::decreaseIndegree(const string &taskId, ZHTClient *zc)
 	}
 }
 
-void* MatrixScheduler::checkingCompleteTask(void *args)
+void* MatrixScheduler::checking_complete_task(void *args)
 {
 	ZHTClient *zc = (ZHTClient*)args;
 	string taskId;
@@ -431,7 +432,7 @@ void* MatrixScheduler::checkingCompleteTask(void *args)
 				cqMutex.unlock();
 				continue;
 			}
-			decreaseIndegree(taskId, zc);
+			decrease_indegree(taskId, zc);
 		}
 	}
 
@@ -439,39 +440,39 @@ void* MatrixScheduler::checkingCompleteTask(void *args)
 	return NULL;
 }
 
-void MatrixScheduler::forkCCTThread(ZHTClient &zc)
+void MatrixScheduler::fork_cct_thread(ZHTClient &zc)
 {
 	pthread_t cctThread;
 
-	while (pthread_create(&cctThread, NULL, checkingCompleteTask, &zc))
+	while (pthread_create(&cctThread, NULL, checking_complete_task, &zc))
 	{
 		sleep(1);
 	}
 }
 
-void* MatrixScheduler::recordingStat(void *args)
+void* MatrixScheduler::recording_stat(void *args)
 {
 	ZHTClient *zc = (ZHTClient*)args;
 
 	while (1)
 	{
 		Value recordVal;
-		recordVal.set_id(getHostName());
+		recordVal.set_id(get_id());
 		recordVal.set_numtaskfin(numTaskFin);
 		recordVal.set_numtaskwait(waitQueue.size());
 		recordVal.set_numtaskready(readyQueue.size());
 		recordVal.set_numcoreavilable(numIdleCore);
-		recordVal.set_numallcore(config->num_core_per_executor);
+		recordVal.set_numallcore(config->numCorePerExecutor);
 		recordVal.set_numworksteal(numWS);
 		recordVal.set_numworkstealfail(numWSFail);
 		string recordValStr = recordVal.SerializeAsString();
-		zc->insert(getHostName(), recordValStr);
+		zc->insert(get_id(), recordValStr);
 
 		string key("num tasks done");
 		string numTaskDoneStr;
 		zc->lookup(key, numTaskDoneStr);
-		long numTaskDone = getLong(numTaskDoneStr);
-		if (numTaskDone == config->num_all_task)
+		long numTaskDone = str_to_num<long>(numTaskDoneStr);
+		if (numTaskDone == config->numAllTask)
 		{
 			break;
 		}
@@ -484,8 +485,8 @@ void* MatrixScheduler::recordingStat(void *args)
 				numTaskDoneStrNew, query_value) != 0)
 		{
 			numTaskDoneStr = query_value;
-			numTaskDone = getLong(numTaskDoneStr);
-			if (numTaskDone == config->num_all_task)
+			numTaskDone = str_to_num<long>(numTaskDoneStr);
+			if (numTaskDone == config->numAllTask)
 			{
 				break;
 			}
@@ -495,39 +496,39 @@ void* MatrixScheduler::recordingStat(void *args)
 			numTaskDoneStrNew = ss.str();
 		}
 		prevNumTaskFin = numTaskFin;
-		usleep(config->sleep_lengh);
+		usleep(config->sleepLength);
 	}
 
 	pthread_exit(NULL);
 	return NULL;
 }
 
-void MatrixScheduler::forkRecordStatThread(ZHTClient &zc)
+void MatrixScheduler::fork_record_stat_thread(ZHTClient &zc)
 {
 	pthread_t rsThread;
 
-	while (pthread_create(&rsThread, NULL, recordingStat, &zc))
+	while (pthread_create(&rsThread, NULL, recording_stat, &zc))
 	{
 		sleep(1);
 	}
 }
 
-void MatrixScheduler::setHostName(string hostname)
+void MatrixScheduler::set_id(string hostname)
 {
-	this->hostname = hostname;
+	this->id = hostname;
 }
 
-string MatrixScheduler::getHostName()
+string MatrixScheduler::get_id()
 {
-	return hostname;
+	return id;
 }
 
-void MatrixScheduler::setIndex(int index)
+void MatrixScheduler::set_index(int index)
 {
 	this->index = index;
 }
 
-int MatrixScheduler::getIndex()
+int MatrixScheduler::get_index()
 {
 	return index;
 }

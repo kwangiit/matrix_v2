@@ -18,9 +18,9 @@ int main(int args, char* argv[])
 	Configuration *config = new Configuration(argv[1]);
 
 	cout << "start to print the Configuration parameters:" << endl;
-	cout << "NumTaskPerClient\t" << config->num_task_per_client << endl;//= getLong((string)config_map.find("NumTaskPerClient"));
-	cout << "NumAllTask\t" << config->num_all_task << endl;//= getLong((string)config_map.find("NumAllTask"));
-	cout << "NumCorePerExecutor\t" << config->num_core_per_executor << endl;
+	cout << "NumTaskPerClient\t" << config->numTaskPerClient << endl;//= getLong((string)config_map.find("NumTaskPerClient"));
+	cout << "NumAllTask\t" << config->numAllTask << endl;//= getLong((string)config_map.find("NumAllTask"));
+	cout << "NumCorePerExecutor\t" << config->numCorePerExecutor << endl;
 	/*max_task_per_pkg = getLong((string)config_map.find("MaxTaskPerPkg"));
 	monitor_interval = getLong((string)config_map.find("MonitorInterval"));
 	scheduler_port_num = getLong((string)config_map.find("SchedulerPortNo"));

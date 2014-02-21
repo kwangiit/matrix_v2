@@ -17,43 +17,43 @@ class MatrixScheduler
 		virtual ~MatrixScheduler();
 
 		void regist(ZHTClient&);
-		void waitAllScheduler(ZHTClient&);
+		void wait_all_scheduler(ZHTClient&);
 
-		int procReq(int, void*, sockaddr);
-		void* epollServing(void*);
-		void forkESThread();
+		int proc_req(int, void*, sockaddr);
+		void* epoll_serving(void*);
+		void fork_es_thread();
 
-		void resetChooseBM();
-		void chooseNeigh();
-		void findMostLoadedNeigh();
-		bool stealTask();
+		void reset_choosebm();
+		void choose_neigh();
+		void find_most_loaded_neigh();
+		bool steal_task();
 
 		void* workstealing(void*);
-		void forkWSThread(void);
+		void fork_ws_thread(void);
 
-		bool checkAReadyTask(const string&, ZHTClient*);
-		void* checkingReadyTask(void*);
-		void forkCRTThread(ZHTClient &zc);
+		bool check_a_ready_task(const string&, ZHTClient*);
+		void* checking_ready_task(void*);
+		void fork_crt_thread(ZHTClient &zc);
 
-		void execOneTask(string&);
-		void* executingTask(void*);
-		void forkETThread();
+		void exec_a_task(string&);
+		void* executing_task(void*);
+		void fork_exec_task_thread();
 
-		void decreaseIndegree(const string&, ZHTClient*);
-		void* checkingCompleteTask(void*);
-		void forkCCTThread(ZHTClient &zc);
+		void decrease_indegree(const string&, ZHTClient*);
+		void* checking_complete_task(void*);
+		void fork_cct_thread(ZHTClient &zc);
 
-		void* recordingStat(void*);
-		void forkRecordStatThread(ZHTClient &zc);
+		void* recording_stat(void*);
+		void fork_record_stat_thread(ZHTClient &zc);
 
-		void setHostName(string);
-		string getHostName();
+		void set_id(string);
+		string get_id();
 
-		void setIndex(int);
-		int getIndex();
+		void set_index(int);
+		int get_index();
 
 		Configuration *config;
-		vector<string> scheduler_vector;
+		vector<string> schedulerVec;
 
 		Mutex numIdleCoreMutex;
 		Mutex numTaskFinMutex;
@@ -82,7 +82,7 @@ class MatrixScheduler
 		deque<string> completeQueue;
 
 	private:
-		string hostname;
+		string id;
 		int index;
 };
 

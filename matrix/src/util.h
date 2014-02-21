@@ -27,27 +27,34 @@
 
 using namespace std;
 
-typedef map<int, vector<int>> adj_list; 	// vertex ---> list of vertices
-typedef map<int, int> in_degree; 		// vertex ---> Indegree of the vertex
+typedef map<int, vector<int>> adjList; 	// vertex ---> list of vertices
+typedef map<int, int> inDegree; 		// vertex ---> Indegree of the vertex
 
-//typedef pair<int, vector<int>> dag_value;	// mapping info of each vertex in DAG
-//typedef map<int, dag_value> task_dag;	// vertex ---> indegree of vertex, adjlist in string format as above
+template<typename T> string num_to_str(T num)
+{
+	stringstream ss;
+	ss << num;
+	return ss.str();
+}
+
+template<typename T> T str_to_num(string &str)
+{
+	stringstream ss(str);
+	T num;
+	return ss >> num ? num : 0;
+}
 
 extern uint _Buf_SIZE;
-extern int getInt(const string&);
-extern long getLong(const string&);
 
-extern int getIP(char*);
-extern string exec(char*);
-extern string getHostIdentity(const string&);
-extern vector<string> readFromFile(const string&);
-extern int getSelfIndex(const string&, vector<string>);
-
-extern void genDagAdjlist(adj_list&, const string&, int, long);
-extern void genDagInDegree(adj_list&, in_degree&);
-
-extern bool initZHTClient(ZHTClient&, const string&, const string&);
 extern vector<string> tokenize(const string&, const char*);
+extern int get_ip(char*);
+extern string exec(const char*);
+extern string get_host_id(const string&);
+extern vector<string> read_from_file(const string&);
+extern int get_self_idx(const string&, vector<string>);
+extern void gen_dag_adjlist(adjList&, const string&, int, long);
+extern void gen_dag_indeg(adjList&, inDegree&);
+extern bool init_zht_client(ZHTClient&, const string&, const string&);
 
 class Mutex
 {
