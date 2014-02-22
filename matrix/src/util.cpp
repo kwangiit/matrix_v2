@@ -154,6 +154,10 @@ void gen_bot_adjlist(adjList &dagAdjList, long numTask)
 	}
 }
 
+/*
+ * generate adjacency list for fanout dags,
+ * the argument is the fan out degree
+ * */
 void gen_fanout_adjlist(adjList &dagAdjList, int dagArg, long numTask)
 {
 	int next = -1;
@@ -180,9 +184,17 @@ void gen_fanout_adjlist(adjList &dagAdjList, int dagArg, long numTask)
 	}
 }
 
+/*
+ * generate adjacency list for fan in dags,
+ * the argument is the fan in degree
+ * */
 void gen_fanin_adjlist(adjList &dagAdjList, int dagArg, long numTask)
 {
 	adjList tmpAdjList;
+
+	/* first generate an adjacency list for fan out dag,
+	 * and then flip it over, and switch the left with the
+	 * right to get the adjacency list for fan in dags */
 	gen_fanout_adjlist(tmpAdjList, dagArg, numTask);
 
 	for (int i = 0; i < numTask; i++)
@@ -331,4 +343,48 @@ int Mutex::lock()
 int Mutex::unlock()
 {
 	return (pthread_mutex_unlock (&mutex));
+}
+
+Peer::Peer(const string &configFile)
+{
+	config = new Configuration(configFile);
+	set_id(get_host_id(config->hostIdType));
+	schedulerVec = read_from_file(config->schedulerMemFile);
+	set_index(get_self_idx(get_id(), schedulerVec));
+}
+
+Peer::~Peer()
+{
+
+}
+
+void Peer::set_id(string id)
+{
+	this->id = id;
+}
+
+string Peer::get_id()
+{
+	return id;
+}
+
+void Peer::set_index(int index)
+{
+	this->index = index;
+}
+
+int Peer::get_index()
+{
+	return index;
+}
+
+void Peer::wait_all_scheduler(ZHTClient &zc)
+{
+	string key("number of scheduler registered");
+	string expValue = num_to_str<int>(schedulerVec.size());
+
+	while (zc.state_change_callback(key, expValue, config->sleepLength) != 0)
+	{
+		usleep(1);
+	}
 }

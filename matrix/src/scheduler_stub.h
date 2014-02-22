@@ -10,14 +10,13 @@
 
 #include "util.h"
 
-class MatrixScheduler
+class MatrixScheduler:public Peer
 {
 	public:
 		MatrixScheduler(const string&);
 		virtual ~MatrixScheduler();
 
 		void regist(ZHTClient&);
-		void wait_all_scheduler(ZHTClient&);
 
 		int proc_req(int, void*, sockaddr);
 		void* epoll_serving(void*);
@@ -46,15 +45,6 @@ class MatrixScheduler
 		void* recording_stat(void*);
 		void fork_record_stat_thread(ZHTClient &zc);
 
-		void set_id(string);
-		string get_id();
-
-		void set_index(int);
-		int get_index();
-
-		Configuration *config;
-		vector<string> schedulerVec;
-
 		Mutex numIdleCoreMutex;
 		Mutex numTaskFinMutex;
 
@@ -80,10 +70,6 @@ class MatrixScheduler
 		deque<string> waitQueue;
 		deque<string> readyQueue;
 		deque<string> completeQueue;
-
-	private:
-		string id;
-		int index;
 };
 
 

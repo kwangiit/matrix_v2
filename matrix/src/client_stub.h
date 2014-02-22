@@ -6,7 +6,7 @@
  */
 
 #ifndef CLIENT_SUB_H_
-#define CLIENT_SUB_H_
+#define CLIENT_STUB_H_
 
 #include <sstream>
 
@@ -16,14 +16,13 @@
 
 #include "config.h"
 
-class MatrixClient
+class MatrixClient:public Peer
 {
 	public:
 		MatrixClient(const string&);
 		virtual ~MatrixClient();
 
 		void insert_taskinfo_to_zht(ZHTClient&, adjList&, inDegree&);
-		void wait_all_scheduler(ZHTClient&);
 		void init_task(void);
 		void submit_task(void);
 		void submit_task_bc(void);
@@ -31,18 +30,7 @@ class MatrixClient
 		void *monitoring(void*);
 		void do_monitoring(ZHTClient&);
 
-		void set_id(string);
-		string get_id(void);
-		void set_index(int);
-		int get_index(void);
-
-		Configuration *config;
-		vector<string> schedulerVec;
 		vector<string> taskVec;
-
-	private:
-		string id;
-		int index;
 };
 
-#endif /* CLIENT_SUB_H_ */
+#endif /* CLIENT_STUB_H_ */

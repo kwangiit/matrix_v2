@@ -8,33 +8,10 @@
 #include "client_stub.h"
 #include "ZHT/src/meta.pb.h"
 
-MatrixClient::MatrixClient(const string &config_file)
+MatrixClient::MatrixClient(const string
+		&configFile):Peer(configFile)
 {
-	config = new Configuration(config_file);
-	set_id(get_host_id(config->hostIdType));
-	schedulerVec = read_from_file(config->schedulerMemFile);
 	taskVec = read_from_file(config->workloadFile);
-	set_index(get_self_idx(get_id(), schedulerVec));
-}
-
-void MatrixClient::set_id(string id)
-{
-	this->id = id;
-}
-
-string MatrixClient::get_id()
-{
-	return id;
-}
-
-void MatrixClient::set_index(int index)
-{
-	this->index = index;
-}
-
-int MatrixClient::get_index()
-{
-	return index;
 }
 
 void MatrixClient::insert_taskinfo_to_zht(ZHTClient &zc,
@@ -67,19 +44,6 @@ void MatrixClient::insert_taskinfo_to_zht(ZHTClient &zc,
 		value.set_fintime(0);
 		string seriValue = value.SerializeAsString();
 		zc.insert(taskId, seriValue);
-	}
-}
-
-void MatrixClient::wait_all_scheduler(ZHTClient &zc)
-{
-	string key("number of scheduler registered");
-	stringstream ss;
-	ss <<  schedulerVec.size();
-	string expValue(ss.str());
-
-	while (zc.state_change_callback(key, expValue, config->sleepLength) != 0)
-	{
-		usleep(1);
 	}
 }
 

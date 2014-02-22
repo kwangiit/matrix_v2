@@ -9,13 +9,9 @@
 #include "math.h"
 #include <algorithm>
 
-MatrixScheduler::MatrixScheduler(const string &configFile)
+MatrixScheduler::MatrixScheduler(const string
+		&configFile):Peer(configFile)
 {
-	config = new Configuration(configFile);
-	set_id(get_host_id(config->hostIdType));
-	schedulerVec = read_from_file(config->schedulerMemFile);
-	set_index(get_self_idx(get_id(), schedulerVec));
-
 	numNeigh = (int)(sqrt(schedulerVec.size()));
 	neighIdx = new int[numNeigh];
 	maxLoadedIdx = -1;
@@ -63,19 +59,6 @@ void MatrixScheduler::regist(ZHTClient &zc)
 			ss << newValNum;
 			newVal = ss.str();
 		}
-	}
-}
-
-void MatrixScheduler::wait_all_scheduler(ZHTClient &zc)
-{
-	string key("number of scheduler registered");
-	stringstream ss;
-	ss <<  schedulerVec.size();
-	string expValue(ss.str());
-
-	while (zc.state_change_callback(key, expValue, config->sleepLength) != 0)
-	{
-		usleep(1);
 	}
 }
 
@@ -511,24 +494,4 @@ void MatrixScheduler::fork_record_stat_thread(ZHTClient &zc)
 	{
 		sleep(1);
 	}
-}
-
-void MatrixScheduler::set_id(string hostname)
-{
-	this->id = hostname;
-}
-
-string MatrixScheduler::get_id()
-{
-	return id;
-}
-
-void MatrixScheduler::set_index(int index)
-{
-	this->index = index;
-}
-
-int MatrixScheduler::get_index()
-{
-	return index;
 }
