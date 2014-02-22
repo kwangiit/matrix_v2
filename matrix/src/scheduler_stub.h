@@ -18,6 +18,8 @@ class MatrixScheduler:public Peer
 
 		void regist(ZHTClient&);
 
+		void pack_send_task(int, int, sockaddr);
+		void send_task(int, sockaddr);
 		int proc_req(int, void*, sockaddr);
 		void* epoll_serving(void*);
 		void fork_es_thread();

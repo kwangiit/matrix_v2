@@ -21,7 +21,7 @@ void MatrixClient::insert_taskinfo_to_zht(ZHTClient &zc,
 						it != dagAdjList.end(); ++it)
 	{
 		stringstream ss;
-		ss << index << it->first;
+		ss << get_index() << it->first;
 		string taskId(ss.str());
 		vector<int> existList = it->second;
 		int inDegree = dagInDegree[it->first];
@@ -61,11 +61,11 @@ void MatrixClient::init_task()
 
 void MatrixClient::submit_task()
 {
-	if (config->submitMode.compare("best case"))
+	if (config->submitMode.compare("best case") == 0)
 	{
 		submit_task_bc();
 	}
-	else if (config->submitMode.compare("worst case"))
+	else if (config->submitMode.compare("worst case") == 0)
 	{
 		int toScheIdx = rand() % schedulerVec.size();
 		submit_task_wc(taskVec, toScheIdx);
@@ -113,17 +113,16 @@ void MatrixClient::submit_task_wc(const vector<string> &taskVec, int toScheIdx)
 		taskPkg.set_realfullpath(tasks);
 		string taskPkgStr = taskPkg.SerializeAsString();
 		// send the taskPkgStr to the server scheduler_vector.at(toScheIdx)
+		// and receive acks
 		numTaskLeft -= numTaskSendPerPkg;
 	}
 }
 
-void* MatrixClient::monitoring(void* args)
+void* MatrixClient::monitoring(void *args)
 {
 	ZHTClient *zc = (ZHTClient*)args;
 	string key("num tasks done");
-	stringstream ss;
-	ss << config->numAllTask;
-	string expValue(ss.str());
+	string expValue = num_to_str<long>(config->numAllTask);
 
 	while (zc->state_change_callback(key, expValue, config->monitorInterval) != 0)
 	{
@@ -134,7 +133,7 @@ void* MatrixClient::monitoring(void* args)
 
 void MatrixClient::do_monitoring(ZHTClient &zc)
 {
-	if (index != 1)
+	if (index != 0)
 	{
 		return;
 	}

@@ -32,7 +32,7 @@ void MatrixScheduler::regist(ZHTClient &zc)
 {
 	string regKey("number of scheduler registered");
 	string taskFinKey("num tasks done");
-	if (index == 1)
+	if (index == 0)
 	{
 		zc.insert(regKey, "1");
 		zc.insert(taskFinKey, "0");
@@ -47,19 +47,55 @@ void MatrixScheduler::regist(ZHTClient &zc)
 			zc.lookup(regKey, value);
 		}
 		int newValNum = str_to_num<int>(value) + 1;
-		stringstream ss;
-		ss << newValNum;
-		string newVal(ss.str());
+		string newVal = num_to_str<int>(newValNum);
 		string queryVal;
 		while (zc.compare_swap(regKey, value, newVal, queryVal) != 0)
 		{
-			ss.str("");
 			value = queryVal;
 			newValNum = str_to_num<int>(value) + 1;
-			ss << newValNum;
-			newVal = ss.str();
+			newVal = num_to_str<int>(newValNum);
 		}
 	}
+}
+
+void MatrixScheduler::pack_send_task(int numTask, int sockfd, sockaddr fromAddr)
+{
+	string tasks;
+	for (int j = 0; j < numTask; j++)
+	{
+		tasks += readyQueue.front();
+		tasks += "eot";
+		readyQueue.pop_front();
+	}
+	Package taskPkg;
+	taskPkg.set_realfullpath(tasks);
+	string taskPkgStr = taskPkg.SerializeAsString();
+	/*send taskPkgStr*/
+}
+
+void MatrixScheduler::send_task(int sockfd, sockaddr fromAddr)
+{
+	int numTaskToSend = -1;
+	rqMutex.lock();
+	numTaskToSend = (readyQueue.size() - numIdleCore) / 2;
+	Package numTaskPkg;
+	numTaskPkg.set_realfullpath(num_to_str<int>(numTaskToSend));
+	string numTaskPkgStr = numTaskPkg.SerializeAsString();
+	/* send back how many task will be sent*/
+	if (numTaskToSend > 0)
+	{
+		int numSend = numTaskToSend / config->maxTaskPerPkg;
+		for (int i = 0; i < numSend; i++)
+		{
+			pack_send_task(config->maxTaskPerPkg, sockfd, fromAddr);
+		}
+		long numTaskLeft = numTaskToSend - numSend * config->maxTaskPerPkg;
+		if (numTaskLeft > 0)
+		{
+			pack_send_task(numTaskLeft, sockfd, fromAddr);
+		}
+	}
+	rqMutex.unlock();
 }
 
 int MatrixScheduler::proc_req(int sockfd, void *buf, sockaddr fromAddr)
@@ -75,11 +111,21 @@ int MatrixScheduler::proc_req(int sockfd, void *buf, sockaddr fromAddr)
 	}
 	else if (msg.compare("steal task") == 0)
 	{
-		/* pack tasks to send */
+		send_task(sockfd, fromAddr);
 	}
 	else if (msg.compare("send task") == 0)
 	{
 		/* add tasks and then send ack back */
+		string taskStr = pkg.realfullpath();
+		vector<string> tasks = tokenize(taskStr, "eot");
+		wqMutex.lock();
+		for (int i = 0; i < tasks.size(); i++)
+		{
+			waitQueue.push_back(tasks.at(i));
+		}
+		wqMutex.unlock();
+		string numTaskStr = num_to_str<int>(tasks.size());
+		/* send number of task string back*/
 	}
 
 	return 1;
@@ -96,9 +142,8 @@ void* MatrixScheduler::epoll_serving(void *args)
 void MatrixScheduler::fork_es_thread()
 {
 	int portNum = config->schedulerPortNo;
-	stringstream ss;
-	ss << portNum;
-	char *port = ss.str().c_str();
+	string portStr = num_to_str<int>(portNum);
+	char *port = portStr.c_str();
 	MatrixEpollServer mes = new MatrixEpollServer(port, this);
 	pthread_t esThread;
 	while (pthread_create(&esThread, NULL, epoll_serving, &mes) != 0)
@@ -167,53 +212,69 @@ bool MatrixScheduler::steal_task()
 	stealTaskPkg.set_virtualpath("steal task");
 	string strStealTask = stealTaskPkg.SerializeAsString();
 
-	string taskStr;
+	string numTaskPkgStr;
 	// send
 	// recv(scheduler_vector.at(maxLoadedIdx), config->scheduler_port_num, taskStr, ***);
-	Package taskPkg;
-	taskPkg.ParseFromString(taskStr);
+	Package numTaskPkg;
+	numTaskPkg.ParseFromString(numTaskPkgStr);
+	string numTaskStr = numTaskPkg.realfullpath();
+	int numTask = str_to_num<int>(numTaskStr);
 
-	if (taskPkg.realfullpath().empty())
+	if (numTask == 0)
 	{
 		return false;
 	}
-	else
+
+	int numRecv = numTask / config->maxTaskPerPkg;
+	if (numRecv * config->maxTaskPerPkg < numTask)
 	{
+		numRecv++;
+	}
+
+	for (int i = 0; i < numRecv; i++)
+	{
+		string taskPkgStr;
+		//recv()
+		Package taskPkg;
+		taskPkg.ParseFromString(taskPkgStr);
 		vector<string> taskStrVec = tokenize(taskPkg.realfullpath(), "eot");
 		rqMutex.lock();
-		for (int i = 0; i < taskStrVec.size(); i++)
+		for (int j = 0; j < taskStrVec.size(); j++)
 		{
-			readyQueue.push_back(taskStrVec.at(i));
+			readyQueue.push_back(taskStrVec.at(j));
 		}
 		rqMutex.unlock();
-		return true;
 	}
+
+	return true;
 }
 
 void* MatrixScheduler::workstealing(void*)
 {
 	while (1)
 	{
-		 while (readyQueue.size() == 0 && pollInterval < config->wsPollIntervalUb)
-		 {
-			 choose_neigh();
-			 find_most_loaded_neigh();
-			 bool success = steal_task();
-			 if (success)
-			 {
-				 pollInterval = config->wsPollIntervalStart;
-			 }
-			 else
-			 {
-				 usleep(pollInterval);
-				 pollInterval *= 2;
-			 }
-		 }
+		while (readyQueue.size() == 0 && pollInterval < config->wsPollIntervalUb)
+		{
+			choose_neigh();
+			find_most_loaded_neigh();
+			bool success = steal_task();
+			maxLoadedIdx = -1;
+			maxLoad = -1000000;
+			if (success)
+			{
+				pollInterval = config->wsPollIntervalStart;
+			}
+			else
+			{
+				usleep(pollInterval);
+				pollInterval *= 2;
+			}
+		}
 
-		 if (pollInterval >= config->wsPollIntervalUb)
-		 {
-			 break;
-		 }
+		if (pollInterval >= config->wsPollIntervalUb)
+		{
+			break;
+		}
 	}
 	pthread_exit(NULL);
 	return NULL;
@@ -319,7 +380,7 @@ bool MatrixScheduler::check_a_ready_task(const string &taskStr, ZHTClient *zc)
 	}
 }
 
-bool checkEmpty(string &str)
+bool check_empty(string &str)
 {
 	return str.empty();
 }
@@ -352,7 +413,7 @@ void* MatrixScheduler::checking_ready_task(void *args)
 			}
 			wqMutex.lock();
 			deque::iterator last = remove_if(waitQueue.begin(),
-										waitQueue.end(), checkEmpty);
+					waitQueue.end(), check_empty);
 			waitQueue.erase(last, waitQueue.end());
 			wqMutex.unlock();
 		}
