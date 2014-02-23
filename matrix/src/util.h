@@ -19,6 +19,7 @@
 #include <stdio.h>
 #include <stropts.h>
 #include <time.h>
+#include <bits/time.h>
 #include <linux/netdevice.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
@@ -81,6 +82,14 @@ extern void gen_dag_indeg(adjList&, inDegree&);
 /* initialize as a ZHT client*/
 extern bool init_zht_client(ZHTClient&, const string&, const string&);
 
+extern double get_time_usec();
+
+extern double get_time_msec();
+
+extern double get_time_sec();
+
+extern timespec time_diff(timespec, timespec);
+
 /* a mutex class for locking and uncloking */
 class Mutex
 {
@@ -108,9 +117,12 @@ class Peer
 
 		Configuration *config;
 		vector<string> schedulerVec;
+		bool running;
 
 	private:
 		string id;
 		int index;
 };
+
+
 #endif /* UTIL_H_ */

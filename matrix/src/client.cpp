@@ -44,7 +44,35 @@ int main(int argc, char* argv[])
 	mc.insert_taskinfo_to_zht(zc, dagAdjList, dagInDegree);
 
 	/* wait until all schedulers have registered to ZHT */
+	cout << "--------------------------------"
+					"----------------------------" << endl;
+	cout << "Now, I am waiting until all the schedulers are running!" << endl;
+	if (mc.clientLogOS.is_open())
+	{
+		mc.clientLogOS << "--------------------------------"
+				"----------------------------" << endl;
+		mc.clientLogOS << "Now, I am waiting until all the "
+				"schedulers are running!" << endl;
+	}
+
+	clock_gettime(0, &mc.start);
+
 	mc.wait_all_scheduler(zc);
+
+	clock_gettime(0, &mc.end);
+	timespec diff = time_diff(mc.start, mc. end);
+
+	cout << "It took " << diff.tv_sec << "s, and "
+			<< diff.tv_nsec << " ns" << endl;
+	cout << "--------------------------------"
+						"----------------------------" << endl;
+	if (mc.clientLogOS.is_open())
+	{
+		mc.clientLogOS << "It took " << diff.tv_sec << "s, and "
+				<< diff.tv_nsec << " ns" << endl;
+		mc.clientLogOS << "--------------------------------"
+						"----------------------------" << endl;
+	}
 
 	/* initalize tasks by assigning taskId information to each task */
 	mc.init_task();

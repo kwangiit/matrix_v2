@@ -11,12 +11,62 @@
 MatrixClient::MatrixClient(const string
 		&configFile):Peer(configFile)
 {
+	clock_gettime(0, &start);
+
 	taskVec = read_from_file(config->workloadFile);
+
+	string base;
+	base.append(num_to_str<int>(schedulerVec.size()));
+	base.append("_");
+	base.append(num_to_str<long>(config->numTaskPerClient));
+
+	string indexStr = num_to_str<int>(get_index());
+	string suffix = base + "_" + indexStr;
+
+	if (config->clientLog.compare("yes") == 0 && get_index() == 0)
+	{
+		string clientLogFile("./client_" + suffix);
+		clientLogOS.open(clientLogFile.c_str());
+	}
+	if (config->taskLog.compare("yes") == 0 && get_index() == 0)
+	{
+		string taskLogFile("./task_" + suffix);
+		taskLogOS.open(taskLogFile.c_str());
+	}
+	if (config->systemLog.compare("yes") == 0 && get_index() == 0)
+	{
+		string systemLogFile("./system_" + suffix);
+		systemLogOS.open(systemLogFile.c_str());
+	}
+
+	clock_gettime(0, &end);
+	timespec diff = time_diff(start, end);
+
+	cout << "I am a Matrix Client, it takes me " << diff.tv_sec << "seconds, "
+			"and " << diff.tv_nsec << " nanosecond for initialization!" << endl;
+	if (clientLogOS.is_open())
+	{
+		clientLogOS << "I am a Matrix Client, it takes me " << diff.tv_sec << "seconds, "
+				"and " << diff.tv_nsec << " nanosecond for initialization!" << endl;
+	}
 }
 
 void MatrixClient::insert_taskinfo_to_zht(ZHTClient &zc,
 		adjList &dagAdjList, inDegree &dagInDegree)
 {
+	cout << "--------------------------------"
+			"----------------------------" << endl;
+	cout << "Now, I am going to insert task information to ZHT" << endl;
+	if (clientLogOS.is_open())
+	{
+		clientLogOS << "-------------------------------"
+				"-----------------------------" << endl;
+		clientLogOS << "Now, I am going to insert "
+				"task information to ZHT" << endl;
+	}
+
+	clock_gettime(0, &start);
+
 	for (adjList::iterator it = dagAdjList.begin();
 						it != dagAdjList.end(); ++it)
 	{
@@ -35,7 +85,7 @@ void MatrixClient::insert_taskinfo_to_zht(ZHTClient &zc,
 			string sChild(ssChild.str());
 			value.add_children(sChild);
 		}
-		value.set_nummove(1);
+		value.set_nummove(0);
 		value.set_history("");
 		value.set_submittime(0);
 		value.set_arrivetime(0);
@@ -44,6 +94,21 @@ void MatrixClient::insert_taskinfo_to_zht(ZHTClient &zc,
 		value.set_fintime(0);
 		string seriValue = value.SerializeAsString();
 		zc.insert(taskId, seriValue);
+	}
+
+	clock_gettime(0, &end);
+	timespec diff = time_diff(start, end);
+
+	cout << "I am done, the time taken is:" << diff.tv_sec
+			<< " s, and " << diff.tv_nsec + " ns" << endl;
+	cout << "--------------------------------"
+				"----------------------------" << endl;
+	if (clientLogOS.is_open())
+	{
+		clientLogOS << "I am done, the time taken is:" << diff.tv_sec
+					<< " s, and " << diff.tv_nsec + " ns" << endl;
+		clientLogOS << "--------------------------------"
+					"----------------------------" << endl;
 	}
 }
 
@@ -61,6 +126,19 @@ void MatrixClient::init_task()
 
 void MatrixClient::submit_task()
 {
+	cout << "--------------------------------"
+						"----------------------------" << endl;
+	cout << "Now, I am going to submit tasks to the schedulers" << endl;
+	if (clientLogOS.is_open())
+	{
+		clientLogOS << "--------------------------------"
+				"----------------------------" << endl;
+		clientLogOS << "Now, I am going to submit "
+				"tasks to the schedulers" << endl;
+	}
+
+	clock_gettime(0, &start);
+
 	if (config->submitMode.compare("best case") == 0)
 	{
 		submit_task_bc();
@@ -69,6 +147,21 @@ void MatrixClient::submit_task()
 	{
 		int toScheIdx = rand() % schedulerVec.size();
 		submit_task_wc(taskVec, toScheIdx);
+	}
+
+	clock_gettime(0, &end);
+	timespec diff = time_diff(start, end);
+
+	cout << "It took " << diff.tv_sec << "s, and "
+			<< diff.tv_nsec << " ns" << endl;
+	cout << "--------------------------------"
+						"----------------------------" << endl;
+	if (clientLogOS.is_open())
+	{
+		clientLogOS << "It took " << diff.tv_sec << "s, and "
+				<< diff.tv_nsec << " ns" << endl;
+		clientLogOS << "--------------------------------"
+						"----------------------------" << endl;
 	}
 }
 
@@ -122,12 +215,59 @@ void* MatrixClient::monitoring(void *args)
 {
 	ZHTClient *zc = (ZHTClient*)args;
 	string key("num tasks done");
-	string expValue = num_to_str<long>(config->numAllTask);
+
+	long numAllCores = config->numCorePerExecutor * schedulerVec.size();
+	long numIdleCores = 0;
+	long numTaskWait = 0, numTaskReady = 0;
+	long preNumTaskDone = 0, numTaskDone = 0;
+	double prevTimeUs = 0.0, currentTimeUs = 0.0, instantThr = 0.0;
+
+	//string expValue = num_to_str<long>(config->numAllTask);
+	string numTaskFinStr;
+	bool systemLog = false;
+	if (systemLogOS.is_open())
+	{
+		systemLog = true;
+		systemLogOS << "Time(us)\tNumAllCore\tNumIdleCore\t"
+				"NumTaskWait\tNumTaskReady\tNumTaskDone\tThroughput" << endl;
+	}
+
+	while (1)
+	{
+		currentTimeUs = get_time_usec();
+		zc->lookup(key, numTaskFinStr);
+		numTaskDone = str_to_num<long>(numTaskFinStr);
+		if (systemLog)
+		{
+			for (int i = 0; i < )
+		}
+		usleep(config->monitorInterval);
+	}
 
 	while (zc->state_change_callback(key, expValue, config->monitorInterval) != 0)
 	{
 		usleep(1);
 	}
+
+	clock_gettime(0, &end);
+	timespec diff = time_diff(start, end);
+
+	double time = (double)diff.tv_sec + (double)diff.tv_nsec / 1E9;
+	double throughput = config->numAllTask / time;
+
+	cout << "It takes " << diff.tv_sec << "s, and " << diff.tv_nsec <<
+			" ns to finish " << config->numAllTask << " tasks" << endl;
+	cout << "The overall throughput is:" << throughput << endl;
+	if (clientLogOS.is_open())
+	{
+		clientLogOS << "It takes " << diff.tv_sec << "s, and " <<
+				diff.tv_nsec << " ns to finish " << config->numAllTask
+				<< " tasks" << endl;
+		clientLogOS << "The overall throughput is:" << throughput << endl;
+		clientLogOS.flush();
+		clientLogOS.close();
+	}
+
 	return NULL;
 }
 

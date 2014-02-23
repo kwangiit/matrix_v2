@@ -65,6 +65,8 @@ void Configuration::parse_config(const string &configFile)
 	submitMode = configMap.find("SubmissionMode")->second;
 	workloadFile = configMap.find("WorkloadFile")->second;
 	clientLog = configMap.find("ClientLog")->second;
+	taskLog = configMap.find("TaskLog")->second;
+	systemLog = configMap.find("SystemLog")->second;
 	schedulerLog = configMap.find("SchedulerLog")->second;
 	zhtMemFile = configMap.find("ZhtMemlistFile")->second;
 	zhtConfigFile = configMap.find("ZhtConfigFile")->second;

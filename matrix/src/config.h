@@ -40,6 +40,8 @@ class Configuration
 		string submitMode;
 		string workloadFile;
 		string clientLog;
+		string taskLog;
+		string systemLog;
 		string schedulerLog;
 		string zhtMemFile;
 		string zhtConfigFile;

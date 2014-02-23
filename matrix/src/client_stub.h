@@ -31,6 +31,10 @@ class MatrixClient:public Peer
 		void do_monitoring(ZHTClient&);
 
 		vector<string> taskVec;
+		timespec start, end;
+		ofstream clientLogOS;
+		ofstream taskLogOS;
+		ofstream systemLogOS;
 };
 
 #endif /* CLIENT_STUB_H_ */

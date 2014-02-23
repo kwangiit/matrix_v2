@@ -325,6 +325,45 @@ bool init_zht_client(ZHTClient &zc, const string &zhtcfgFile, const string &neig
 	}
 }
 
+double get_time_usec()
+{
+	struct timeval currentTime;
+
+	gettimeofday(&currentTime, NULL);
+	return static_cast<double>(currentTime.tv_sec) * 1E6
+				+ static_cast<double>(currentTime.tv_usec);
+}
+
+double get_time_msec()
+{
+	struct timeval currentTime;
+
+	gettimeofday(&currentTime, NULL);
+	return static_cast<double>(currentTime.tv_sec) * 1E3
+			+ static_cast<double>(currentTime.tv_usec) / 1E3;
+}
+
+double get_time_sec()
+{
+	struct timeval currentTime;
+
+	gettimeofday(&currentTime, NULL);
+	return static_cast<double>(currentTime.tv_sec)
+			+ static_cast<double>(currentTime.tv_usec) / 1E6;
+}
+
+timespec time_diff(timespec start, timespec end)
+{
+	timespec diff;
+	uint64_t ts, te;
+	ts = (uint64_t)start.tv_sec * 1E9 + (uint64_t)start.tv_nsec;
+	te = (uint64_t)end.tv_sec * 1E9 + (uint64_t)end.tv_nsec;
+	diff.tv_sec = (te - ts)/1E9;
+	diff.tv_nsec = (te - ts) % 1E9;
+
+	return diff;
+}
+
 Mutex::Mutex()
 {
 	int ret = pthread_mutex_init (&mutex, NULL);
@@ -351,6 +390,7 @@ Peer::Peer(const string &configFile)
 	set_id(get_host_id(config->hostIdType));
 	schedulerVec = read_from_file(config->schedulerMemFile);
 	set_index(get_self_idx(get_id(), schedulerVec));
+	running = true;
 }
 
 Peer::~Peer()
