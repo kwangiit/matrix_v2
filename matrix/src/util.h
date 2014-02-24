@@ -114,10 +114,12 @@ class Peer
 		string get_id(void);
 		void set_index(int);
 		int get_index(void);
+		void incre_ZHT_msg_count(long);
 
 		Configuration *config;
 		vector<string> schedulerVec;
 		bool running;
+		long numZHTMsg;
 
 	private:
 		string id;

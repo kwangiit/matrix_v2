@@ -40,13 +40,14 @@ class MatrixScheduler:public Peer
 		void* executing_task(void*);
 		void fork_exec_task_thread();
 
-		void decrease_indegree(const string&, ZHTClient*);
+		long decrease_indegree(const string&, ZHTClient*);
 		void* checking_complete_task(void*);
 		void fork_cct_thread(ZHTClient &zc);
 
 		void* recording_stat(void*);
 		void fork_record_stat_thread(ZHTClient &zc);
 
+		Mutex ZHTMsgCountMutex;
 		Mutex numIdleCoreMutex;
 		Mutex numTaskFinMutex;
 
@@ -72,6 +73,8 @@ class MatrixScheduler:public Peer
 		deque<string> waitQueue;
 		deque<string> readyQueue;
 		deque<string> completeQueue;
+
+		ofstream schedulerLogOS;
 };
 
 

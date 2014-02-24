@@ -12,6 +12,9 @@
 MatrixScheduler::MatrixScheduler(const string
 		&configFile):Peer(configFile)
 {
+	timespec start, end;
+	clock_gettime(0, &start);
+
 	numNeigh = (int)(sqrt(schedulerVec.size()));
 	neighIdx = new int[numNeigh];
 	maxLoadedIdx = -1;
@@ -20,42 +23,68 @@ MatrixScheduler::MatrixScheduler(const string
 	chooseBitMap = new bool[schedulerVec.size()];
 	reset_choosebm();
 
+	ZHTMsgCountMutex = new Mutex();
 	numIdleCoreMutex = new Mutex();
 	numTaskFinMutex = new Mutex();
 
 	wqMutex = new Mutex();
 	rqMutex = new Mutex();
 	cqMutex = new Mutex();
+
+	clock_gettime(0, &end);
+
+	if (config->schedulerLog.compare("yes") == 0)
+	{
+		string schedulerLogFile("./scheduler_" + (num_to_str<int>(
+				schedulerVec.size())) + "_" + num_to_str<long>(
+				config->numTaskPerClient) + "_" + num_to_str<int>(get_index()));
+		schedulerLogOS.open(schedulerLogFile.c_str());
+
+		timespec diff = time_diff(start, end);
+		schedulerLogOS << "I am a Matrix Scheduler, it takes me " <<
+				diff.tv_sec << "s, and " << diff.tv_nsec <<
+				" ns for initialization!" << endl;
+	}
 }
 
 void MatrixScheduler::regist(ZHTClient &zc)
 {
 	string regKey("number of scheduler registered");
 	string taskFinKey("num tasks done");
+	long increment = 0;
 	if (index == 0)
 	{
 		zc.insert(regKey, "1");
 		zc.insert(taskFinKey, "0");
+		increment += 2;
 	}
 	else
 	{
 		string value;
 		zc.lookup(regKey, value);
+		increment++;
 		while (value.empty())
 		{
 			usleep(config->sleepLength);
 			zc.lookup(regKey, value);
+			increment++;
 		}
 		int newValNum = str_to_num<int>(value) + 1;
 		string newVal = num_to_str<int>(newValNum);
 		string queryVal;
+		increment++;
 		while (zc.compare_swap(regKey, value, newVal, queryVal) != 0)
 		{
 			value = queryVal;
 			newValNum = str_to_num<int>(value) + 1;
 			newVal = num_to_str<int>(newValNum);
+			increment++;
+			usleep(1);
 		}
 	}
+	ZHTMsgCountMutex.lock();
+	incre_ZHT_msg_count(increment);
+	ZHTMsgCountMutex.unlock();
 }
 
 void MatrixScheduler::pack_send_task(int numTask, int sockfd, sockaddr fromAddr)
@@ -251,13 +280,14 @@ bool MatrixScheduler::steal_task()
 
 void* MatrixScheduler::workstealing(void*)
 {
-	while (1)
+	while (running)
 	{
 		while (readyQueue.size() == 0 && pollInterval < config->wsPollIntervalUb)
 		{
 			choose_neigh();
 			find_most_loaded_neigh();
 			bool success = steal_task();
+			numWS++;
 			maxLoadedIdx = -1;
 			maxLoad = -1000000;
 			if (success)
@@ -266,6 +296,7 @@ void* MatrixScheduler::workstealing(void*)
 			}
 			else
 			{
+				numWSFail++;
 				usleep(pollInterval);
 				pollInterval *= 2;
 			}
@@ -317,7 +348,7 @@ void* MatrixScheduler::executing_task(void*)
 {
 	string taskStr;
 
-	while (1)
+	while (running)
 	{
 		while (readyQueue.size() > 0)
 		{
@@ -390,7 +421,9 @@ void* MatrixScheduler::checking_ready_task(void *args)
 	ZHTClient *zc = (ZHTClient*)args;
 	int size = 0;
 	string taskStr;
-	while (1)
+	long increment = 0;
+
+	while (running)
 	{
 		while (waitQueue.size() > 0)
 		{
@@ -400,10 +433,12 @@ void* MatrixScheduler::checking_ready_task(void *args)
 				taskStr = waitQueue[i];
 				if (!taskStr.empty())
 				{
+					increment++;
 					if (check_a_ready_task(taskStr, zc))
 					{
 						rqMutex.lock();
 						readyQueue.push_back(taskStr);
+						//vector<string> taskStrVec = tokenize(taskStr, " ");
 						rqMutex.unlock();
 						wqMutex.lock();
 						waitQueue[i] = "";
@@ -418,6 +453,11 @@ void* MatrixScheduler::checking_ready_task(void *args)
 			wqMutex.unlock();
 		}
 	}
+
+	ZHTMsgCountMutex.lock();
+	incre_ZHT_msg_count(increment);
+	ZHTMsgCountMutex.unlock();
+
 	pthread_exit(NULL);
 	return NULL;
 }
@@ -433,10 +473,13 @@ void MatrixScheduler::fork_crt_thread(ZHTClient &zc)
 	}
 }
 
-void MatrixScheduler::decrease_indegree(const string &taskId, ZHTClient *zc)
+long MatrixScheduler::decrease_indegree(const string &taskId, ZHTClient *zc)
 {
 	string taskDetail;
+	long increment = 0;
+
 	zc->lookup(taskId, taskDetail);
+	increment++;
 
 	Value taskDetailVal;
 	taskDetailVal.ParseFromString(taskDetail);
@@ -452,15 +495,19 @@ void MatrixScheduler::decrease_indegree(const string &taskId, ZHTClient *zc)
 		childTaskDetailVal.set_indegree(childTaskDetailVal.indegree() - 1);
 		childTaskDetail = childTaskDetailVal.SerializeAsString();
 		zc->insert(childTaskId, childTaskDetail);
+		increment += 2;
 	}
+
+	return increment;
 }
 
 void* MatrixScheduler::checking_complete_task(void *args)
 {
 	ZHTClient *zc = (ZHTClient*)args;
 	string taskId;
+	long increment = 0;
 
-	while (1)
+	while (running)
 	{
 		while (completeQueue.size() > 0)
 		{
@@ -476,9 +523,13 @@ void* MatrixScheduler::checking_complete_task(void *args)
 				cqMutex.unlock();
 				continue;
 			}
-			decrease_indegree(taskId, zc);
+			increment += decrease_indegree(taskId, zc);
 		}
 	}
+
+	ZHTMsgCountMutex.lock();
+	incre_ZHT_msg_count(increment);
+	ZHTMsgCountMutex.unlock();
 
 	pthread_exit(NULL);
 	return NULL;
@@ -497,6 +548,16 @@ void MatrixScheduler::fork_cct_thread(ZHTClient &zc)
 void* MatrixScheduler::recording_stat(void *args)
 {
 	ZHTClient *zc = (ZHTClient*)args;
+	long increment = 0;
+
+	timespec time;
+	bool schedulerLogOn = false;
+	if (schedulerLogOS.is_open())
+	{
+		schedulerLogOn = true;
+		schedulerLogOS << "Time\tNumTaskFin\tNumTaskWait\tNumTaskReady\t"
+				"NumIdleCore\tNumAllCore\tNumWorkSteal\tNumWorkStealFail" << endl;
+	}
 
 	while (1)
 	{
@@ -512,19 +573,40 @@ void* MatrixScheduler::recording_stat(void *args)
 		string recordValStr = recordVal.SerializeAsString();
 		zc->insert(get_id(), recordValStr);
 
+		if (schedulerLogOn)
+		{
+			schedulerLogOS << get_time_usec() << "\t" << numTaskFin << "\t" <<
+					waitQueue.size() << "\t" << readyQueue.size() << "\t" <<
+					numIdleCore << "\t" << config->numCorePerExecutor << "\t" <<
+					numWS << "\t" << numWSFail << endl;
+		}
+
 		string key("num tasks done");
 		string numTaskDoneStr;
 		zc->lookup(key, numTaskDoneStr);
+		increment += 2;
 		long numTaskDone = str_to_num<long>(numTaskDoneStr);
 		if (numTaskDone == config->numAllTask)
 		{
+			running = false;
+			if (schedulerLogOn)
+			{
+				schedulerLogOS << get_time_usec() << "\t" << numTaskFin << "\t" <<
+						waitQueue.size() << "\t" << readyQueue.size() << "\t" <<
+						numIdleCore << "\t" << config->numCorePerExecutor << "\t" <<
+						numWS << "\t" << numWSFail << endl;
+				schedulerLogOS << "The number of ZHT message is:" << numZHTMsg << endl;
+				schedulerLogOS.flush(); schedulerLogOS.close();
+			}
 			break;
 		}
+		numTaskFinMutex.lock();
 		numTaskDone += (numTaskFin - prevNumTaskFin);
 		stringstream ss;
 		ss << numTaskDone;
 		string numTaskDoneStrNew = ss.str();
 		string query_value;
+		increment++;
 		while (zc->compare_swap(key, numTaskDoneStr,
 				numTaskDoneStrNew, query_value) != 0)
 		{
@@ -538,10 +620,17 @@ void* MatrixScheduler::recording_stat(void *args)
 			ss.str("");
 			ss << numTaskDone;
 			numTaskDoneStrNew = ss.str();
+			increment++;
 		}
 		prevNumTaskFin = numTaskFin;
+
+		numTaskFinMutex.unlock();
 		usleep(config->sleepLength);
 	}
+
+	ZHTMsgCountMutex.lock();
+	incre_ZHT_msg_count(increment);
+	ZHTMsgCountMutex.unlock();
 
 	pthread_exit(NULL);
 	return NULL;

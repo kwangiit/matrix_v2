@@ -42,12 +42,12 @@ MatrixClient::MatrixClient(const string
 	clock_gettime(0, &end);
 	timespec diff = time_diff(start, end);
 
-	cout << "I am a Matrix Client, it takes me " << diff.tv_sec << "seconds, "
-			"and " << diff.tv_nsec << " nanosecond for initialization!" << endl;
+	cout << "I am a Matrix Client, it takes me " << diff.tv_sec << "s, "
+			"and " << diff.tv_nsec << " ns for initialization!" << endl;
 	if (clientLogOS.is_open())
 	{
-		clientLogOS << "I am a Matrix Client, it takes me " << diff.tv_sec << "seconds, "
-				"and " << diff.tv_nsec << " nanosecond for initialization!" << endl;
+		clientLogOS << "I am a Matrix Client, it takes me " << diff.tv_sec << "s, "
+				"and " << diff.tv_nsec << " ns for initialization!" << endl;
 	}
 }
 
@@ -95,6 +95,8 @@ void MatrixClient::insert_taskinfo_to_zht(ZHTClient &zc,
 		string seriValue = value.SerializeAsString();
 		zc.insert(taskId, seriValue);
 	}
+
+	incre_ZHT_msg_count(config->numTaskPerClient);
 
 	clock_gettime(0, &end);
 	timespec diff = time_diff(start, end);
@@ -216,13 +218,12 @@ void* MatrixClient::monitoring(void *args)
 	ZHTClient *zc = (ZHTClient*)args;
 	string key("num tasks done");
 
-	long numAllCores = config->numCorePerExecutor * schedulerVec.size();
-	long numIdleCores = 0;
+	long numAllCore = config->numCorePerExecutor * schedulerVec.size();
+	long numIdleCore = 0;
 	long numTaskWait = 0, numTaskReady = 0;
 	long preNumTaskDone = 0, numTaskDone = 0;
 	double prevTimeUs = 0.0, currentTimeUs = 0.0, instantThr = 0.0;
 
-	//string expValue = num_to_str<long>(config->numAllTask);
 	string numTaskFinStr;
 	bool systemLog = false;
 	if (systemLogOS.is_open())
@@ -232,21 +233,47 @@ void* MatrixClient::monitoring(void *args)
 				"NumTaskWait\tNumTaskReady\tNumTaskDone\tThroughput" << endl;
 	}
 
+	long increment = 0;
+
 	while (1)
 	{
-		currentTimeUs = get_time_usec();
 		zc->lookup(key, numTaskFinStr);
+		increment++;
 		numTaskDone = str_to_num<long>(numTaskFinStr);
+
 		if (systemLog)
 		{
-			for (int i = 0; i < )
+			currentTimeUs = get_time_usec();
+			for (int i = 0; i < schedulerVec.size(); i++)
+			{
+				string schedulerStat;
+				zc->lookup(schedulerVec.at(i), schedulerStat);
+				increment++;
+				Value value;
+				value.ParseFromString(schedulerStat);
+				numIdleCore += value.numcoreavilable();
+				numTaskWait += value.numtaskwait();
+				numTaskReady += value.numtaskready();
+			}
+			instantThr = (double)(numTaskDone - preNumTaskDone) /
+						(currentTimeUs - prevTimeUs) * 1E6;
+			systemLogOS << currentTimeUs << "\t" << numAllCore << "\t"
+					<< numIdleCore << "\t" << numTaskWait << "\t"
+					<< numTaskReady << "\t" << numTaskDone << "\t"
+					<< instantThr << endl;
+			preNumTaskDone = numTaskDone;
+			prevTimeUs = currentTimeUs;
+			numIdleCore = 0; numTaskWait = 0; numTaskReady = 0;
 		}
-		usleep(config->monitorInterval);
-	}
 
-	while (zc->state_change_callback(key, expValue, config->monitorInterval) != 0)
-	{
-		usleep(1);
+		if (numTaskDone == config->numAllTask)
+		{
+			break;
+		}
+		else
+		{
+			usleep(config->monitorInterval);
+		}
 	}
 
 	clock_gettime(0, &end);
@@ -264,10 +291,44 @@ void* MatrixClient::monitoring(void *args)
 				diff.tv_nsec << " ns to finish " << config->numAllTask
 				<< " tasks" << endl;
 		clientLogOS << "The overall throughput is:" << throughput << endl;
-		clientLogOS.flush();
-		clientLogOS.close();
 	}
 
+	if (systemLogOS.is_open())
+	{
+		systemLogOS.flush(); systemLogOS.close();
+	}
+
+	if (taskLogOS.is_open())
+	{
+		taskLogOS << "TaskId\tNumMove\tHistory\tSubmitTime\tArriveTime\t"
+				"ReadyQueuedTime\tExeTime\tFinTime" << endl;
+
+		for (int i = 0; i < schedulerVec.size(); i++)
+		{
+			for (long j = 0; j < config->numAllTask; j++)
+			{
+				string taskId = num_to_str<int>(i) + num_to_str<long>(j);
+				string taskDetail;
+				zc->lookup(taskId, taskDetail);
+				increment++;
+				Value value;
+				value.ParseFromString(taskDetail);
+				taskLogOS << taskId << "\t" << value.nummove() << "\t" <<
+						value.history() << "\t" << value.submittime() << "\t" <<
+						value.arrivetime() << "\t" << value.rqueuedtime() << "\t" <<
+						value.exetime() << "\t" << value.fintime() << endl;
+			}
+		}
+		taskLogOS.flush(); taskLogOS.close();
+	}
+
+	incre_ZHT_msg_count(increment);
+	cout << "The number of ZHT message is:" << numZHTMsg << endl;
+	if (clientLogOS.is_open())
+	{
+		clientLogOS << "The number of ZHT message is:" << numZHTMsg << endl;
+		clientLogOS.flush(); clientLogOS.close();
+	}
 	return NULL;
 }
 

@@ -391,6 +391,7 @@ Peer::Peer(const string &configFile)
 	schedulerVec = read_from_file(config->schedulerMemFile);
 	set_index(get_self_idx(get_id(), schedulerVec));
 	running = true;
+	numZHTMsg = 0;
 }
 
 Peer::~Peer()
@@ -427,4 +428,9 @@ void Peer::wait_all_scheduler(ZHTClient &zc)
 	{
 		usleep(1);
 	}
+}
+
+void Peer::incre_ZHT_msg_count(long increment)
+{
+	numZHTMsg += increment;
 }
