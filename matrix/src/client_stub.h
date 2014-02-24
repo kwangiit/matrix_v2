@@ -22,13 +22,13 @@ class MatrixClient:public Peer
 		MatrixClient(const string&);
 		virtual ~MatrixClient();
 
-		void insert_taskinfo_to_zht(ZHTClient&, adjList&, inDegree&);
+		void insert_taskinfo_to_zht(adjList&, inDegree&);
 		void init_task(void);
 		void submit_task(void);
 		void submit_task_bc(void);
 		void submit_task_wc(const vector<string>&, int);
 		void *monitoring(void*);
-		void do_monitoring(ZHTClient&);
+		void do_monitoring();
 
 		vector<string> taskVec;
 		timespec start, end;

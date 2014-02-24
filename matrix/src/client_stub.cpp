@@ -213,9 +213,8 @@ void MatrixClient::submit_task_wc(const vector<string> &taskVec, int toScheIdx)
 	}
 }
 
-void* MatrixClient::monitoring(void *args)
+void* MatrixClient::monitoring(void*)
 {
-	ZHTClient *zc = (ZHTClient*)args;
 	string key("num tasks done");
 
 	long numAllCore = config->numCorePerExecutor * schedulerVec.size();
@@ -237,7 +236,7 @@ void* MatrixClient::monitoring(void *args)
 
 	while (1)
 	{
-		zc->lookup(key, numTaskFinStr);
+		zc.lookup(key, numTaskFinStr);
 		increment++;
 		numTaskDone = str_to_num<long>(numTaskFinStr);
 
@@ -247,7 +246,7 @@ void* MatrixClient::monitoring(void *args)
 			for (int i = 0; i < schedulerVec.size(); i++)
 			{
 				string schedulerStat;
-				zc->lookup(schedulerVec.at(i), schedulerStat);
+				zc.lookup(schedulerVec.at(i), schedulerStat);
 				increment++;
 				Value value;
 				value.ParseFromString(schedulerStat);
@@ -309,7 +308,7 @@ void* MatrixClient::monitoring(void *args)
 			{
 				string taskId = num_to_str<int>(i) + num_to_str<long>(j);
 				string taskDetail;
-				zc->lookup(taskId, taskDetail);
+				zc.lookup(taskId, taskDetail);
 				increment++;
 				Value value;
 				value.ParseFromString(taskDetail);
@@ -332,7 +331,7 @@ void* MatrixClient::monitoring(void *args)
 	return NULL;
 }
 
-void MatrixClient::do_monitoring(ZHTClient &zc)
+void MatrixClient::do_monitoring()
 {
 	if (index != 0)
 	{
@@ -341,7 +340,7 @@ void MatrixClient::do_monitoring(ZHTClient &zc)
 
 	pthread_t monThread;
 
-	while (pthread_create(&monThread, NULL, monitoring, &zc) != 0)
+	while (pthread_create(&monThread, NULL, monitoring, NULL) != 0)
 	{
 		sleep(1);
 	}

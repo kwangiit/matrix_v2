@@ -9,8 +9,6 @@
 
 using namespace std;
 
-ZHTClient zc;
-
 
 int main(int argc, char* argv[])
 {
@@ -37,11 +35,8 @@ int main(int argc, char* argv[])
 	inDegree dagInDegree;
 	gen_dag_indegree(dagAdjList, dagInDegree);
 
-	/* initialize zc as a ZHT client */
-	init_zht_client(zc, mc.config->zhtConfigFile, mc.config->zhtMemFile);
-
 	/* insert the task information to ZHT */
-	mc.insert_taskinfo_to_zht(zc, dagAdjList, dagInDegree);
+	mc.insert_taskinfo_to_zht(mc.zc, dagAdjList, dagInDegree);
 
 	/* wait until all schedulers have registered to ZHT */
 	cout << "--------------------------------"
@@ -57,7 +52,7 @@ int main(int argc, char* argv[])
 
 	clock_gettime(0, &mc.start);
 
-	mc.wait_all_scheduler(zc);
+	mc.wait_all_scheduler();
 
 	clock_gettime(0, &mc.end);
 	timespec diff = time_diff(mc.start, mc. end);
@@ -81,5 +76,5 @@ int main(int argc, char* argv[])
 	mc.submit_task();
 
 	/* do the monitoring to watch th executing progress */
-	mc.do_monitoring(zc);
+	mc.do_monitoring();
 }

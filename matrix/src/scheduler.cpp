@@ -9,8 +9,6 @@
 
 using namespace std;
 
-ZHTClient zc;
-
 int main(int argc, char *argv)
 {
 	if (argc != 2)
@@ -24,17 +22,19 @@ int main(int argc, char *argv)
 
 	MatrixScheduler ms = new MatrixScheduler(configFileStr);
 
-	ms.regist(zc);
+	ms.fork_es_thread();
 
-	ms.wait_all_scheduler(zc);
+	ms.regist();
 
-	ms.fork_crt_thread(zc);
+	ms.wait_all_scheduler();
+
+	ms.fork_crt_thread();
 
 	ms.fork_exec_task_thread();
 
-	ms.fork_cct_thread(zc);
+	ms.fork_cct_thread();
 
 	ms.fork_ws_thread();
 
-	ms.fork_record_stat_thread(zc);
+	ms.fork_record_stat_thread();
 }

@@ -79,9 +79,6 @@ extern void gen_dag_adjlist(adjList&, const string&, int, long);
  * number of parents for each task */
 extern void gen_dag_indeg(adjList&, inDegree&);
 
-/* initialize as a ZHT client*/
-extern bool init_zht_client(ZHTClient&, const string&, const string&);
-
 extern double get_time_usec();
 
 extern double get_time_msec();
@@ -109,13 +106,16 @@ class Peer
 	public:
 		Peer(const string&);
 		virtual ~Peer();
-		void wait_all_scheduler(ZHTClient&);
+
+		bool init_zht_client(const string&, const string&);
+		void wait_all_scheduler();
 		void set_id(string);
 		string get_id(void);
 		void set_index(int);
 		int get_index(void);
 		void incre_ZHT_msg_count(long);
 
+		ZHTClient zc;
 		Configuration *config;
 		vector<string> schedulerVec;
 		bool running;

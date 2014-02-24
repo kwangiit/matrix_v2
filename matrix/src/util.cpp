@@ -306,25 +306,6 @@ void gen_dag_indegree(adjList &dagAdjList, inDegree &dagInDegree)
 	}
 }
 
-bool init_zht_client(ZHTClient &zc, const string &zhtcfgFile, const string &neighFile)
-{
-	if (zhtcfgFile.empty() || neighFile.empty())
-	{
-		return false;
-	}
-	else
-	{
-		if (zc.init(zhtcfgFile, neighFile) != 0)
-		{
-			return false;
-		}
-		else
-		{
-			return true;
-		}
-	}
-}
-
 double get_time_usec()
 {
 	struct timeval currentTime;
@@ -392,11 +373,31 @@ Peer::Peer(const string &configFile)
 	set_index(get_self_idx(get_id(), schedulerVec));
 	running = true;
 	numZHTMsg = 0;
+	init_zht_client(config->zhtConfigFile, config->zhtMemFile);
 }
 
 Peer::~Peer()
 {
 
+}
+
+bool Peer::init_zht_client(const string &zhtcfgFile, const string &neighFile)
+{
+	if (zhtcfgFile.empty() || neighFile.empty())
+	{
+		return false;
+	}
+	else
+	{
+		if (zc.init(zhtcfgFile, neighFile) != 0)
+		{
+			return false;
+		}
+		else
+		{
+			return true;
+		}
+	}
 }
 
 void Peer::set_id(string id)
@@ -419,7 +420,7 @@ int Peer::get_index()
 	return index;
 }
 
-void Peer::wait_all_scheduler(ZHTClient &zc)
+void Peer::wait_all_scheduler()
 {
 	string key("number of scheduler registered");
 	string expValue = num_to_str<int>(schedulerVec.size());
