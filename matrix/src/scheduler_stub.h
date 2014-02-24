@@ -18,6 +18,7 @@ class MatrixScheduler:public Peer
 
 		void regist();
 
+		void recv_task_from_scheduler(int, int);
 		void recv_task_from_client(string&, int, sockaddr);
 		void pack_send_task(int, int, sockaddr);
 		void send_task(int, sockaddr);

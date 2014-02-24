@@ -256,6 +256,50 @@ void MatrixScheduler::find_most_loaded_neigh()
 	}
 }
 
+void MatrixScheduler::recv_task_from_scheduler(int sockfd, int numTask)
+{
+	int numRecv = numTask / config->maxTaskPerPkg;
+	if (numRecv * config->maxTaskPerPkg < numTask)
+	{
+		numRecv++;
+	}
+
+	long increment = 0;
+	for (int i = 0; i < numRecv; i++)
+	{
+		string taskPkgStr;
+		//recv(sockfd, taskPkgStr);
+		Package taskPkg;
+		taskPkg.ParseFromString(taskPkgStr);
+		vector<string> taskStrVec = tokenize(taskPkg.realfullpath(), "eot");
+		rqMutex.lock();
+		for (int j = 0; j < taskStrVec.size(); j++)
+		{
+			readyQueue.push_back(taskStrVec.at(j));
+			vector<string> taskSpec = tokenize(taskStrVec.at(j), " ");
+			string taskDetailStr;
+			zc.lookup(taskSpec.at(0), taskDetailStr);
+			Value value;
+			value.ParseFromString(taskDetailStr);
+			value.set_nummove(value.nummove() + 1);
+			value.set_history(value.history() + "->" +
+					num_to_str<int>(get_index(index)));
+			value.set_rqueuedtime(get_time_usec());
+			taskDetailStr = value.SerializeAsString();
+			zc.insert(taskSpec.at(0), taskDetailStr);
+			increment += 2;
+		}
+		rqMutex.unlock();
+	}
+
+	if (increment > 0)
+	{
+		ZHTMsgCountMutex.lock();
+		incre_ZHT_msg_count(increment);
+		ZHTMsgCountMutex.unlock();
+	}
+}
+
 bool MatrixScheduler::steal_task()
 {
 	if (maxLoad <= 0)
@@ -268,7 +312,7 @@ bool MatrixScheduler::steal_task()
 	string strStealTask = stealTaskPkg.SerializeAsString();
 
 	string numTaskPkgStr;
-	// send
+	int sockfd = 0;//send
 	// recv(scheduler_vector.at(maxLoadedIdx), config->scheduler_port_num, taskStr, ***);
 	Package numTaskPkg;
 	numTaskPkg.ParseFromString(numTaskPkgStr);
@@ -280,27 +324,7 @@ bool MatrixScheduler::steal_task()
 		return false;
 	}
 
-	int numRecv = numTask / config->maxTaskPerPkg;
-	if (numRecv * config->maxTaskPerPkg < numTask)
-	{
-		numRecv++;
-	}
-
-	for (int i = 0; i < numRecv; i++)
-	{
-		string taskPkgStr;
-		//recv()
-		Package taskPkg;
-		taskPkg.ParseFromString(taskPkgStr);
-		vector<string> taskStrVec = tokenize(taskPkg.realfullpath(), "eot");
-		rqMutex.lock();
-		for (int j = 0; j < taskStrVec.size(); j++)
-		{
-			readyQueue.push_back(taskStrVec.at(j));
-		}
-		rqMutex.unlock();
-	}
-
+	recv_task_from_scheduler(sockfd, numTask);
 	return true;
 }
 
@@ -359,15 +383,28 @@ void MatrixScheduler::exec_a_task(string &taskStr)
 	 * taskStrVec.at(4) = arguments
 	 */
 	vector<string> taskStrVec = tokenize(taskStr, " ");
+	string taskDetail;
+	zc.lookup(taskStrVec.at(0), taskDetail);
+	Value value;
+	value.ParseFromString(taskDetail);
+	value.set_exetime(get_time_usec());
 
 	char *execmd = (taskStrVec.at(3) + taskStrVec.at(4)).c_str();
 	string result = exec(execmd);
+	value.set_fintime(get_time_usec);
+	taskDetail = value.SerializeAsString();
+	zc.insert(taskStrVec.at(0), taskDetail);
+
 	numTaskFinMutex.lock();
 	numTaskFin++;
 	numTaskFinMutex.unlock();
 	cqMutex.lock();
 	completeQueue.push_back(taskStrVec.at(0));
 	cqMutex.unlock();
+
+	ZHTMsgCountMutex.lock();
+	incre_ZHT_msg_count(2);
+	ZHTMsgCountMutex.unlock();
 }
 
 void* MatrixScheduler::executing_task(void*)

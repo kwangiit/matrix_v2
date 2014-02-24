@@ -51,7 +51,7 @@ MatrixClient::MatrixClient(const string
 	}
 }
 
-void MatrixClient::insert_taskinfo_to_zht(ZHTClient &zc,
+void MatrixClient::insert_taskinfo_to_zht(
 		adjList &dagAdjList, inDegree &dagInDegree)
 {
 	cout << "--------------------------------"
@@ -140,6 +140,24 @@ void MatrixClient::submit_task()
 	}
 
 	clock_gettime(0, &start);
+
+	double time_us = get_time_usec();
+	long increment = 0;
+
+	for (long i = 0; i < config->numAllTask; i++)
+	{
+		string taskSpec = tokenize(taskVec.at(i), " ");
+		string taskDetail;
+		zc.lookup(taskSpec[0], taskDetail);
+		Value value;
+		value.ParseFromString(taskDetail);
+		value.set_submittime(time_us);
+		taskDetal = value.SerializeAsString();
+		zc.insert(taskSpec[0], taskDetail);
+		increment += 2;
+	}
+
+	incre_ZHT_msg_count(increment);
 
 	if (config->submitMode.compare("best case") == 0)
 	{

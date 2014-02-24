@@ -36,7 +36,7 @@ int main(int argc, char* argv[])
 	gen_dag_indegree(dagAdjList, dagInDegree);
 
 	/* insert the task information to ZHT */
-	mc.insert_taskinfo_to_zht(mc.zc, dagAdjList, dagInDegree);
+	mc.insert_taskinfo_to_zht(dagAdjList, dagInDegree);
 
 	/* wait until all schedulers have registered to ZHT */
 	cout << "--------------------------------"
