@@ -1,16 +1,16 @@
 message Value
 {
 	required string id = 1;
-	optional int32 indegree = 2;
+	optional int64 indegree = 2;
 	repeated string children = 3;
 	optional int32 numMove = 4;
 	optional string history = 5;
-	optional int64 submitTime = 6;
-	optional int64 arriveTime = 7;
-	optional int64 rqueuedTime = 8;
-	optional int64 exeTime = 9;
-	optional int64 finTime = 10;
-	optional int32 numTaskFin = 11;
+	optional double submitTime = 6;
+	optional double arriveTime = 7;
+	optional double rqueuedTime = 8;
+	optional double exeTime = 9;
+	optional double finTime = 10;
+	optional int64 numTaskFin = 11;
 	optional int32 numTaskWait = 12;
 	optional int32 numTaskReady = 13;
 	optional int32 numCoreAvilable = 14;

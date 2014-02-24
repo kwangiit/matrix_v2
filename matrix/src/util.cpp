@@ -38,29 +38,33 @@ vector<string> tokenize(const string &source, const char *delimiter)
 
 int get_ip(char *outIP)
 {
-	int i = 0;
-	int sockfd;
+	int i = 0, sockfd;
 	struct ifconf ifconf_local;
 	char buf[512];
 	struct ifreq *ifreq_local;
 	char* ip;
 	ifconf_local.ifc_len = 512;
 	ifconf_local.ifc_buf = buf;
+
 	if((sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0)
 	{
 		return -1;
 	}
+
 	ioctl(sockfd, SIOCGIFCONF, &ifconf_local);
 	close(sockfd);
+
 	ifreq_local = (struct ifreq*)buf;
 	for(i=(ifconf_local.ifc_len / sizeof(struct ifreq));i > 0;i--)
 	{
 		ip = inet_ntoa(((struct sockaddr_in*)&(ifreq_local->ifr_addr))->sin_addr);
+
 		if(strcmp(ip, "127.0.0.1") == 0)
 		{
 			ifreq_local++;
 			continue;
 		}
+
 		strcpy(outIP, ip);
 		return 0;
 	}
@@ -74,8 +78,10 @@ string exec(const char *cmd)
 	{
 		return "ERROR";
 	}
+
 	char buffer[128];
 	string result = "";
+
 	while (!feof(pipe))
 	{
 		if(fgets(buffer, 128, pipe) != NULL)
@@ -83,6 +89,7 @@ string exec(const char *cmd)
 	    	result += buffer;
 	    }
 	}
+
 	pclose(pipe);
 	return result;
 }
@@ -135,7 +142,7 @@ int get_self_idx(const string &str, vector<string> strVec)
 
 	for (int i = 0; i < strVec.size(); i++)
 	{
-		if (!str.compare(strVec.at(i)))
+		if (str.compare(strVec.at(i)) == 0)
 		{
 			idx = i;
 			break;
@@ -145,11 +152,12 @@ int get_self_idx(const string &str, vector<string> strVec)
 	return idx;
 }
 
+ /* generate adjecency list for BOT independent tasks */
 void gen_bot_adjlist(adjList &dagAdjList, long numTask)
 {
-	for (int i = 0; i < numTask; i++)
+	for (long i = 0; i < numTask; i++)
 	{
-		vector<int> newList;
+		vector<long> newList;
 		dagAdjList.insert(make_pair(i, newList));
 	}
 }
@@ -158,15 +166,15 @@ void gen_bot_adjlist(adjList &dagAdjList, long numTask)
  * generate adjacency list for fanout dags,
  * the argument is the fan out degree
  * */
-void gen_fanout_adjlist(adjList &dagAdjList, int dagArg, long numTask)
+void gen_fanout_adjlist(adjList &dagAdjList, long dagArg, long numTask)
 {
-	int next = -1;
+	long next = -1;
 
-	for (int i = 0; i < numTask; i++)
+	for (long i = 0; i < numTask; i++)
 	{
-		vector<int> newList;
+		vector<long> newList;
 
-		for (int j = 1; j <= dagArg; j++)
+		for (long j = 1; j <= dagArg; j++)
 		{
 			next = i * dagArg + j;
 
@@ -188,7 +196,7 @@ void gen_fanout_adjlist(adjList &dagAdjList, int dagArg, long numTask)
  * generate adjacency list for fan in dags,
  * the argument is the fan in degree
  * */
-void gen_fanin_adjlist(adjList &dagAdjList, int dagArg, long numTask)
+void gen_fanin_adjlist(adjList &dagAdjList, long dagArg, long numTask)
 {
 	adjList tmpAdjList;
 
@@ -197,16 +205,16 @@ void gen_fanin_adjlist(adjList &dagAdjList, int dagArg, long numTask)
 	 * right to get the adjacency list for fan in dags */
 	gen_fanout_adjlist(tmpAdjList, dagArg, numTask);
 
-	for (int i = 0; i < numTask; i++)
+	for (long i = 0; i < numTask; i++)
 	{
-		int reverseId = numTask - 1 - i;
+		long reverseId = numTask - 1 - i;
 
-		vector<int> newList;
+		vector<long> newList;
 		newList.push_back(numTask - 1 - i);
 
-		vector<int> tmpList = tmpAdjList.find(i)->second;
+		vector<long> tmpList = tmpAdjList.find(i)->second;
 
-		for (int j = 0; j < tmpList.size(); j++)
+		for (long j = 0; j < tmpList.size(); j++)
 		{
 			dagAdjList.insert(make_pair(numTask - 1 -
 					tmpList.at(tmpList.size() - 1 - j), newList));
@@ -214,17 +222,17 @@ void gen_fanin_adjlist(adjList &dagAdjList, int dagArg, long numTask)
 	}
 }
 
-void gen_pipeline_adjlist(adjList &dagAdjList, int dagArg, long numTask)
+void gen_pipeline_adjlist(adjList &dagAdjList, long dagArg, long numTask)
 {
-	int numPipe = numTask / dagArg, index = -1, next = -1;
+	long numPipe = numTask / dagArg, index = -1, next = -1;
 
-	for (int i = 0; i < numPipe; i++)
+	for (long i = 0; i < numPipe; i++)
 	{
-		for (int j = 0; j < dagArg; j++)
+		for (long j = 0; j < dagArg; j++)
 		{
 			index = i * dagArg + j;
 			next = index + 1;
-			vector<int> newList;
+			vector<long> newList;
 
 			if (next % dagArg != 0 && next < numTask)
 			{
@@ -238,7 +246,7 @@ void gen_pipeline_adjlist(adjList &dagAdjList, int dagArg, long numTask)
 	for (index = numPipe * dagArg; index < numTask; index++)
 	{
 		next = index + 1;
-		vector<int> newList;
+		vector<long> newList;
 
 		if (next % dagArg != 0 && next < numTask)
 		{
@@ -254,10 +262,10 @@ void print_adjlist(adjList &dagAdjList)
 	for(adjList::iterator it = dagAdjList.begin();
 			it != dagAdjList.end(); ++it)
 	{
-		vector<int> existList = it->second;
+		vector<long> existList = it->second;
         cout << " " << it->first << " -> ";
 
-        for(int i = 0; i < existList.size(); i++)
+        for(long i = 0; i < existList.size(); i++)
         {
         	cout << " " << existList[i] << ",";
         }
@@ -267,7 +275,7 @@ void print_adjlist(adjList &dagAdjList)
 }
 
 void gen_dag_adjlist(adjList &dagAdjList, string &dagType,
-							int dagArg, long numTask)
+							long dagArg, long numTask)
 {
 	if (!dagType.compare("BOT"))
 	{
@@ -289,17 +297,17 @@ void gen_dag_adjlist(adjList &dagAdjList, string &dagType,
 
 void gen_dag_indegree(adjList &dagAdjList, inDegree &dagInDegree)
 {
-	for (int i = 0; i < dagAdjList.size(); i++)
+	for (long i = 0; i < dagAdjList.size(); i++)
 	{
 		dagInDegree[i] = 0;
 	}
 	for(adjList::iterator it = dagAdjList.begin();
 						it != dagAdjList.end(); ++it)
 	{
-		int index = it->first;
-		vector<int> existList = it->second;
+		long index = it->first;
+		vector<long> existList = it->second;
 
-		for (int j = 0; j < existList.size(); j++)
+		for (long j = 0; j < existList.size(); j++)
 		{
 			dagInDegree[existList.at(j)]++;
 		}
@@ -337,6 +345,7 @@ timespec time_diff(timespec start, timespec end)
 {
 	timespec diff;
 	uint64_t ts, te;
+
 	ts = (uint64_t)start.tv_sec * 1E9 + (uint64_t)start.tv_nsec;
 	te = (uint64_t)end.tv_sec * 1E9 + (uint64_t)end.tv_nsec;
 	diff.tv_sec = (te - ts)/1E9;

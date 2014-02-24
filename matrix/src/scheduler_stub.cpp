@@ -282,8 +282,7 @@ void MatrixScheduler::recv_task_from_scheduler(int sockfd, int numTask)
 			Value value;
 			value.ParseFromString(taskDetailStr);
 			value.set_nummove(value.nummove() + 1);
-			value.set_history(value.history() + "->" +
-					num_to_str<int>(get_index(index)));
+			value.set_history(value.history() + "->" + num_to_str<int>(get_index()));
 			value.set_rqueuedtime(get_time_usec());
 			taskDetailStr = value.SerializeAsString();
 			zc.insert(taskSpec.at(0), taskDetailStr);
@@ -391,7 +390,7 @@ void MatrixScheduler::exec_a_task(string &taskStr)
 
 	char *execmd = (taskStrVec.at(3) + taskStrVec.at(4)).c_str();
 	string result = exec(execmd);
-	value.set_fintime(get_time_usec);
+	value.set_fintime(get_time_usec());
 	taskDetail = value.SerializeAsString();
 	zc.insert(taskStrVec.at(0), taskDetail);
 

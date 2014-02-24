@@ -31,8 +31,8 @@
 
 using namespace std;
 
-typedef map<int, vector<int>> adjList;	// task DAG represented as adjacency list
-typedef map<int, int> inDegree;	// number of parents of each task
+typedef map<long, vector<long>> adjList;	// task DAG represented as adjacency list
+typedef map<long, long> inDegree;	// number of parents of each task
 
 /* template of converting a number
  * to a string using stringstream */
@@ -79,12 +79,16 @@ extern void gen_dag_adjlist(adjList&, const string&, int, long);
  * number of parents for each task */
 extern void gen_dag_indeg(adjList&, inDegree&);
 
+/* get the current time of day in micro-second */
 extern double get_time_usec();
 
+/* get the current time of day in mili-second */
 extern double get_time_msec();
 
+/* get the current time of day in second */
 extern double get_time_sec();
 
+/* calculate the time duration between two times */
 extern timespec time_diff(timespec, timespec);
 
 /* a mutex class for locking and uncloking */
@@ -108,11 +112,17 @@ class Peer
 		virtual ~Peer();
 
 		bool init_zht_client(const string&, const string&);
+
 		void wait_all_scheduler();
+
 		void set_id(string);
+
 		string get_id(void);
+
 		void set_index(int);
+
 		int get_index(void);
+
 		void incre_ZHT_msg_count(long);
 
 		ZHTClient zc;
@@ -125,6 +135,5 @@ class Peer
 		string id;
 		int index;
 };
-
 
 #endif /* UTIL_H_ */

@@ -21,30 +21,30 @@ class Configuration
 
 		void parse_config(const string&);
 
-		long numTaskPerClient;
-		long numAllTask;
-		int numCorePerExecutor;
-		long maxTaskPerPkg;
-		long monitorInterval;
-		long schedulerPortNo;
-		long sleepLength;
-		int workStealingOn;
-		long wsPollIntervalStart;
-		long wsPollIntervalUb;
+		long numTaskPerClient;	// number of task per client
+		long numAllTask;	// number of all tasks
+		int numCorePerExecutor;	// number of cores per executor
+		long maxTaskPerPkg;	// maximum number of tasks per package
+		long monitorInterval;	//monitor interval in microsecond
+		long schedulerPortNo;	// scheduler port number
+		long sleepLength;	// time duration in microsecond
+		int workStealingOn;	// indicate whether to do work staling (1) or not (0)
+		long wsPollIntervalStart;	// the initial value of poll interval in microsecond
+		long wsPollIntervalUb;	// the upper bound of poll inerval in microsecond
 
-		string schedulerMemFile;
-		string netProtoc;
-		string dagType;
-		int dagArg;
-		string hostIdType;
-		string submitMode;
-		string workloadFile;
-		string clientLog;
-		string taskLog;
-		string systemLog;
-		string schedulerLog;
-		string zhtMemFile;
-		string zhtConfigFile;
+		string schedulerMemFile;	// the memberlist file of all the schedulers
+		string netProtoc;	// network protocol type: TCP, UDP, UDT, etc
+		string dagType;	// the type of workload DAGs: BOT, Fan-In, Fan-Out, Pipeline
+		long dagArg;	// the argument to the workload DAG
+		string hostIdType;	// the host identity type: localhost, hostname, ip address
+		string submitMode;	// the mode that clients submit tasks: best case, worst case
+		string workloadFile;	// the workload file
+		int clientLog;	// indicate whether to logging (1) for client or not (0)
+		int taskLog;	// indicate whether to logging (1) for each individual task or not (0)
+		int systemLog;	// indicate whether to logging (1) for the system status or not (0)
+		int schedulerLog;	// indicate whether to logging (1) for scheduler or not (0)
+		string zhtMemFile;	// the ZHT memeberlist file
+		string zhtConfigFile;	// the ZHT configuration file
 };
 
 #endif /* CONFIGURE_H_ */
