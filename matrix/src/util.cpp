@@ -277,19 +277,19 @@ void print_adjlist(adjList &dagAdjList)
 void gen_dag_adjlist(adjList &dagAdjList, string &dagType,
 							long dagArg, long numTask)
 {
-	if (!dagType.compare("BOT"))
+	if (dagType.compare("BOT") == 0)
 	{
 		gen_bot_adjlist(dagAdjList, numTask);
 	}
-	else if (!dagType.compare("FanOut"))
+	else if (dagType.compare("FanOut") == 0)
 	{
 		gen_fanout_adjlist(dagAdjList, dagArg, numTask);
 	}
-	else if (!dagType.compare("FanIn"))
+	else if (dagType.compare("FanIn") == 0)
 	{
 		gen_fanin_adjlist(dagAdjList, dagArg, numTask);
 	}
-	else if (!dagType.compare("Pipeline"))
+	else if (dagType.compare("Pipeline") == 0)
 	{
 		gen_pipeline_adjlist(dagAdjList, dagArg, numTask);
 	}

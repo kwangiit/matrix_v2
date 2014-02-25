@@ -15,7 +15,11 @@ MatrixScheduler::MatrixScheduler(const string
 	timespec start, end;
 	clock_gettime(0, &start);
 
+	/* number of neighbors is equal to the
+	 * squared root of all number of schedulers
+	 * */
 	numNeigh = (int)(sqrt(schedulerVec.size()));
+
 	neighIdx = new int[numNeigh];
 	maxLoadedIdx = -1;
 	maxLoad = -1000000;
@@ -33,11 +37,11 @@ MatrixScheduler::MatrixScheduler(const string
 
 	clock_gettime(0, &end);
 
-	if (config->schedulerLog.compare("yes") == 0)
+	if (config->schedulerLog == 1)
 	{
 		string schedulerLogFile("./scheduler_" + (num_to_str<int>(
-				schedulerVec.size())) + "_" + num_to_str<long>(
-				config->numTaskPerClient) + "_" + num_to_str<int>(get_index()));
+			schedulerVec.size())) + "_" + num_to_str<long>(
+			config->numTaskPerClient) + "_" + num_to_str<int>(get_index()));
 		schedulerLogOS.open(schedulerLogFile.c_str());
 
 		timespec diff = time_diff(start, end);
@@ -47,12 +51,21 @@ MatrixScheduler::MatrixScheduler(const string
 	}
 }
 
+/* the scheduler tries to regist to ZHT server by increasing a counter.
+ * The purpose of doing the registration is to ensure that all the
+ * schedulers are running at the beginning before moving forward
+ * */
 void MatrixScheduler::regist()
 {
 	string regKey("number of scheduler registered");
 	string taskFinKey("num tasks done");
 	long increment = 0;
-	if (index == 0)
+
+	/* the first scheduler (index = 0) intializes the records
+	 * including both the number of registered schedulers and
+	 * the number of tasks done
+	 * */
+	if (get_index() == 0)
 	{
 		zc.insert(regKey, "1");
 		zc.insert(taskFinKey, "0");
@@ -69,56 +82,77 @@ void MatrixScheduler::regist()
 			zc.lookup(regKey, value);
 			increment++;
 		}
+
 		int newValNum = str_to_num<int>(value) + 1;
 		string newVal = num_to_str<int>(newValNum);
 		string queryVal;
 		increment++;
+
 		while (zc.compare_swap(regKey, value, newVal, queryVal) != 0)
 		{
 			value = queryVal;
 			newValNum = str_to_num<int>(value) + 1;
 			newVal = num_to_str<int>(newValNum);
 			increment++;
-			usleep(1);
+			usleep(config->sleepLength);
 		}
 	}
+
 	ZHTMsgCountMutex.lock();
 	incre_ZHT_msg_count(increment);
 	ZHTMsgCountMutex.unlock();
 }
 
-void MatrixScheduler::pack_send_task(int numTask, int sockfd, sockaddr fromAddr)
+/* pack several tasks (numTask) together, and send them
+ * with one package to another thief scheduler. The tasks
+ * are delimited with "eot"
+ * */
+void MatrixScheduler::pack_send_task(
+		int numTask, int sockfd, sockaddr fromAddr)
 {
 	string tasks;
+
 	for (int j = 0; j < numTask; j++)
 	{
 		tasks += readyQueue.front();
 		tasks += "eot";
 		readyQueue.pop_front();
 	}
+
 	Package taskPkg;
 	taskPkg.set_realfullpath(tasks);
 	string taskPkgStr = taskPkg.SerializeAsString();
 	/*send taskPkgStr*/
 }
 
+/* send tasks to another thief scheduler */
 void MatrixScheduler::send_task(int sockfd, sockaddr fromAddr)
 {
 	int numTaskToSend = -1;
+
 	rqMutex.lock();
+
+	/* number of tasks to send equals to half of the current load,
+	 * which is calculated as the number of tasks in the ready queue
+	 * minus number of idle cores */
 	numTaskToSend = (readyQueue.size() - numIdleCore) / 2;
+
 	Package numTaskPkg;
 	numTaskPkg.set_realfullpath(num_to_str<int>(numTaskToSend));
 	string numTaskPkgStr = numTaskPkg.SerializeAsString();
 	/* send back how many task will be sent*/
+
 	if (numTaskToSend > 0)
 	{
 		int numSend = numTaskToSend / config->maxTaskPerPkg;
+
 		for (int i = 0; i < numSend; i++)
 		{
 			pack_send_task(config->maxTaskPerPkg, sockfd, fromAddr);
 		}
+
 		long numTaskLeft = numTaskToSend - numSend * config->maxTaskPerPkg;
+
 		if (numTaskLeft > 0)
 		{
 			pack_send_task(numTaskLeft, sockfd, fromAddr);
@@ -127,18 +161,25 @@ void MatrixScheduler::send_task(int sockfd, sockaddr fromAddr)
 	rqMutex.unlock();
 }
 
+/* receive tasks submitted by client */
 void MatrixScheduler::recv_task_from_client(
 		string &taskStr, int sockfd, sockaddr fromAddr)
 {
 	long increment = 0;
+
+	/* tasks are delimited with "eot"*/
 	vector<string> tasks = tokenize(taskStr, "eot");
+
 	wqMutex.lock();
 	for (int i = 0; i < tasks.size(); i++)
 	{
 		waitQueue.push_back(tasks.at(i));
+
+		/* update the task metadata in ZHT */
 		vector<string> taskVec = tokenize(tasks.at(i), " ");
 		string taskDetail;
 		zc.lookup(taskVec.at(0), taskDetail);
+
 		Value value;
 		value.ParseFromString(taskDetail);
 		value.set_arrivetime(get_time_usec());
@@ -146,10 +187,12 @@ void MatrixScheduler::recv_task_from_client(
 		value.set_history(value.history() + "->" +
 				num_to_str<int>(get_index()));
 		taskDetail = value.SerializeAsString();
+
 		zc.insert(taskVec.at(0), taskDetail);
 		increment += 2;
 	}
 	wqMutex.unlock();
+
 	string numTaskStr = num_to_str<int>(tasks.size());
 	/* send number of task string back*/
 	if (increment > 0)
@@ -160,23 +203,27 @@ void MatrixScheduler::recv_task_from_client(
 	}
 }
 
+/* processing requests received by the epoll server */
 int MatrixScheduler::proc_req(int sockfd, void *buf, sockaddr fromAddr)
 {
 	Package pkg;
 	pkg.ParseFromArray(buf, _BUF_SIZE);
 
 	long increment = 0;
+
+	/* message type is stored in pkg.virtualpath(), and contents
+	 * are stored in pkg.readfullpath() */
 	string msg = pkg.virtualpath();
-	if (msg.compare("query_load") == 0)
+	if (msg.compare("query_load") == 0)	// thief quering load
 	{
 		int load = readyQueue.size() - numIdleCore;
 		/* do a send back the load */
 	}
-	else if (msg.compare("steal task") == 0)
+	else if (msg.compare("steal task") == 0)	// thief steals tasks
 	{
 		send_task(sockfd, fromAddr);
 	}
-	else if (msg.compare("send task") == 0)
+	else if (msg.compare("send task") == 0)	// client sent tasks
 	{
 		/* add tasks and then send ack back */
 		string taskStr = pkg.realfullpath();
@@ -186,6 +233,7 @@ int MatrixScheduler::proc_req(int sockfd, void *buf, sockaddr fromAddr)
 	return 1;
 }
 
+/* epoll server thread function */
 void* MatrixScheduler::epoll_serving(void *args)
 {
 	MatrixEpollServer *mes = (MatrixEpollServer*)args;
@@ -194,19 +242,25 @@ void* MatrixScheduler::epoll_serving(void *args)
 	return NULL;
 }
 
+/* fork epoll server thread */
 void MatrixScheduler::fork_es_thread()
 {
-	int portNum = config->schedulerPortNo;
-	string portStr = num_to_str<int>(portNum);
+	long portNum = config->schedulerPortNo;
+	string portStr = num_to_str<long>(portNum);
 	char *port = portStr.c_str();
+
 	MatrixEpollServer mes = new MatrixEpollServer(port, this);
+
 	pthread_t esThread;
+
 	while (pthread_create(&esThread, NULL, epoll_serving, &mes) != 0)
 	{
 		sleep(1);
 	}
 }
 
+/* reset the bitmap of neighbors chosen, "false"
+ * means hasn't been chosen */
 void MatrixScheduler::reset_choosebm()
 {
 	for (int i = 0; i < schedulerVec.size(); i++)
@@ -215,6 +269,9 @@ void MatrixScheduler::reset_choosebm()
 	}
 }
 
+/* choose candidate neighbors to steal tasks,
+ * for simplicity, we randomly choose neighbors
+ * */
 void MatrixScheduler::choose_neigh()
 {
 	srand(time(NULL));
@@ -232,13 +289,17 @@ void MatrixScheduler::choose_neigh()
 	reset_choosebm();
 }
 
+/* find the neighbor with the maximum load by quering
+ * the load information of each scheduler one by one
+ * */
 void MatrixScheduler::find_most_loaded_neigh()
 {
 	Package loadQueryPkg;
 	loadQueryPkg.set_virtualpath("query load");
 	string strLoadQuery = loadQueryPkg.SerializeAsString();
 
-	int load = -1;
+	long load = -1;
+
 	for (int i = 0; i < numNeigh; i++)
 	{
 		string result;
@@ -247,7 +308,8 @@ void MatrixScheduler::find_most_loaded_neigh()
 		Package loadPkg;
 		loadPkg.ParseFromString(result);
 		string loadStr = loadPkg.realfullpath();
-		load = str_to_num<int>(loadStr);
+		load = str_to_num<long>(loadStr);
+
 		if (maxLoad < load)
 		{
 			maxLoad = load;
@@ -256,26 +318,32 @@ void MatrixScheduler::find_most_loaded_neigh()
 	}
 }
 
-void MatrixScheduler::recv_task_from_scheduler(int sockfd, int numTask)
+/* receive several tasks (numTask) from another scheduler */
+void MatrixScheduler::recv_task_from_scheduler(int sockfd, long numTask)
 {
-	int numRecv = numTask / config->maxTaskPerPkg;
+	/* compute how many receives needed as there is a limit of
+	 * maximum number of tasks that can be sent once
+	 * */
+	long numRecv = numTask / config->maxTaskPerPkg;
 	if (numRecv * config->maxTaskPerPkg < numTask)
 	{
 		numRecv++;
 	}
 
 	long increment = 0;
-	for (int i = 0; i < numRecv; i++)
+	for (long i = 0; i < numRecv; i++)
 	{
 		string taskPkgStr;
 		//recv(sockfd, taskPkgStr);
 		Package taskPkg;
 		taskPkg.ParseFromString(taskPkgStr);
 		vector<string> taskStrVec = tokenize(taskPkg.realfullpath(), "eot");
+
 		rqMutex.lock();
-		for (int j = 0; j < taskStrVec.size(); j++)
+		for (long j = 0; j < taskStrVec.size(); j++)
 		{
 			readyQueue.push_back(taskStrVec.at(j));
+			/* update task metadata */
 			vector<string> taskSpec = tokenize(taskStrVec.at(j), " ");
 			string taskDetailStr;
 			zc.lookup(taskSpec.at(0), taskDetailStr);

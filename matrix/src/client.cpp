@@ -9,14 +9,12 @@
 
 using namespace std;
 
-
 int main(int argc, char* argv[])
 {
 	/* check whether specified a configuration file */
 	if (argc != 2)
 	{
-		fprintf(stderr, "The usage is: client\t"
-						 "configuration_file!\n");
+		fprintf(stderr, "The usage is: client configuration_file!\n");
 		exit(-1);
 	}
 
@@ -39,9 +37,12 @@ int main(int argc, char* argv[])
 	mc.insert_taskinfo_to_zht(dagAdjList, dagInDegree);
 
 	/* wait until all schedulers have registered to ZHT */
+#ifdef PRINT_OUT
 	cout << "--------------------------------"
-					"----------------------------" << endl;
+			"----------------------------" << endl;
 	cout << "Now, I am waiting until all the schedulers are running!" << endl;
+#endif
+
 	if (mc.clientLogOS.is_open())
 	{
 		mc.clientLogOS << "--------------------------------"
@@ -57,10 +58,13 @@ int main(int argc, char* argv[])
 	clock_gettime(0, &mc.end);
 	timespec diff = time_diff(mc.start, mc. end);
 
+#ifdef PRINT_OUT
 	cout << "It took " << diff.tv_sec << "s, and "
 			<< diff.tv_nsec << " ns" << endl;
 	cout << "--------------------------------"
-						"----------------------------" << endl;
+			"----------------------------" << endl;
+#endif
+
 	if (mc.clientLogOS.is_open())
 	{
 		mc.clientLogOS << "It took " << diff.tv_sec << "s, and "
