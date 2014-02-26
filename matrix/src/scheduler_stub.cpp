@@ -367,8 +367,15 @@ void MatrixScheduler::recv_task_from_scheduler(int sockfd, long numTask)
 	}
 }
 
+/* try to steal tasks from the most-loaded neighbor. The thief first
+ * sends a message ("steal tasks") to the neighbor, and then waits
+ * for the neighbor's response. The neighbor first sends a message
+ * notifying how many tasks could be migrated, then sends all the
+ * tasks batch by batch.
+ * */
 bool MatrixScheduler::steal_task()
 {
+	/* if no neighbors have ready tasks */
 	if (maxLoad <= 0)
 	{
 		return false;
@@ -386,20 +393,28 @@ bool MatrixScheduler::steal_task()
 	string numTaskStr = numTaskPkg.realfullpath();
 	int numTask = str_to_num<int>(numTaskStr);
 
+	/* if the victim doesn't have tasks to migrate*/
 	if (numTask == 0)
 	{
 		return false;
 	}
 
+	/* otherwise, receive numTask tasks from the victim*/
 	recv_task_from_scheduler(sockfd, numTask);
 	return true;
 }
 
+/* work stealing threading function, under the condition that the scheduler
+ * is still processing tasks, as long as the ready queue is empty and the
+ * poll interval has reached the upper bound, the scheduler would do work
+ * stealing.
+ * */
 void* MatrixScheduler::workstealing(void*)
 {
 	while (running)
 	{
-		while (readyQueue.size() == 0 && pollInterval < config->wsPollIntervalUb)
+		while (readyQueue.size() == 0 &&
+				pollInterval < config->wsPollIntervalUb)
 		{
 			choose_neigh();
 			find_most_loaded_neigh();
@@ -407,6 +422,12 @@ void* MatrixScheduler::workstealing(void*)
 			numWS++;
 			maxLoadedIdx = -1;
 			maxLoad = -1000000;
+
+			/* if successfully steals some tasks, then the poll
+			 * interval is set back to the initial value, otherwise
+			 * sleep the poll interval length, and double the poll
+			 * interval, and tries to do work stealing again
+			 * */
 			if (success)
 			{
 				pollInterval = config->wsPollIntervalStart;
@@ -428,6 +449,7 @@ void* MatrixScheduler::workstealing(void*)
 	return NULL;
 }
 
+/* fork work stealing thread */
 void MatrixScheduler::fork_ws_thread()
 {
 	if (config->workStealingOn == 1)
@@ -440,6 +462,11 @@ void MatrixScheduler::fork_ws_thread()
 	}
 }
 
+/* executing a task. A task's specification has several fields:
+ * taskId, users, directory, command and arguments. They are
+ * delimited with space. After a task is done, move it to the
+ * complete queue.
+ * */
 void MatrixScheduler::exec_a_task(string &taskStr)
 {
 	/*
@@ -474,6 +501,10 @@ void MatrixScheduler::exec_a_task(string &taskStr)
 	ZHTMsgCountMutex.unlock();
 }
 
+/* executing task thread function, under the conditin that the
+ * scheduler is still processing tasks, as long as there are
+ * tasks in the ready queue, execute the task one by one
+ * */
 void* MatrixScheduler::executing_task(void*)
 {
 	string taskStr;
@@ -510,6 +541,10 @@ void* MatrixScheduler::executing_task(void*)
 	return NULL;
 }
 
+/* forking execute task threads. The number of executing threads is
+ * given by the configuration file, and it is usually eaqual to the
+ * number of cores a machine has.
+ * */
 void MatrixScheduler::fork_exec_task_thread()
 {
 	pthread_t *execThread = new pthread_t[config->numCorePerExecutor];
@@ -523,6 +558,10 @@ void MatrixScheduler::fork_exec_task_thread()
 	}
 }
 
+/* check to see whether a task is ready to run or not. A task is
+ * ready only if all of its parants are done (the indegree counter
+ * equals to 0).
+ * */
 bool MatrixScheduler::check_a_ready_task(const string &taskStr)
 {
 	vector<string> taskStrVec = tokenize(taskStr, " ");
@@ -533,6 +572,9 @@ bool MatrixScheduler::check_a_ready_task(const string &taskStr)
 	valuePkg.ParseFromString(taskDetail);
 	if (valuePkg.indegree() == 0)
 	{
+		valuePkg.set_rqueuedtime(get_time_usec());
+		taskDetail = valuePkg.SerializeAsString();
+		zc.insert(taskStrVec.at(0), taskDetail);
 		return true;
 	}
 	else
@@ -546,6 +588,12 @@ bool check_empty(string &str)
 	return str.empty();
 }
 
+/* checking ready task thread function, under the condition
+ * that the scheduler is still processing tasks, if the
+ * waiting queue is not empty, check all the tasks in the
+ * waiting queue to see it they are ready to run. Move the
+ * tasks that are ready to run to the ready queue.
+ * */
 void* MatrixScheduler::checking_ready_task(void*)
 {
 	int size = 0;
@@ -557,6 +605,7 @@ void* MatrixScheduler::checking_ready_task(void*)
 		while (waitQueue.size() > 0)
 		{
 			size = waitQueue.size();
+
 			for (int i = 0; i < size; i++)
 			{
 				taskStr = waitQueue[i];
@@ -565,16 +614,22 @@ void* MatrixScheduler::checking_ready_task(void*)
 					increment++;
 					if (check_a_ready_task(taskStr))
 					{
+						increment++;
 						rqMutex.lock();
 						readyQueue.push_back(taskStr);
-						//vector<string> taskStrVec = tokenize(taskStr, " ");
 						rqMutex.unlock();
+
 						wqMutex.lock();
 						waitQueue[i] = "";
 						wqMutex.unlock();
 					}
 				}
 			}
+
+			/* erase all the task entries that have been
+			 * moved to the ready queue. Those entries are
+			 * set to be empty
+			 * */
 			wqMutex.lock();
 			deque::iterator last = remove_if(waitQueue.begin(),
 					waitQueue.end(), check_empty);
@@ -591,6 +646,7 @@ void* MatrixScheduler::checking_ready_task(void*)
 	return NULL;
 }
 
+/* fork check ready task thread */
 void MatrixScheduler::fork_crt_thread()
 {
 	pthread_t crtThread;
@@ -601,6 +657,9 @@ void MatrixScheduler::fork_crt_thread()
 	}
 }
 
+/* decrease the indegree of a task by one, because one of
+ * its parents has been done.
+ * */
 long MatrixScheduler::decrease_indegree(const string &taskId)
 {
 	string taskDetail;
@@ -629,6 +688,11 @@ long MatrixScheduler::decrease_indegree(const string &taskId)
 	return increment;
 }
 
+/* checking complete queue tasks thread function, under the condition
+ * that the scheduler is still processing tasks, as long as the task
+ * complete queue is not empty, for each task in the queue, decrease
+ * the indegree of each child by one.
+ * */
 void* MatrixScheduler::checking_complete_task(void*)
 {
 	string taskId;
@@ -662,6 +726,7 @@ void* MatrixScheduler::checking_complete_task(void*)
 	return NULL;
 }
 
+/* fork check complete queue tasks thread */
 void MatrixScheduler::fork_cct_thread()
 {
 	pthread_t cctThread;
@@ -672,6 +737,11 @@ void MatrixScheduler::fork_cct_thread()
 	}
 }
 
+/* recording status thread function. The recording thread would periodically
+ * dump the scheduler status information (number of tasks done, waiting,
+ * and ready; number of idle/all cores, and number of (failed) working
+ * stealing operations) to ZHT.
+ * */
 void* MatrixScheduler::recording_stat(void*)
 {
 	long increment = 0;
@@ -707,10 +777,16 @@ void* MatrixScheduler::recording_stat(void*)
 					numWS << "\t" << numWSFail << endl;
 		}
 
+		/* check and modify how many tasks are done for all the schedulers. If all
+		 * tasks are done, then flipping the scheduler status to off to indicate
+		 * that it is not processing any task any more
+		 * */
 		string key("num tasks done");
 		string numTaskDoneStr;
 		zc.lookup(key, numTaskDoneStr);
+
 		increment += 2;
+
 		long numTaskDone = str_to_num<long>(numTaskDoneStr);
 		if (numTaskDone == config->numAllTask)
 		{
@@ -726,11 +802,11 @@ void* MatrixScheduler::recording_stat(void*)
 			}
 			break;
 		}
+
 		numTaskFinMutex.lock();
+
 		numTaskDone += (numTaskFin - prevNumTaskFin);
-		stringstream ss;
-		ss << numTaskDone;
-		string numTaskDoneStrNew = ss.str();
+		string numTaskDoneStrNew = num_to_str<long>(numTaskDone);
 		string query_value;
 		increment++;
 		while (zc.compare_swap(key, numTaskDoneStr,
@@ -743,9 +819,7 @@ void* MatrixScheduler::recording_stat(void*)
 				break;
 			}
 			numTaskDone += (numTaskFin - prevNumTaskFin);
-			ss.str("");
-			ss << numTaskDone;
-			numTaskDoneStrNew = ss.str();
+			numTaskDoneStrNew = num_to_str<long>(numTaskDone);
 			increment++;
 		}
 		prevNumTaskFin = numTaskFin;
@@ -762,6 +836,7 @@ void* MatrixScheduler::recording_stat(void*)
 	return NULL;
 }
 
+/* fork recording status thread */
 void MatrixScheduler::fork_record_stat_thread()
 {
 	pthread_t rsThread;

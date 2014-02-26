@@ -1,5 +1,5 @@
 /*
- * client_sub.h
+ * client_stub.h
  *
  *  Created on: Dec 4, 2013
  *      Author: kwang
