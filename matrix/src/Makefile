@@ -18,10 +18,10 @@ scheduler: scheduler.o scheduler_stub.o util.o config.o matrix_epoll_server.o me
 	$(CC) $(CCFLAGS) -o $@ $^ $(LIBFLAGS)
 	
 %.o: %.cpp
-	$(CC) $(CCFLAGS) -c $^ $(LIBFLAGS)
+	$(CC) $(CCFLAGS) -c $^ $(LIBFLAGS) $(INCS)
 	
 %.o: %.cc
-	$(CC) $(CCFLAGS) -c $^ $(LIBFLAGS)
+	$(CC) $(CCFLAGS) -c $^ $(LIBFLAGS) $(INCS)
 
 util.o: util.cpp
 config.o: config.cpp
