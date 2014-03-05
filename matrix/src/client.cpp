@@ -22,19 +22,18 @@ int main(int argc, char* argv[])
 
 	/* create a new matrix client */
 	string configFileStr(argv[1]);
-	MatrixClient mc = new MatrixClient(configFileStr);
+	MatrixClient *mc = new MatrixClient(configFileStr);
 
 	/* generate task dag adjecent list (children) */
 	adjList dagAdjList;
-	gen_dag_adjlist(dagAdjList, mc.config->dagType, mc.config->dagArg,
-							mc.config->numTaskPerClient);
+	gen_dag_adjlist(dagAdjList, mc->config->dagType, mc->config->dagArg, mc->config->numTaskPerClient);
 
 	/* calculate indegrees (number of parents) for every tasks */
 	inDegree dagInDegree;
 	gen_dag_indegree(dagAdjList, dagInDegree);
 
 	/* insert the task information to ZHT */
-	mc.insert_taskinfo_to_zht(dagAdjList, dagInDegree);
+	mc->insert_taskinfo_to_zht(dagAdjList, dagInDegree);
 
 	/* wait until all schedulers have registered to ZHT */
 #ifdef PRINT_OUT
@@ -43,20 +42,20 @@ int main(int argc, char* argv[])
 	cout << "Now, I am waiting until all the schedulers are running!" << endl;
 #endif
 
-	if (mc.clientLogOS.is_open())
+	if (mc->clientLogOS.is_open())
 	{
-		mc.clientLogOS << "--------------------------------"
+		mc->clientLogOS << "--------------------------------"
 				"----------------------------" << endl;
-		mc.clientLogOS << "Now, I am waiting until all the "
+		mc->clientLogOS << "Now, I am waiting until all the "
 				"schedulers are running!" << endl;
 	}
 
-	clock_gettime(0, &mc.start);
+	clock_gettime(0, &mc->start);
 
-	mc.wait_all_scheduler();
+	mc->wait_all_scheduler();
 
-	clock_gettime(0, &mc.end);
-	timespec diff = time_diff(mc.start, mc. end);
+	clock_gettime(0, &mc->end);
+	timespec diff = time_diff(mc->start, mc->end);
 
 #ifdef PRINT_OUT
 	cout << "It took " << diff.tv_sec << "s, and "
@@ -65,20 +64,20 @@ int main(int argc, char* argv[])
 			"----------------------------" << endl;
 #endif
 
-	if (mc.clientLogOS.is_open())
+	if (mc->clientLogOS.is_open())
 	{
-		mc.clientLogOS << "It took " << diff.tv_sec << "s, and "
+		mc->clientLogOS << "It took " << diff.tv_sec << "s, and "
 				<< diff.tv_nsec << " ns" << endl;
-		mc.clientLogOS << "--------------------------------"
+		mc->clientLogOS << "--------------------------------"
 						"----------------------------" << endl;
 	}
 
 	/* initalize tasks by assigning taskId information to each task */
-	mc.init_task();
+	mc->init_task();
 
 	/* submit tasks to the schedulers */
-	mc.submit_task();
+	mc->submit_task();
 
 	/* do the monitoring to watch th executing progress */
-	mc.do_monitoring();
+	mc->do_monitoring();
 }

@@ -56,7 +56,6 @@ class MatrixEpollServer
 		virtual ~MatrixEpollServer();
 
 		void serve();
-		int serve_request(int, void*, sockaddr);
 
 	private:
 		int create_and_bind(const char*);
@@ -74,7 +73,7 @@ class MatrixEpollServer
 
 	private:
 		MatrixScheduler *_ms;
-		char* _port;
+		const char* _port;
 		queue<MatrixEventData> _eventQueue;
 
 	private:

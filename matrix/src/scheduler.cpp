@@ -9,7 +9,7 @@
 
 using namespace std;
 
-int main(int argc, char *argv)
+int main(int argc, char *argv[])
 {
 	/* check whether specified a configuration file */
 	if (argc != 2)
@@ -21,23 +21,23 @@ int main(int argc, char *argv)
 	string configFileStr(argv[1]);
 
 	/* create a MATRIX scheduler*/
-	MatrixScheduler ms = new MatrixScheduler(configFileStr);
+	MatrixScheduler *ms = new MatrixScheduler(configFileStr);
 
-	ms.fork_es_thread();	// forks the epoll event driven server
+	ms->fork_es_thread();	// forks the epoll event driven server
 
-	ms.regist();	// regists to ZHT
+	ms->regist();	// regists to ZHT
 
-	ms.wait_all_scheduler();	// waits all the other schedulers are running
+	ms->wait_all_scheduler();	// waits all the other schedulers are running
 
-	ms.fork_crt_thread();	// forks checking ready task thread
+	ms->fork_crt_thread();	// forks checking ready task thread
 
-	ms.fork_exec_task_thread();	// forks executing task threads
+	ms->fork_exec_task_thread();	// forks executing task threads
 
-	ms.fork_cct_thread();	// forks checking complete task thread
+	ms->fork_cct_thread();	// forks checking complete task thread
 
-	ms.fork_ws_thread();	// forks work stealing thread
+	ms->fork_ws_thread();	// forks work stealing thread
 
-	ms.fork_record_stat_thread();	// forks recording status thread
+	ms->fork_record_stat_thread();	// forks recording status thread
 
 	while (1)
 	{

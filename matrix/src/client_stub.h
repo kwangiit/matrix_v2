@@ -14,9 +14,9 @@
 #include <pthread.h>
 #include <error.h>
 
-#include "config.h"
+#include "util.h"
 
-class MatrixClient:public Peer
+class MatrixClient : public Peer
 {
 	public:
 		MatrixClient(const string&);
@@ -39,10 +39,10 @@ class MatrixClient:public Peer
 		/* the worst case senario where tasks are submitted
 		 * to just one random chosen scheduler
 		 * */
-		void submit_task_wc(const vector<string>&, int);
+		void submit_task_wc(const vector<string>, int);
 
 		/* monitoring thread function */
-		void *monitoring(void*);
+		//void *monitoring(void*);
 
 		/* fork a monitoring thread */
 		void do_monitoring();

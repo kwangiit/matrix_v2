@@ -5,7 +5,7 @@
  *      Author: kwang
  */
 
-#include "config.h"
+#include "util.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <sstream>

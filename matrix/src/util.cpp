@@ -16,7 +16,7 @@ vector<string> tokenize(const string &source, const char *delimiter)
 
 	if (source.empty())
 	{
-		return NULL;
+		return results;
 	}
 
 	while ((next = source.find_first_of(delimiter, prev)) != string::npos)
@@ -125,7 +125,7 @@ vector<string> read_from_file(const string &fileName)
 
 	if (!fileStream.good())
 	{
-		return NULL;
+		return fileVec;
 	}
 
 	while(fileStream >> line)
@@ -346,10 +346,10 @@ timespec time_diff(timespec start, timespec end)
 	timespec diff;
 	uint64_t ts, te;
 
-	ts = (uint64_t)start.tv_sec * 1E9 + (uint64_t)start.tv_nsec;
-	te = (uint64_t)end.tv_sec * 1E9 + (uint64_t)end.tv_nsec;
-	diff.tv_sec = (te - ts)/1E9;
-	diff.tv_nsec = (te - ts) % 1E9;
+	ts = (uint64_t)start.tv_sec * 1000000000 + (uint64_t)start.tv_nsec;
+	te = (uint64_t)end.tv_sec * 1000000000 + (uint64_t)end.tv_nsec;
+	diff.tv_sec = (te - ts) / 1000000000;
+	diff.tv_nsec = (te - ts) % 1000000000;
 
 	return diff;
 }

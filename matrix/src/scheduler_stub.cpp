@@ -6,11 +6,12 @@
  */
 
 #include "scheduler_stub.h"
-#include "math.h"
+#include "matrix_epoll_server.h"
+#include <math.h>
 #include <algorithm>
 
 MatrixScheduler::MatrixScheduler(const string
-		&configFile):Peer(configFile)
+		&configFile): Peer(configFile)
 {
 	timespec start, end;
 	clock_gettime(0, &start);
@@ -27,13 +28,13 @@ MatrixScheduler::MatrixScheduler(const string
 	chooseBitMap = new bool[schedulerVec.size()];
 	reset_choosebm();
 
-	ZHTMsgCountMutex = new Mutex();
-	numIdleCoreMutex = new Mutex();
-	numTaskFinMutex = new Mutex();
+	ZHTMsgCountMutex = Mutex();
+	numIdleCoreMutex = Mutex();
+	numTaskFinMutex = Mutex();
 
-	wqMutex = new Mutex();
-	rqMutex = new Mutex();
-	cqMutex = new Mutex();
+	wqMutex = Mutex();
+	rqMutex = Mutex();
+	cqMutex = Mutex();
 
 	clock_gettime(0, &end);
 
@@ -49,6 +50,11 @@ MatrixScheduler::MatrixScheduler(const string
 				diff.tv_sec << "s, and " << diff.tv_nsec <<
 				" ns for initialization!" << endl;
 	}
+}
+
+MatrixScheduler::~MatrixScheduler(void)
+{
+
 }
 
 /* the scheduler tries to regist to ZHT server by increasing a counter.
@@ -234,7 +240,7 @@ int MatrixScheduler::proc_req(int sockfd, void *buf, sockaddr fromAddr)
 }
 
 /* epoll server thread function */
-void* MatrixScheduler::epoll_serving(void *args)
+void *epoll_serving(void *args)
 {
 	MatrixEpollServer *mes = (MatrixEpollServer*)args;
 	mes->serve();
@@ -247,13 +253,13 @@ void MatrixScheduler::fork_es_thread()
 {
 	long portNum = config->schedulerPortNo;
 	string portStr = num_to_str<long>(portNum);
-	char *port = portStr.c_str();
+	const char *port = portStr.c_str();
 
-	MatrixEpollServer mes = new MatrixEpollServer(port, this);
+	MatrixEpollServer *mes = new MatrixEpollServer(port, this);
 
 	pthread_t esThread;
 
-	while (pthread_create(&esThread, NULL, epoll_serving, &mes) != 0)
+	while (pthread_create(&esThread, NULL, epoll_serving, (void*)mes) != 0)
 	{
 		sleep(1);
 	}
@@ -409,19 +415,20 @@ bool MatrixScheduler::steal_task()
  * poll interval has reached the upper bound, the scheduler would do work
  * stealing.
  * */
-void* MatrixScheduler::workstealing(void*)
+void *workstealing(void* args)
 {
-	while (running)
+	MatrixScheduler *ms = (MatrixScheduler*)args;
+	while (ms->running)
 	{
-		while (readyQueue.size() == 0 &&
-				pollInterval < config->wsPollIntervalUb)
+		while (ms->readyQueue.size() == 0 &&
+				ms->pollInterval < ms->config->wsPollIntervalUb)
 		{
-			choose_neigh();
-			find_most_loaded_neigh();
-			bool success = steal_task();
-			numWS++;
-			maxLoadedIdx = -1;
-			maxLoad = -1000000;
+			ms->choose_neigh();
+			ms->find_most_loaded_neigh();
+			bool success = ms->steal_task();
+			ms->numWS++;
+			ms->maxLoadedIdx = -1;
+			ms->maxLoad = -1000000;
 
 			/* if successfully steals some tasks, then the poll
 			 * interval is set back to the initial value, otherwise
@@ -430,17 +437,17 @@ void* MatrixScheduler::workstealing(void*)
 			 * */
 			if (success)
 			{
-				pollInterval = config->wsPollIntervalStart;
+				ms->pollInterval = ms->config->wsPollIntervalStart;
 			}
 			else
 			{
-				numWSFail++;
-				usleep(pollInterval);
-				pollInterval *= 2;
+				ms->numWSFail++;
+				usleep(ms->pollInterval);
+				ms->pollInterval *= 2;
 			}
 		}
 
-		if (pollInterval >= config->wsPollIntervalUb)
+		if (ms->pollInterval >= ms->config->wsPollIntervalUb)
 		{
 			break;
 		}
@@ -455,7 +462,7 @@ void MatrixScheduler::fork_ws_thread()
 	if (config->workStealingOn == 1)
 	{
 		pthread_t wsThread;
-		while (pthread_create(&wsThread, NULL, workstealing, NULL))
+		while (pthread_create(&wsThread, NULL, workstealing, this))
 		{
 			sleep(1);
 		}
@@ -483,7 +490,7 @@ void MatrixScheduler::exec_a_task(string &taskStr)
 	value.ParseFromString(taskDetail);
 	value.set_exetime(get_time_usec());
 
-	char *execmd = (taskStrVec.at(3) + taskStrVec.at(4)).c_str();
+	const char *execmd = (taskStrVec.at(3) + taskStrVec.at(4)).c_str();
 	string result = exec(execmd);
 	value.set_fintime(get_time_usec());
 	taskDetail = value.SerializeAsString();
@@ -505,35 +512,36 @@ void MatrixScheduler::exec_a_task(string &taskStr)
  * scheduler is still processing tasks, as long as there are
  * tasks in the ready queue, execute the task one by one
  * */
-void* MatrixScheduler::executing_task(void*)
+void *executing_task(void *args)
 {
+	MatrixScheduler *ms = (MatrixScheduler*)args;
 	string taskStr;
 
-	while (running)
+	while (ms->running)
 	{
-		while (readyQueue.size() > 0)
+		while (ms->readyQueue.size() > 0)
 		{
-			rqMutex.lock();
-			if (readyQueue.size > 0)
+			ms->rqMutex.lock();
+			if (ms->readyQueue.size() > 0)
 			{
-				taskStr = readyQueue.front();
-				readyQueue.pop_front();
-				rqMutex.unlock();
+				taskStr = ms->readyQueue.front();
+				ms->readyQueue.pop_front();
+				ms->rqMutex.unlock();
 			}
 			else
 			{
-				rqMutex.unlock();
+				ms->rqMutex.unlock();
 				continue;
 			}
-			numIdleCoreMutex.lock();
-			numIdleCore--;
-			numIdleCoreMutex.unlock();
+			ms->numIdleCoreMutex.lock();
+			ms->numIdleCore--;
+			ms->numIdleCoreMutex.unlock();
 
-			exec_a_task(taskStr);
+			ms->exec_a_task(taskStr);
 
-			numIdleCoreMutex.lock();
-			numIdleCore++;
-			numIdleCoreMutex.unlock();
+			ms->numIdleCoreMutex.lock();
+			ms->numIdleCore++;
+			ms->numIdleCoreMutex.unlock();
 		}
 	}
 
@@ -551,7 +559,7 @@ void MatrixScheduler::fork_exec_task_thread()
 
 	for (int i = 0; i < config->numCorePerExecutor; i++)
 	{
-		while (pthread_create(&execThread[i], NULL, executing_task, NULL))
+		while (pthread_create(&execThread[i], NULL, executing_task, this))
 		{
 			sleep(1);
 		}
@@ -594,34 +602,35 @@ bool check_empty(string &str)
  * waiting queue to see it they are ready to run. Move the
  * tasks that are ready to run to the ready queue.
  * */
-void* MatrixScheduler::checking_ready_task(void*)
+void *checking_ready_task(void *args)
 {
+	MatrixScheduler *ms = (MatrixScheduler*)args;
 	int size = 0;
 	string taskStr;
 	long increment = 0;
 
-	while (running)
+	while (ms->running)
 	{
-		while (waitQueue.size() > 0)
+		while (ms->waitQueue.size() > 0)
 		{
-			size = waitQueue.size();
+			size = ms->waitQueue.size();
 
 			for (int i = 0; i < size; i++)
 			{
-				taskStr = waitQueue[i];
+				taskStr = ms->waitQueue[i];
 				if (!taskStr.empty())
 				{
 					increment++;
-					if (check_a_ready_task(taskStr))
+					if (ms->check_a_ready_task(taskStr))
 					{
 						increment++;
-						rqMutex.lock();
-						readyQueue.push_back(taskStr);
-						rqMutex.unlock();
+						ms->rqMutex.lock();
+						ms->readyQueue.push_back(taskStr);
+						ms->rqMutex.unlock();
 
-						wqMutex.lock();
-						waitQueue[i] = "";
-						wqMutex.unlock();
+						ms->wqMutex.lock();
+						ms->waitQueue[i] = "";
+						ms->wqMutex.unlock();
 					}
 				}
 			}
@@ -630,17 +639,17 @@ void* MatrixScheduler::checking_ready_task(void*)
 			 * moved to the ready queue. Those entries are
 			 * set to be empty
 			 * */
-			wqMutex.lock();
-			deque::iterator last = remove_if(waitQueue.begin(),
-					waitQueue.end(), check_empty);
-			waitQueue.erase(last, waitQueue.end());
-			wqMutex.unlock();
+			ms->wqMutex.lock();
+			deque<string>::iterator last = remove_if(ms->waitQueue.begin(),
+					ms->waitQueue.end(), check_empty);
+			ms->waitQueue.erase(last, ms->waitQueue.end());
+			ms->wqMutex.unlock();
 		}
 	}
 
-	ZHTMsgCountMutex.lock();
-	incre_ZHT_msg_count(increment);
-	ZHTMsgCountMutex.unlock();
+	ms->ZHTMsgCountMutex.lock();
+	ms->incre_ZHT_msg_count(increment);
+	ms->ZHTMsgCountMutex.unlock();
 
 	pthread_exit(NULL);
 	return NULL;
@@ -651,7 +660,7 @@ void MatrixScheduler::fork_crt_thread()
 {
 	pthread_t crtThread;
 
-	while (pthread_create(&crtThread, NULL, checking_ready_task, NULL))
+	while (pthread_create(&crtThread, NULL, checking_ready_task, this))
 	{
 		sleep(1);
 	}
@@ -693,34 +702,35 @@ long MatrixScheduler::decrease_indegree(const string &taskId)
  * complete queue is not empty, for each task in the queue, decrease
  * the indegree of each child by one.
  * */
-void* MatrixScheduler::checking_complete_task(void*)
+void *checking_complete_task(void *args)
 {
+	MatrixScheduler *ms = (MatrixScheduler*)args;
 	string taskId;
 	long increment = 0;
 
-	while (running)
+	while (ms->running)
 	{
-		while (completeQueue.size() > 0)
+		while (ms->completeQueue.size() > 0)
 		{
-			cqMutex.lock();
-			if (completeQueue.size() > 0)
+			ms->cqMutex.lock();
+			if (ms->completeQueue.size() > 0)
 			{
-				taskId = completeQueue.front();
-				completeQueue.pop_back();
-				cqMutex.unlock();
+				taskId = ms->completeQueue.front();
+				ms->completeQueue.pop_back();
+				ms->cqMutex.unlock();
 			}
 			else
 			{
-				cqMutex.unlock();
+				ms->cqMutex.unlock();
 				continue;
 			}
-			increment += decrease_indegree(taskId);
+			increment += ms->decrease_indegree(taskId);
 		}
 	}
 
-	ZHTMsgCountMutex.lock();
-	incre_ZHT_msg_count(increment);
-	ZHTMsgCountMutex.unlock();
+	ms->ZHTMsgCountMutex.lock();
+	ms->incre_ZHT_msg_count(increment);
+	ms->ZHTMsgCountMutex.unlock();
 
 	pthread_exit(NULL);
 	return NULL;
@@ -731,7 +741,7 @@ void MatrixScheduler::fork_cct_thread()
 {
 	pthread_t cctThread;
 
-	while (pthread_create(&cctThread, NULL, checking_complete_task, NULL))
+	while (pthread_create(&cctThread, NULL, checking_complete_task, this))
 	{
 		sleep(1);
 	}
@@ -742,39 +752,40 @@ void MatrixScheduler::fork_cct_thread()
  * and ready; number of idle/all cores, and number of (failed) working
  * stealing operations) to ZHT.
  * */
-void* MatrixScheduler::recording_stat(void*)
+void *recording_stat(void *args)
 {
+	MatrixScheduler *ms = (MatrixScheduler*)args;
 	long increment = 0;
 
 	timespec time;
 	bool schedulerLogOn = false;
-	if (schedulerLogOS.is_open())
+	if (ms->schedulerLogOS.is_open())
 	{
 		schedulerLogOn = true;
-		schedulerLogOS << "Time\tNumTaskFin\tNumTaskWait\tNumTaskReady\t"
+		ms->schedulerLogOS << "Time\tNumTaskFin\tNumTaskWait\tNumTaskReady\t"
 				"NumIdleCore\tNumAllCore\tNumWorkSteal\tNumWorkStealFail" << endl;
 	}
 
 	while (1)
 	{
 		Value recordVal;
-		recordVal.set_id(get_id());
-		recordVal.set_numtaskfin(numTaskFin);
-		recordVal.set_numtaskwait(waitQueue.size());
-		recordVal.set_numtaskready(readyQueue.size());
-		recordVal.set_numcoreavilable(numIdleCore);
-		recordVal.set_numallcore(config->numCorePerExecutor);
-		recordVal.set_numworksteal(numWS);
-		recordVal.set_numworkstealfail(numWSFail);
+		recordVal.set_id(ms->get_id());
+		recordVal.set_numtaskfin(ms->numTaskFin);
+		recordVal.set_numtaskwait(ms->waitQueue.size());
+		recordVal.set_numtaskready(ms->readyQueue.size());
+		recordVal.set_numcoreavilable(ms->numIdleCore);
+		recordVal.set_numallcore(ms->config->numCorePerExecutor);
+		recordVal.set_numworksteal(ms->numWS);
+		recordVal.set_numworkstealfail(ms->numWSFail);
 		string recordValStr = recordVal.SerializeAsString();
-		zc.insert(get_id(), recordValStr);
+		ms->zc.insert(ms->get_id(), recordValStr);
 
 		if (schedulerLogOn)
 		{
-			schedulerLogOS << get_time_usec() << "\t" << numTaskFin << "\t" <<
-					waitQueue.size() << "\t" << readyQueue.size() << "\t" <<
-					numIdleCore << "\t" << config->numCorePerExecutor << "\t" <<
-					numWS << "\t" << numWSFail << endl;
+			ms->schedulerLogOS << get_time_usec() << "\t" << ms->numTaskFin << "\t" <<
+					ms->waitQueue.size() << "\t" << ms->readyQueue.size() << "\t" <<
+					ms->numIdleCore << "\t" << ms->config->numCorePerExecutor << "\t" <<
+					ms->numWS << "\t" << ms->numWSFail << endl;
 		}
 
 		/* check and modify how many tasks are done for all the schedulers. If all
@@ -783,54 +794,54 @@ void* MatrixScheduler::recording_stat(void*)
 		 * */
 		string key("num tasks done");
 		string numTaskDoneStr;
-		zc.lookup(key, numTaskDoneStr);
+		ms->zc.lookup(key, numTaskDoneStr);
 
 		increment += 2;
 
 		long numTaskDone = str_to_num<long>(numTaskDoneStr);
-		if (numTaskDone == config->numAllTask)
+		if (numTaskDone == ms->config->numAllTask)
 		{
-			running = false;
+			ms->running = false;
 			if (schedulerLogOn)
 			{
-				schedulerLogOS << get_time_usec() << "\t" << numTaskFin << "\t" <<
-						waitQueue.size() << "\t" << readyQueue.size() << "\t" <<
-						numIdleCore << "\t" << config->numCorePerExecutor << "\t" <<
-						numWS << "\t" << numWSFail << endl;
-				schedulerLogOS << "The number of ZHT message is:" << numZHTMsg << endl;
-				schedulerLogOS.flush(); schedulerLogOS.close();
+				ms->schedulerLogOS << get_time_usec() << "\t" << ms->numTaskFin << "\t" <<
+						ms->waitQueue.size() << "\t" << ms->readyQueue.size() << "\t" <<
+						ms->numIdleCore << "\t" << ms->config->numCorePerExecutor << "\t" <<
+						ms->numWS << "\t" << ms->numWSFail << endl;
+				ms->schedulerLogOS << "The number of ZHT message is:" << ms->numZHTMsg << endl;
+				ms->schedulerLogOS.flush(); ms->schedulerLogOS.close();
 			}
 			break;
 		}
 
-		numTaskFinMutex.lock();
+		ms->numTaskFinMutex.lock();
 
-		numTaskDone += (numTaskFin - prevNumTaskFin);
+		numTaskDone += (ms->numTaskFin - ms->prevNumTaskFin);
 		string numTaskDoneStrNew = num_to_str<long>(numTaskDone);
 		string query_value;
 		increment++;
-		while (zc.compare_swap(key, numTaskDoneStr,
+		while (ms->zc.compare_swap(key, numTaskDoneStr,
 				numTaskDoneStrNew, query_value) != 0)
 		{
 			numTaskDoneStr = query_value;
 			numTaskDone = str_to_num<long>(numTaskDoneStr);
-			if (numTaskDone == config->numAllTask)
+			if (numTaskDone == ms->config->numAllTask)
 			{
 				break;
 			}
-			numTaskDone += (numTaskFin - prevNumTaskFin);
+			numTaskDone += (ms->numTaskFin - ms->prevNumTaskFin);
 			numTaskDoneStrNew = num_to_str<long>(numTaskDone);
 			increment++;
 		}
-		prevNumTaskFin = numTaskFin;
+		ms->prevNumTaskFin = ms->numTaskFin;
 
-		numTaskFinMutex.unlock();
-		usleep(config->sleepLength);
+		ms->numTaskFinMutex.unlock();
+		usleep(ms->config->sleepLength);
 	}
 
-	ZHTMsgCountMutex.lock();
-	incre_ZHT_msg_count(increment);
-	ZHTMsgCountMutex.unlock();
+	ms->ZHTMsgCountMutex.lock();
+	ms->incre_ZHT_msg_count(increment);
+	ms->ZHTMsgCountMutex.unlock();
 
 	pthread_exit(NULL);
 	return NULL;
@@ -841,7 +852,7 @@ void MatrixScheduler::fork_record_stat_thread()
 {
 	pthread_t rsThread;
 
-	while (pthread_create(&rsThread, NULL, recording_stat, NULL))
+	while (pthread_create(&rsThread, NULL, recording_stat, this))
 	{
 		sleep(1);
 	}

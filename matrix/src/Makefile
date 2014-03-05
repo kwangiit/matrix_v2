@@ -4,17 +4,18 @@ INCS=-I. \
 	-I../../ \
 	-I../../ZHT \
 	-I../../ZHT/src
-CCFLAGS = -g -I${USER_INCLUDE} -I../../ -L${USER_LIB} -L../../ZHT/src
+CCFLAGS = -g -I${USER_INCLUDE} -L${USER_LIB} -DPRINT_OUT
 #CCFLAGS = -g -I${USER_INCLUDE} -L${USER_LIB} -DPF_INET -DBIG_MSG -DTHREADED_SERVE -DSOCKET_CACHE -DSCCB
 
-LIBFLAGS = -lstdc++ -lrt -lpthread -lm -lc -lprotobuf -lprotobuf-c
+LIBFLAGS = -lstdc++ -lrt -lpthread -lm -lc -lprotobuf -lprotobuf-c -L../../ZHT/src -lzht
 
 all:	$(TARGETS)
 
-client: client.o client_stub.o util.o config.o matrix_epoll_server.o metazht.pb.o
-	$(CC) $(CCFLAGS) -o $@ $^ -PRINT_OUT $(LIBFLAGS)
+client: client.o client_stub.o config.o util.o metazht.pb.o \
+../../ZHT/src/cpp_zhtclient.o ../../ZHT/src/lru_cache.o ../../ZHT/src/meta.pb.o ../../ZHT/src/novoht.o ../../ZHT/src/lock_guard.o
+	$(CC) $(CCFLAGS) -o $@ $^ $(LIBFLAGS)
 
-scheduler: scheduler.o scheduler_stub.o util.o config.o matrix_epoll_server.o metazht.pb.o
+scheduler: scheduler.o scheduler_stub.o config.o util.o matrix_epoll_server.o metazht.pb.o
 	$(CC) $(CCFLAGS) -o $@ $^ $(LIBFLAGS)
 	
 %.o: %.cpp
@@ -23,8 +24,8 @@ scheduler: scheduler.o scheduler_stub.o util.o config.o matrix_epoll_server.o me
 %.o: %.cc
 	$(CC) $(CCFLAGS) -c $^ $(LIBFLAGS) $(INCS)
 
-util.o: util.cpp
 config.o: config.cpp
+util.o: util.cpp
 matrix_epoll_server.o: matrix_epoll_server.cpp
 metazht.pb.o: metazht.pb.cc
 
@@ -37,5 +38,5 @@ scheduler.o: scheduler.cpp
 .PHONY:	clean
 
 clean:	
-	rm *.o
-	rm $(TARGETS)
+	rm -rf *.o
+	rm -rf $(TARGETS)

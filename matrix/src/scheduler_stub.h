@@ -9,8 +9,9 @@
 #define SCHEDULER_STUB_H_
 
 #include "util.h"
+#include "ZHT/src/meta.pb.h"
 
-class MatrixScheduler:public Peer
+class MatrixScheduler: public Peer
 {
 	public:
 		MatrixScheduler(const string&);
@@ -35,8 +36,6 @@ class MatrixScheduler:public Peer
 		/* processing requests received by the epoll server */
 		int proc_req(int, void*, sockaddr);
 
-		void* epoll_serving(void*);	//epoll server thread function
-
 		void fork_es_thread();	// fork epoll server thread
 
 		void reset_choosebm();	// reset the bitmap of neighbors chosen
@@ -49,35 +48,24 @@ class MatrixScheduler:public Peer
 		/* try to steal tasks from the most-loaded neighbor */
 		bool steal_task();
 
-		void* workstealing(void*);	// work stealing thread function
+		//void* workstealing(void*);	// work stealing thread function
 
 		void fork_ws_thread(void);	// fork work stealing thread
 
 		/* check if a given task is ready to run */
 		bool check_a_ready_task(const string&);
 
-		/* check ready task thread function */
-		void* checking_ready_task(void*);
-
 		void fork_crt_thread();	// fork check ready task thread
 
 		void exec_a_task(string&);	// execute a task
-
-		void* executing_task(void*);	// execute task thread function
 
 		void fork_exec_task_thread();	// fork execute task threads
 
 		/* decrease the number of waiting parents for a given task */
 		long decrease_indegree(const string&);
 
-		/* check complete task thread function */
-		void* checking_complete_task(void*);
-
 		/* fork check compute task thread */
 		void fork_cct_thread();
-
-		/* recording status thread function */
-		void* recording_stat(void*);
 
 		/* fork recording status thread */
 		void fork_record_stat_thread();

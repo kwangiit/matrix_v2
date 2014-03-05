@@ -269,9 +269,8 @@ void* MatrixEpollServer::threaded_serve(void *arg)
 
 			/*pes->_ZProcessor->process(eventData.fd(), eventData.buf(),
 					eventData.fromaddr()); replace this part with matrix logic */
-			mes->serve_request(eventData.fd(), eventData.buf(), eventData.fromaddr());
+			mes->_ms->proc_req(eventData.fd(), eventData.buf(), eventData.fromaddr());
 			mes->_eventQueue.pop();
-
 		}
 	}
 

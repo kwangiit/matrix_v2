@@ -12,26 +12,32 @@
 #define UTIL_H_
 
 #include <string>
+#include <sstream>
 #include <map>
 #include <vector>
+#include <deque>
 #include <iostream>
 #include <stdlib.h>
 #include <stdio.h>
 #include <stropts.h>
 #include <time.h>
 #include <bits/time.h>
-#include <linux/netdevice.h>
-#include <arpa/inet.h>
+#include <sys/time.h>
 #include <netinet/in.h>
+#include <net/if.h>
+#include <arpa/inet.h>
 #include <sys/socket.h>
+#include <sys/types.h>
 #include <sys/ioctl.h>
 
 #include "metazht.pb.h"
 #include "ZHT/src/cpp_zhtclient.h"
+#include "config.h"
+
 
 using namespace std;
 
-typedef map<long, vector<long>> adjList;	// task DAG represented as adjacency list
+typedef map<long, vector<long> > adjList;	// task DAG represented as adjacency list
 typedef map<long, long> inDegree;	// number of parents of each task
 
 /* template of converting a number
@@ -52,7 +58,7 @@ template<typename T> T str_to_num(const string &str)
 	return ss >> num ? num : 0;
 }
 
-extern uint _Buf_SIZE;	// the buffer size defined to receive messages
+extern uint _BUF_SIZE;	// the buffer size defined to receive messages
 
 /* tokenize a string with a specified delimiter */
 extern vector<string> tokenize(const string&, const char*);
@@ -73,11 +79,11 @@ extern vector<string> read_from_file(const string&);
 extern int get_self_idx(const string&, vector<string>);
 
 /* generate the adjacency list of a DAG */
-extern void gen_dag_adjlist(adjList&, const string&, int, long);
+extern void gen_dag_adjlist(adjList&, string&, long, long);
 
 /* generate the infomation of
  * number of parents for each task */
-extern void gen_dag_indeg(adjList&, inDegree&);
+extern void gen_dag_indegree(adjList&, inDegree&);
 
 /* get the current time of day in micro-second */
 extern double get_time_usec();

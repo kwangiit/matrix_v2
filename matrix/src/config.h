@@ -9,7 +9,6 @@
 #define CONFIGURE_H_
 
 #include <fstream>
-#include "util.h"
 
 using namespace std;
 
