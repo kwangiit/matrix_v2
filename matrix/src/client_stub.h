@@ -24,6 +24,7 @@ class MatrixClient : public Peer
 
 		/* insert task information to ZHT */
 		void insert_taskinfo_to_zht(adjList&, inDegree&);
+		//void insert_taskinfo_to_zht(adjList&, adjList&);
 
 		/* initialize tasks by adding taskId for each task */
 		void init_task(void);

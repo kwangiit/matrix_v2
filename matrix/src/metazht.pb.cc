@@ -29,10 +29,13 @@ void protobuf_AssignDesc_metazht_2eproto() {
       "metazht.proto");
   GOOGLE_CHECK(file != NULL);
   Value_descriptor_ = file->message_type(0);
-  static const int Value_offsets_[17] = {
+  static const int Value_offsets_[20] = {
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Value, id_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Value, parents_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Value, indegree_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Value, children_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Value, datanamelist_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Value, datasize_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Value, nummove_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Value, history_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Value, submittime_),
@@ -89,15 +92,17 @@ void protobuf_AddDesc_metazht_2eproto() {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
 
   ::google::protobuf::DescriptorPool::InternalAddGeneratedFile(
-    "\n\rmetazht.proto\"\324\002\n\005Value\022\n\n\002id\030\001 \002(\t\022\020\n"
-    "\010indegree\030\002 \001(\005\022\020\n\010children\030\003 \003(\t\022\017\n\007num"
-    "Move\030\004 \001(\005\022\017\n\007history\030\005 \001(\t\022\022\n\nsubmitTim"
-    "e\030\006 \001(\003\022\022\n\narriveTime\030\007 \001(\003\022\023\n\013rqueuedTi"
-    "me\030\010 \001(\003\022\017\n\007exeTime\030\t \001(\003\022\017\n\007finTime\030\n \001"
-    "(\003\022\022\n\nnumTaskFin\030\013 \001(\005\022\023\n\013numTaskWait\030\014 "
-    "\001(\005\022\024\n\014numTaskReady\030\r \001(\005\022\027\n\017numCoreAvil"
-    "able\030\016 \001(\005\022\022\n\nnumAllCore\030\017 \001(\005\022\024\n\014numWor"
-    "kSteal\030\020 \001(\003\022\030\n\020numWorkStealFail\030\021 \001(\003", 358);
+    "\n\rmetazht.proto\"\215\003\n\005Value\022\n\n\002id\030\001 \002(\t\022\017\n"
+    "\007parents\030\002 \003(\t\022\020\n\010indegree\030\003 \001(\003\022\020\n\010chil"
+    "dren\030\004 \003(\t\022\024\n\014dataNameList\030\005 \003(\t\022\020\n\010data"
+    "Size\030\006 \003(\003\022\017\n\007numMove\030\007 \001(\005\022\017\n\007history\030\010"
+    " \001(\t\022\022\n\nsubmitTime\030\t \001(\001\022\022\n\narriveTime\030\n"
+    " \001(\001\022\023\n\013rqueuedTime\030\013 \001(\001\022\017\n\007exeTime\030\014 \001"
+    "(\001\022\017\n\007finTime\030\r \001(\001\022\022\n\nnumTaskFin\030\016 \001(\003\022"
+    "\023\n\013numTaskWait\030\017 \001(\005\022\024\n\014numTaskReady\030\020 \001"
+    "(\005\022\027\n\017numCoreAvilable\030\021 \001(\005\022\022\n\nnumAllCor"
+    "e\030\022 \001(\005\022\024\n\014numWorkSteal\030\023 \001(\003\022\030\n\020numWork"
+    "StealFail\030\024 \001(\003", 415);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "metazht.proto", &protobuf_RegisterTypes);
   Value::default_instance_ = new Value();
@@ -117,8 +122,11 @@ struct StaticDescriptorInitializer_metazht_2eproto {
 
 #ifndef _MSC_VER
 const int Value::kIdFieldNumber;
+const int Value::kParentsFieldNumber;
 const int Value::kIndegreeFieldNumber;
 const int Value::kChildrenFieldNumber;
+const int Value::kDataNameListFieldNumber;
+const int Value::kDataSizeFieldNumber;
 const int Value::kNumMoveFieldNumber;
 const int Value::kHistoryFieldNumber;
 const int Value::kSubmitTimeFieldNumber;
@@ -152,15 +160,15 @@ Value::Value(const Value& from)
 void Value::SharedCtor() {
   _cached_size_ = 0;
   id_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
-  indegree_ = 0;
+  indegree_ = GOOGLE_LONGLONG(0);
   nummove_ = 0;
   history_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
-  submittime_ = GOOGLE_LONGLONG(0);
-  arrivetime_ = GOOGLE_LONGLONG(0);
-  rqueuedtime_ = GOOGLE_LONGLONG(0);
-  exetime_ = GOOGLE_LONGLONG(0);
-  fintime_ = GOOGLE_LONGLONG(0);
-  numtaskfin_ = 0;
+  submittime_ = 0;
+  arrivetime_ = 0;
+  rqueuedtime_ = 0;
+  exetime_ = 0;
+  fintime_ = 0;
+  numtaskfin_ = GOOGLE_LONGLONG(0);
   numtaskwait_ = 0;
   numtaskready_ = 0;
   numcoreavilable_ = 0;
@@ -212,31 +220,34 @@ void Value::Clear() {
         id_->clear();
       }
     }
-    indegree_ = 0;
+    indegree_ = GOOGLE_LONGLONG(0);
     nummove_ = 0;
     if (has_history()) {
       if (history_ != &::google::protobuf::internal::kEmptyString) {
         history_->clear();
       }
     }
-    submittime_ = GOOGLE_LONGLONG(0);
-    arrivetime_ = GOOGLE_LONGLONG(0);
-    rqueuedtime_ = GOOGLE_LONGLONG(0);
   }
   if (_has_bits_[8 / 32] & (0xffu << (8 % 32))) {
-    exetime_ = GOOGLE_LONGLONG(0);
-    fintime_ = GOOGLE_LONGLONG(0);
-    numtaskfin_ = 0;
+    submittime_ = 0;
+    arrivetime_ = 0;
+    rqueuedtime_ = 0;
+    exetime_ = 0;
+    fintime_ = 0;
+    numtaskfin_ = GOOGLE_LONGLONG(0);
     numtaskwait_ = 0;
     numtaskready_ = 0;
+  }
+  if (_has_bits_[16 / 32] & (0xffu << (16 % 32))) {
     numcoreavilable_ = 0;
     numallcore_ = 0;
     numworksteal_ = GOOGLE_LONGLONG(0);
-  }
-  if (_has_bits_[16 / 32] & (0xffu << (16 % 32))) {
     numworkstealfail_ = GOOGLE_LONGLONG(0);
   }
+  parents_.Clear();
   children_.Clear();
+  datanamelist_.Clear();
+  datasize_.Clear();
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
   mutable_unknown_fields()->Clear();
 }
@@ -259,28 +270,46 @@ bool Value::MergePartialFromCodedStream(
         } else {
           goto handle_uninterpreted;
         }
-        if (input->ExpectTag(16)) goto parse_indegree;
+        if (input->ExpectTag(18)) goto parse_parents;
         break;
       }
       
-      // optional int32 indegree = 2;
+      // repeated string parents = 2;
       case 2: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
+         parse_parents:
+          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
+                input, this->add_parents()));
+          ::google::protobuf::internal::WireFormat::VerifyUTF8String(
+            this->parents(0).data(), this->parents(0).length(),
+            ::google::protobuf::internal::WireFormat::PARSE);
+        } else {
+          goto handle_uninterpreted;
+        }
+        if (input->ExpectTag(18)) goto parse_parents;
+        if (input->ExpectTag(24)) goto parse_indegree;
+        break;
+      }
+      
+      // optional int64 indegree = 3;
+      case 3: {
         if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
             ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
          parse_indegree:
           DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
+                   ::google::protobuf::int64, ::google::protobuf::internal::WireFormatLite::TYPE_INT64>(
                  input, &indegree_)));
           set_has_indegree();
         } else {
           goto handle_uninterpreted;
         }
-        if (input->ExpectTag(26)) goto parse_children;
+        if (input->ExpectTag(34)) goto parse_children;
         break;
       }
       
-      // repeated string children = 3;
-      case 3: {
+      // repeated string children = 4;
+      case 4: {
         if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
             ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
          parse_children:
@@ -292,13 +321,53 @@ bool Value::MergePartialFromCodedStream(
         } else {
           goto handle_uninterpreted;
         }
-        if (input->ExpectTag(26)) goto parse_children;
-        if (input->ExpectTag(32)) goto parse_numMove;
+        if (input->ExpectTag(34)) goto parse_children;
+        if (input->ExpectTag(42)) goto parse_dataNameList;
         break;
       }
       
-      // optional int32 numMove = 4;
-      case 4: {
+      // repeated string dataNameList = 5;
+      case 5: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
+         parse_dataNameList:
+          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
+                input, this->add_datanamelist()));
+          ::google::protobuf::internal::WireFormat::VerifyUTF8String(
+            this->datanamelist(0).data(), this->datanamelist(0).length(),
+            ::google::protobuf::internal::WireFormat::PARSE);
+        } else {
+          goto handle_uninterpreted;
+        }
+        if (input->ExpectTag(42)) goto parse_dataNameList;
+        if (input->ExpectTag(48)) goto parse_dataSize;
+        break;
+      }
+      
+      // repeated int64 dataSize = 6;
+      case 6: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
+         parse_dataSize:
+          DO_((::google::protobuf::internal::WireFormatLite::ReadRepeatedPrimitive<
+                   ::google::protobuf::int64, ::google::protobuf::internal::WireFormatLite::TYPE_INT64>(
+                 1, 48, input, this->mutable_datasize())));
+        } else if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag)
+                   == ::google::protobuf::internal::WireFormatLite::
+                      WIRETYPE_LENGTH_DELIMITED) {
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPackedPrimitiveNoInline<
+                   ::google::protobuf::int64, ::google::protobuf::internal::WireFormatLite::TYPE_INT64>(
+                 input, this->mutable_datasize())));
+        } else {
+          goto handle_uninterpreted;
+        }
+        if (input->ExpectTag(48)) goto parse_dataSize;
+        if (input->ExpectTag(56)) goto parse_numMove;
+        break;
+      }
+      
+      // optional int32 numMove = 7;
+      case 7: {
         if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
             ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
          parse_numMove:
@@ -309,12 +378,12 @@ bool Value::MergePartialFromCodedStream(
         } else {
           goto handle_uninterpreted;
         }
-        if (input->ExpectTag(42)) goto parse_history;
+        if (input->ExpectTag(66)) goto parse_history;
         break;
       }
       
-      // optional string history = 5;
-      case 5: {
+      // optional string history = 8;
+      case 8: {
         if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
             ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
          parse_history:
@@ -326,108 +395,108 @@ bool Value::MergePartialFromCodedStream(
         } else {
           goto handle_uninterpreted;
         }
-        if (input->ExpectTag(48)) goto parse_submitTime;
+        if (input->ExpectTag(73)) goto parse_submitTime;
         break;
       }
       
-      // optional int64 submitTime = 6;
-      case 6: {
+      // optional double submitTime = 9;
+      case 9: {
         if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
-            ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_FIXED64) {
          parse_submitTime:
           DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   ::google::protobuf::int64, ::google::protobuf::internal::WireFormatLite::TYPE_INT64>(
+                   double, ::google::protobuf::internal::WireFormatLite::TYPE_DOUBLE>(
                  input, &submittime_)));
           set_has_submittime();
         } else {
           goto handle_uninterpreted;
         }
-        if (input->ExpectTag(56)) goto parse_arriveTime;
+        if (input->ExpectTag(81)) goto parse_arriveTime;
         break;
       }
       
-      // optional int64 arriveTime = 7;
-      case 7: {
+      // optional double arriveTime = 10;
+      case 10: {
         if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
-            ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_FIXED64) {
          parse_arriveTime:
           DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   ::google::protobuf::int64, ::google::protobuf::internal::WireFormatLite::TYPE_INT64>(
+                   double, ::google::protobuf::internal::WireFormatLite::TYPE_DOUBLE>(
                  input, &arrivetime_)));
           set_has_arrivetime();
         } else {
           goto handle_uninterpreted;
         }
-        if (input->ExpectTag(64)) goto parse_rqueuedTime;
+        if (input->ExpectTag(89)) goto parse_rqueuedTime;
         break;
       }
       
-      // optional int64 rqueuedTime = 8;
-      case 8: {
+      // optional double rqueuedTime = 11;
+      case 11: {
         if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
-            ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_FIXED64) {
          parse_rqueuedTime:
           DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   ::google::protobuf::int64, ::google::protobuf::internal::WireFormatLite::TYPE_INT64>(
+                   double, ::google::protobuf::internal::WireFormatLite::TYPE_DOUBLE>(
                  input, &rqueuedtime_)));
           set_has_rqueuedtime();
         } else {
           goto handle_uninterpreted;
         }
-        if (input->ExpectTag(72)) goto parse_exeTime;
+        if (input->ExpectTag(97)) goto parse_exeTime;
         break;
       }
       
-      // optional int64 exeTime = 9;
-      case 9: {
+      // optional double exeTime = 12;
+      case 12: {
         if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
-            ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_FIXED64) {
          parse_exeTime:
           DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   ::google::protobuf::int64, ::google::protobuf::internal::WireFormatLite::TYPE_INT64>(
+                   double, ::google::protobuf::internal::WireFormatLite::TYPE_DOUBLE>(
                  input, &exetime_)));
           set_has_exetime();
         } else {
           goto handle_uninterpreted;
         }
-        if (input->ExpectTag(80)) goto parse_finTime;
+        if (input->ExpectTag(105)) goto parse_finTime;
         break;
       }
       
-      // optional int64 finTime = 10;
-      case 10: {
+      // optional double finTime = 13;
+      case 13: {
         if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
-            ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_FIXED64) {
          parse_finTime:
           DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   ::google::protobuf::int64, ::google::protobuf::internal::WireFormatLite::TYPE_INT64>(
+                   double, ::google::protobuf::internal::WireFormatLite::TYPE_DOUBLE>(
                  input, &fintime_)));
           set_has_fintime();
         } else {
           goto handle_uninterpreted;
         }
-        if (input->ExpectTag(88)) goto parse_numTaskFin;
+        if (input->ExpectTag(112)) goto parse_numTaskFin;
         break;
       }
       
-      // optional int32 numTaskFin = 11;
-      case 11: {
+      // optional int64 numTaskFin = 14;
+      case 14: {
         if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
             ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
          parse_numTaskFin:
           DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
-                   ::google::protobuf::int32, ::google::protobuf::internal::WireFormatLite::TYPE_INT32>(
+                   ::google::protobuf::int64, ::google::protobuf::internal::WireFormatLite::TYPE_INT64>(
                  input, &numtaskfin_)));
           set_has_numtaskfin();
         } else {
           goto handle_uninterpreted;
         }
-        if (input->ExpectTag(96)) goto parse_numTaskWait;
+        if (input->ExpectTag(120)) goto parse_numTaskWait;
         break;
       }
       
-      // optional int32 numTaskWait = 12;
-      case 12: {
+      // optional int32 numTaskWait = 15;
+      case 15: {
         if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
             ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
          parse_numTaskWait:
@@ -438,12 +507,12 @@ bool Value::MergePartialFromCodedStream(
         } else {
           goto handle_uninterpreted;
         }
-        if (input->ExpectTag(104)) goto parse_numTaskReady;
+        if (input->ExpectTag(128)) goto parse_numTaskReady;
         break;
       }
       
-      // optional int32 numTaskReady = 13;
-      case 13: {
+      // optional int32 numTaskReady = 16;
+      case 16: {
         if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
             ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
          parse_numTaskReady:
@@ -454,12 +523,12 @@ bool Value::MergePartialFromCodedStream(
         } else {
           goto handle_uninterpreted;
         }
-        if (input->ExpectTag(112)) goto parse_numCoreAvilable;
+        if (input->ExpectTag(136)) goto parse_numCoreAvilable;
         break;
       }
       
-      // optional int32 numCoreAvilable = 14;
-      case 14: {
+      // optional int32 numCoreAvilable = 17;
+      case 17: {
         if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
             ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
          parse_numCoreAvilable:
@@ -470,12 +539,12 @@ bool Value::MergePartialFromCodedStream(
         } else {
           goto handle_uninterpreted;
         }
-        if (input->ExpectTag(120)) goto parse_numAllCore;
+        if (input->ExpectTag(144)) goto parse_numAllCore;
         break;
       }
       
-      // optional int32 numAllCore = 15;
-      case 15: {
+      // optional int32 numAllCore = 18;
+      case 18: {
         if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
             ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
          parse_numAllCore:
@@ -486,12 +555,12 @@ bool Value::MergePartialFromCodedStream(
         } else {
           goto handle_uninterpreted;
         }
-        if (input->ExpectTag(128)) goto parse_numWorkSteal;
+        if (input->ExpectTag(152)) goto parse_numWorkSteal;
         break;
       }
       
-      // optional int64 numWorkSteal = 16;
-      case 16: {
+      // optional int64 numWorkSteal = 19;
+      case 19: {
         if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
             ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
          parse_numWorkSteal:
@@ -502,12 +571,12 @@ bool Value::MergePartialFromCodedStream(
         } else {
           goto handle_uninterpreted;
         }
-        if (input->ExpectTag(136)) goto parse_numWorkStealFail;
+        if (input->ExpectTag(160)) goto parse_numWorkStealFail;
         break;
       }
       
-      // optional int64 numWorkStealFail = 17;
-      case 17: {
+      // optional int64 numWorkStealFail = 20;
+      case 20: {
         if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
             ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
          parse_numWorkStealFail:
@@ -549,92 +618,116 @@ void Value::SerializeWithCachedSizes(
       1, this->id(), output);
   }
   
-  // optional int32 indegree = 2;
-  if (has_indegree()) {
-    ::google::protobuf::internal::WireFormatLite::WriteInt32(2, this->indegree(), output);
+  // repeated string parents = 2;
+  for (int i = 0; i < this->parents_size(); i++) {
+  ::google::protobuf::internal::WireFormat::VerifyUTF8String(
+    this->parents(i).data(), this->parents(i).length(),
+    ::google::protobuf::internal::WireFormat::SERIALIZE);
+    ::google::protobuf::internal::WireFormatLite::WriteString(
+      2, this->parents(i), output);
   }
   
-  // repeated string children = 3;
+  // optional int64 indegree = 3;
+  if (has_indegree()) {
+    ::google::protobuf::internal::WireFormatLite::WriteInt64(3, this->indegree(), output);
+  }
+  
+  // repeated string children = 4;
   for (int i = 0; i < this->children_size(); i++) {
   ::google::protobuf::internal::WireFormat::VerifyUTF8String(
     this->children(i).data(), this->children(i).length(),
     ::google::protobuf::internal::WireFormat::SERIALIZE);
     ::google::protobuf::internal::WireFormatLite::WriteString(
-      3, this->children(i), output);
+      4, this->children(i), output);
   }
   
-  // optional int32 numMove = 4;
+  // repeated string dataNameList = 5;
+  for (int i = 0; i < this->datanamelist_size(); i++) {
+  ::google::protobuf::internal::WireFormat::VerifyUTF8String(
+    this->datanamelist(i).data(), this->datanamelist(i).length(),
+    ::google::protobuf::internal::WireFormat::SERIALIZE);
+    ::google::protobuf::internal::WireFormatLite::WriteString(
+      5, this->datanamelist(i), output);
+  }
+  
+  // repeated int64 dataSize = 6;
+  for (int i = 0; i < this->datasize_size(); i++) {
+    ::google::protobuf::internal::WireFormatLite::WriteInt64(
+      6, this->datasize(i), output);
+  }
+  
+  // optional int32 numMove = 7;
   if (has_nummove()) {
-    ::google::protobuf::internal::WireFormatLite::WriteInt32(4, this->nummove(), output);
+    ::google::protobuf::internal::WireFormatLite::WriteInt32(7, this->nummove(), output);
   }
   
-  // optional string history = 5;
+  // optional string history = 8;
   if (has_history()) {
     ::google::protobuf::internal::WireFormat::VerifyUTF8String(
       this->history().data(), this->history().length(),
       ::google::protobuf::internal::WireFormat::SERIALIZE);
     ::google::protobuf::internal::WireFormatLite::WriteString(
-      5, this->history(), output);
+      8, this->history(), output);
   }
   
-  // optional int64 submitTime = 6;
+  // optional double submitTime = 9;
   if (has_submittime()) {
-    ::google::protobuf::internal::WireFormatLite::WriteInt64(6, this->submittime(), output);
+    ::google::protobuf::internal::WireFormatLite::WriteDouble(9, this->submittime(), output);
   }
   
-  // optional int64 arriveTime = 7;
+  // optional double arriveTime = 10;
   if (has_arrivetime()) {
-    ::google::protobuf::internal::WireFormatLite::WriteInt64(7, this->arrivetime(), output);
+    ::google::protobuf::internal::WireFormatLite::WriteDouble(10, this->arrivetime(), output);
   }
   
-  // optional int64 rqueuedTime = 8;
+  // optional double rqueuedTime = 11;
   if (has_rqueuedtime()) {
-    ::google::protobuf::internal::WireFormatLite::WriteInt64(8, this->rqueuedtime(), output);
+    ::google::protobuf::internal::WireFormatLite::WriteDouble(11, this->rqueuedtime(), output);
   }
   
-  // optional int64 exeTime = 9;
+  // optional double exeTime = 12;
   if (has_exetime()) {
-    ::google::protobuf::internal::WireFormatLite::WriteInt64(9, this->exetime(), output);
+    ::google::protobuf::internal::WireFormatLite::WriteDouble(12, this->exetime(), output);
   }
   
-  // optional int64 finTime = 10;
+  // optional double finTime = 13;
   if (has_fintime()) {
-    ::google::protobuf::internal::WireFormatLite::WriteInt64(10, this->fintime(), output);
+    ::google::protobuf::internal::WireFormatLite::WriteDouble(13, this->fintime(), output);
   }
   
-  // optional int32 numTaskFin = 11;
+  // optional int64 numTaskFin = 14;
   if (has_numtaskfin()) {
-    ::google::protobuf::internal::WireFormatLite::WriteInt32(11, this->numtaskfin(), output);
+    ::google::protobuf::internal::WireFormatLite::WriteInt64(14, this->numtaskfin(), output);
   }
   
-  // optional int32 numTaskWait = 12;
+  // optional int32 numTaskWait = 15;
   if (has_numtaskwait()) {
-    ::google::protobuf::internal::WireFormatLite::WriteInt32(12, this->numtaskwait(), output);
+    ::google::protobuf::internal::WireFormatLite::WriteInt32(15, this->numtaskwait(), output);
   }
   
-  // optional int32 numTaskReady = 13;
+  // optional int32 numTaskReady = 16;
   if (has_numtaskready()) {
-    ::google::protobuf::internal::WireFormatLite::WriteInt32(13, this->numtaskready(), output);
+    ::google::protobuf::internal::WireFormatLite::WriteInt32(16, this->numtaskready(), output);
   }
   
-  // optional int32 numCoreAvilable = 14;
+  // optional int32 numCoreAvilable = 17;
   if (has_numcoreavilable()) {
-    ::google::protobuf::internal::WireFormatLite::WriteInt32(14, this->numcoreavilable(), output);
+    ::google::protobuf::internal::WireFormatLite::WriteInt32(17, this->numcoreavilable(), output);
   }
   
-  // optional int32 numAllCore = 15;
+  // optional int32 numAllCore = 18;
   if (has_numallcore()) {
-    ::google::protobuf::internal::WireFormatLite::WriteInt32(15, this->numallcore(), output);
+    ::google::protobuf::internal::WireFormatLite::WriteInt32(18, this->numallcore(), output);
   }
   
-  // optional int64 numWorkSteal = 16;
+  // optional int64 numWorkSteal = 19;
   if (has_numworksteal()) {
-    ::google::protobuf::internal::WireFormatLite::WriteInt64(16, this->numworksteal(), output);
+    ::google::protobuf::internal::WireFormatLite::WriteInt64(19, this->numworksteal(), output);
   }
   
-  // optional int64 numWorkStealFail = 17;
+  // optional int64 numWorkStealFail = 20;
   if (has_numworkstealfail()) {
-    ::google::protobuf::internal::WireFormatLite::WriteInt64(17, this->numworkstealfail(), output);
+    ::google::protobuf::internal::WireFormatLite::WriteInt64(20, this->numworkstealfail(), output);
   }
   
   if (!unknown_fields().empty()) {
@@ -655,93 +748,117 @@ void Value::SerializeWithCachedSizes(
         1, this->id(), target);
   }
   
-  // optional int32 indegree = 2;
-  if (has_indegree()) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteInt32ToArray(2, this->indegree(), target);
+  // repeated string parents = 2;
+  for (int i = 0; i < this->parents_size(); i++) {
+    ::google::protobuf::internal::WireFormat::VerifyUTF8String(
+      this->parents(i).data(), this->parents(i).length(),
+      ::google::protobuf::internal::WireFormat::SERIALIZE);
+    target = ::google::protobuf::internal::WireFormatLite::
+      WriteStringToArray(2, this->parents(i), target);
   }
   
-  // repeated string children = 3;
+  // optional int64 indegree = 3;
+  if (has_indegree()) {
+    target = ::google::protobuf::internal::WireFormatLite::WriteInt64ToArray(3, this->indegree(), target);
+  }
+  
+  // repeated string children = 4;
   for (int i = 0; i < this->children_size(); i++) {
     ::google::protobuf::internal::WireFormat::VerifyUTF8String(
       this->children(i).data(), this->children(i).length(),
       ::google::protobuf::internal::WireFormat::SERIALIZE);
     target = ::google::protobuf::internal::WireFormatLite::
-      WriteStringToArray(3, this->children(i), target);
+      WriteStringToArray(4, this->children(i), target);
   }
   
-  // optional int32 numMove = 4;
+  // repeated string dataNameList = 5;
+  for (int i = 0; i < this->datanamelist_size(); i++) {
+    ::google::protobuf::internal::WireFormat::VerifyUTF8String(
+      this->datanamelist(i).data(), this->datanamelist(i).length(),
+      ::google::protobuf::internal::WireFormat::SERIALIZE);
+    target = ::google::protobuf::internal::WireFormatLite::
+      WriteStringToArray(5, this->datanamelist(i), target);
+  }
+  
+  // repeated int64 dataSize = 6;
+  for (int i = 0; i < this->datasize_size(); i++) {
+    target = ::google::protobuf::internal::WireFormatLite::
+      WriteInt64ToArray(6, this->datasize(i), target);
+  }
+  
+  // optional int32 numMove = 7;
   if (has_nummove()) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteInt32ToArray(4, this->nummove(), target);
+    target = ::google::protobuf::internal::WireFormatLite::WriteInt32ToArray(7, this->nummove(), target);
   }
   
-  // optional string history = 5;
+  // optional string history = 8;
   if (has_history()) {
     ::google::protobuf::internal::WireFormat::VerifyUTF8String(
       this->history().data(), this->history().length(),
       ::google::protobuf::internal::WireFormat::SERIALIZE);
     target =
       ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
-        5, this->history(), target);
+        8, this->history(), target);
   }
   
-  // optional int64 submitTime = 6;
+  // optional double submitTime = 9;
   if (has_submittime()) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteInt64ToArray(6, this->submittime(), target);
+    target = ::google::protobuf::internal::WireFormatLite::WriteDoubleToArray(9, this->submittime(), target);
   }
   
-  // optional int64 arriveTime = 7;
+  // optional double arriveTime = 10;
   if (has_arrivetime()) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteInt64ToArray(7, this->arrivetime(), target);
+    target = ::google::protobuf::internal::WireFormatLite::WriteDoubleToArray(10, this->arrivetime(), target);
   }
   
-  // optional int64 rqueuedTime = 8;
+  // optional double rqueuedTime = 11;
   if (has_rqueuedtime()) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteInt64ToArray(8, this->rqueuedtime(), target);
+    target = ::google::protobuf::internal::WireFormatLite::WriteDoubleToArray(11, this->rqueuedtime(), target);
   }
   
-  // optional int64 exeTime = 9;
+  // optional double exeTime = 12;
   if (has_exetime()) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteInt64ToArray(9, this->exetime(), target);
+    target = ::google::protobuf::internal::WireFormatLite::WriteDoubleToArray(12, this->exetime(), target);
   }
   
-  // optional int64 finTime = 10;
+  // optional double finTime = 13;
   if (has_fintime()) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteInt64ToArray(10, this->fintime(), target);
+    target = ::google::protobuf::internal::WireFormatLite::WriteDoubleToArray(13, this->fintime(), target);
   }
   
-  // optional int32 numTaskFin = 11;
+  // optional int64 numTaskFin = 14;
   if (has_numtaskfin()) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteInt32ToArray(11, this->numtaskfin(), target);
+    target = ::google::protobuf::internal::WireFormatLite::WriteInt64ToArray(14, this->numtaskfin(), target);
   }
   
-  // optional int32 numTaskWait = 12;
+  // optional int32 numTaskWait = 15;
   if (has_numtaskwait()) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteInt32ToArray(12, this->numtaskwait(), target);
+    target = ::google::protobuf::internal::WireFormatLite::WriteInt32ToArray(15, this->numtaskwait(), target);
   }
   
-  // optional int32 numTaskReady = 13;
+  // optional int32 numTaskReady = 16;
   if (has_numtaskready()) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteInt32ToArray(13, this->numtaskready(), target);
+    target = ::google::protobuf::internal::WireFormatLite::WriteInt32ToArray(16, this->numtaskready(), target);
   }
   
-  // optional int32 numCoreAvilable = 14;
+  // optional int32 numCoreAvilable = 17;
   if (has_numcoreavilable()) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteInt32ToArray(14, this->numcoreavilable(), target);
+    target = ::google::protobuf::internal::WireFormatLite::WriteInt32ToArray(17, this->numcoreavilable(), target);
   }
   
-  // optional int32 numAllCore = 15;
+  // optional int32 numAllCore = 18;
   if (has_numallcore()) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteInt32ToArray(15, this->numallcore(), target);
+    target = ::google::protobuf::internal::WireFormatLite::WriteInt32ToArray(18, this->numallcore(), target);
   }
   
-  // optional int64 numWorkSteal = 16;
+  // optional int64 numWorkSteal = 19;
   if (has_numworksteal()) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteInt64ToArray(16, this->numworksteal(), target);
+    target = ::google::protobuf::internal::WireFormatLite::WriteInt64ToArray(19, this->numworksteal(), target);
   }
   
-  // optional int64 numWorkStealFail = 17;
+  // optional int64 numWorkStealFail = 20;
   if (has_numworkstealfail()) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteInt64ToArray(17, this->numworkstealfail(), target);
+    target = ::google::protobuf::internal::WireFormatLite::WriteInt64ToArray(20, this->numworkstealfail(), target);
   }
   
   if (!unknown_fields().empty()) {
@@ -762,109 +879,99 @@ int Value::ByteSize() const {
           this->id());
     }
     
-    // optional int32 indegree = 2;
+    // optional int64 indegree = 3;
     if (has_indegree()) {
       total_size += 1 +
-        ::google::protobuf::internal::WireFormatLite::Int32Size(
+        ::google::protobuf::internal::WireFormatLite::Int64Size(
           this->indegree());
     }
     
-    // optional int32 numMove = 4;
+    // optional int32 numMove = 7;
     if (has_nummove()) {
       total_size += 1 +
         ::google::protobuf::internal::WireFormatLite::Int32Size(
           this->nummove());
     }
     
-    // optional string history = 5;
+    // optional string history = 8;
     if (has_history()) {
       total_size += 1 +
         ::google::protobuf::internal::WireFormatLite::StringSize(
           this->history());
     }
     
-    // optional int64 submitTime = 6;
-    if (has_submittime()) {
-      total_size += 1 +
-        ::google::protobuf::internal::WireFormatLite::Int64Size(
-          this->submittime());
-    }
-    
-    // optional int64 arriveTime = 7;
-    if (has_arrivetime()) {
-      total_size += 1 +
-        ::google::protobuf::internal::WireFormatLite::Int64Size(
-          this->arrivetime());
-    }
-    
-    // optional int64 rqueuedTime = 8;
-    if (has_rqueuedtime()) {
-      total_size += 1 +
-        ::google::protobuf::internal::WireFormatLite::Int64Size(
-          this->rqueuedtime());
-    }
-    
   }
   if (_has_bits_[8 / 32] & (0xffu << (8 % 32))) {
-    // optional int64 exeTime = 9;
+    // optional double submitTime = 9;
+    if (has_submittime()) {
+      total_size += 1 + 8;
+    }
+    
+    // optional double arriveTime = 10;
+    if (has_arrivetime()) {
+      total_size += 1 + 8;
+    }
+    
+    // optional double rqueuedTime = 11;
+    if (has_rqueuedtime()) {
+      total_size += 1 + 8;
+    }
+    
+    // optional double exeTime = 12;
     if (has_exetime()) {
-      total_size += 1 +
-        ::google::protobuf::internal::WireFormatLite::Int64Size(
-          this->exetime());
+      total_size += 1 + 8;
     }
     
-    // optional int64 finTime = 10;
+    // optional double finTime = 13;
     if (has_fintime()) {
-      total_size += 1 +
-        ::google::protobuf::internal::WireFormatLite::Int64Size(
-          this->fintime());
+      total_size += 1 + 8;
     }
     
-    // optional int32 numTaskFin = 11;
+    // optional int64 numTaskFin = 14;
     if (has_numtaskfin()) {
       total_size += 1 +
-        ::google::protobuf::internal::WireFormatLite::Int32Size(
+        ::google::protobuf::internal::WireFormatLite::Int64Size(
           this->numtaskfin());
     }
     
-    // optional int32 numTaskWait = 12;
+    // optional int32 numTaskWait = 15;
     if (has_numtaskwait()) {
       total_size += 1 +
         ::google::protobuf::internal::WireFormatLite::Int32Size(
           this->numtaskwait());
     }
     
-    // optional int32 numTaskReady = 13;
+    // optional int32 numTaskReady = 16;
     if (has_numtaskready()) {
-      total_size += 1 +
+      total_size += 2 +
         ::google::protobuf::internal::WireFormatLite::Int32Size(
           this->numtaskready());
     }
     
-    // optional int32 numCoreAvilable = 14;
+  }
+  if (_has_bits_[16 / 32] & (0xffu << (16 % 32))) {
+    // optional int32 numCoreAvilable = 17;
     if (has_numcoreavilable()) {
-      total_size += 1 +
+      total_size += 2 +
         ::google::protobuf::internal::WireFormatLite::Int32Size(
           this->numcoreavilable());
     }
     
-    // optional int32 numAllCore = 15;
+    // optional int32 numAllCore = 18;
     if (has_numallcore()) {
-      total_size += 1 +
+      total_size += 2 +
         ::google::protobuf::internal::WireFormatLite::Int32Size(
           this->numallcore());
     }
     
-    // optional int64 numWorkSteal = 16;
+    // optional int64 numWorkSteal = 19;
     if (has_numworksteal()) {
       total_size += 2 +
         ::google::protobuf::internal::WireFormatLite::Int64Size(
           this->numworksteal());
     }
     
-  }
-  if (_has_bits_[16 / 32] & (0xffu << (16 % 32))) {
-    // optional int64 numWorkStealFail = 17;
+    // optional int64 numWorkStealFail = 20;
     if (has_numworkstealfail()) {
       total_size += 2 +
         ::google::protobuf::internal::WireFormatLite::Int64Size(
@@ -872,11 +979,35 @@ int Value::ByteSize() const {
     }
     
   }
-  // repeated string children = 3;
+  // repeated string parents = 2;
+  total_size += 1 * this->parents_size();
+  for (int i = 0; i < this->parents_size(); i++) {
+    total_size += ::google::protobuf::internal::WireFormatLite::StringSize(
+      this->parents(i));
+  }
+  
+  // repeated string children = 4;
   total_size += 1 * this->children_size();
   for (int i = 0; i < this->children_size(); i++) {
     total_size += ::google::protobuf::internal::WireFormatLite::StringSize(
       this->children(i));
+  }
+  
+  // repeated string dataNameList = 5;
+  total_size += 1 * this->datanamelist_size();
+  for (int i = 0; i < this->datanamelist_size(); i++) {
+    total_size += ::google::protobuf::internal::WireFormatLite::StringSize(
+      this->datanamelist(i));
+  }
+  
+  // repeated int64 dataSize = 6;
+  {
+    int data_size = 0;
+    for (int i = 0; i < this->datasize_size(); i++) {
+      data_size += ::google::protobuf::internal::WireFormatLite::
+        Int64Size(this->datasize(i));
+    }
+    total_size += 1 * this->datasize_size() + data_size;
   }
   
   if (!unknown_fields().empty()) {
@@ -904,7 +1035,10 @@ void Value::MergeFrom(const ::google::protobuf::Message& from) {
 
 void Value::MergeFrom(const Value& from) {
   GOOGLE_CHECK_NE(&from, this);
+  parents_.MergeFrom(from.parents_);
   children_.MergeFrom(from.children_);
+  datanamelist_.MergeFrom(from.datanamelist_);
+  datasize_.MergeFrom(from.datasize_);
   if (from._has_bits_[0 / 32] & (0xffu << (0 % 32))) {
     if (from.has_id()) {
       set_id(from.id());
@@ -918,6 +1052,8 @@ void Value::MergeFrom(const Value& from) {
     if (from.has_history()) {
       set_history(from.history());
     }
+  }
+  if (from._has_bits_[8 / 32] & (0xffu << (8 % 32))) {
     if (from.has_submittime()) {
       set_submittime(from.submittime());
     }
@@ -927,8 +1063,6 @@ void Value::MergeFrom(const Value& from) {
     if (from.has_rqueuedtime()) {
       set_rqueuedtime(from.rqueuedtime());
     }
-  }
-  if (from._has_bits_[8 / 32] & (0xffu << (8 % 32))) {
     if (from.has_exetime()) {
       set_exetime(from.exetime());
     }
@@ -944,6 +1078,8 @@ void Value::MergeFrom(const Value& from) {
     if (from.has_numtaskready()) {
       set_numtaskready(from.numtaskready());
     }
+  }
+  if (from._has_bits_[16 / 32] & (0xffu << (16 % 32))) {
     if (from.has_numcoreavilable()) {
       set_numcoreavilable(from.numcoreavilable());
     }
@@ -953,8 +1089,6 @@ void Value::MergeFrom(const Value& from) {
     if (from.has_numworksteal()) {
       set_numworksteal(from.numworksteal());
     }
-  }
-  if (from._has_bits_[16 / 32] & (0xffu << (16 % 32))) {
     if (from.has_numworkstealfail()) {
       set_numworkstealfail(from.numworkstealfail());
     }
@@ -983,8 +1117,11 @@ bool Value::IsInitialized() const {
 void Value::Swap(Value* other) {
   if (other != this) {
     std::swap(id_, other->id_);
+    parents_.Swap(&other->parents_);
     std::swap(indegree_, other->indegree_);
     children_.Swap(&other->children_);
+    datanamelist_.Swap(&other->datanamelist_);
+    datasize_.Swap(&other->datasize_);
     std::swap(nummove_, other->nummove_);
     std::swap(history_, other->history_);
     std::swap(submittime_, other->submittime_);

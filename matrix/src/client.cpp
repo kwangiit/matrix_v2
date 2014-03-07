@@ -31,6 +31,8 @@ int main(int argc, char* argv[])
 	/* calculate indegrees (number of parents) for every tasks */
 	inDegree dagInDegree;
 	gen_dag_indegree(dagAdjList, dagInDegree);
+	//adjList dagParentList;
+	//gen_dag_parents(dagAdjList, dagParentList);
 
 	/* insert the task information to ZHT */
 	mc->insert_taskinfo_to_zht(dagAdjList, dagInDegree);

@@ -30,6 +30,7 @@ class Configuration
 		int workStealingOn;	// indicate whether to do work staling (1) or not (0)
 		long wsPollIntervalStart;	// the initial value of poll interval in microsecond
 		long wsPollIntervalUb;	// the upper bound of poll inerval in microsecond
+		long dataSizeThreshold;
 
 		string schedulerMemFile;	// the memberlist file of all the schedulers
 		string netProtoc;	// network protocol type: TCP, UDP, UDT, etc

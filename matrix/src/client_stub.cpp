@@ -139,6 +139,88 @@ void MatrixClient::insert_taskinfo_to_zht(
 	}
 }
 
+//void MatrixClient::insert_taskinfo_to_zht(
+//		adjList &dagAdjList, adjList &dagParentList)
+//{
+//#ifdef PRINT_OUT
+//	cout << "------------------------------"
+//			"------------------------------" << endl;
+//	cout << "Now, I am going to insert task information to ZHT" << endl;
+//#endif
+//
+//	if (clientLogOS.is_open())
+//	{
+//		clientLogOS << "-------------------------------"
+//				"-----------------------------" << endl;
+//		clientLogOS << "Now, I am going to insert "
+//				"task information to ZHT" << endl;
+//	}
+//
+//	clock_gettime(0, &start);
+//
+//	for (adjList::iterator it = dagAdjList.begin();
+//						it != dagAdjList.end(); ++it)
+//	{
+//		stringstream ss;
+//		ss << get_index() << it->first;
+//		string taskId(ss.str());
+//
+//		vector<long> existList = it->second;
+//		vector<long> parents = dagParentList[it->first];
+//
+//		Value value;
+//		value.set_id(taskId);
+//
+//		for (long i = 0; i < parents.size(); i++)
+//		{
+//			value.add_parents()
+//		}
+//
+//		value.set_indegree(parents.size());
+//
+//		for (long i = 0; i < existList.size(); i++)
+//		{
+//			stringstream ssChild;
+//			ssChild << get_index() << existList.at(i);
+//			string sChild(ssChild.str());
+//
+//			value.add_children(sChild);
+//		}
+//
+//		value.set_nummove(0);
+//		value.set_history("");
+//		value.set_submittime(0.0);
+//		value.set_arrivetime(0.0);
+//		value.set_rqueuedtime(0.0);
+//		value.set_exetime(0.0);
+//		value.set_fintime(0.0);
+//
+//		string seriValue = value.SerializeAsString();
+//
+//		zc.insert(taskId, seriValue);
+//	}
+//
+//	incre_ZHT_msg_count(config->numTaskPerClient);
+//
+//	clock_gettime(0, &end);
+//	timespec diff = time_diff(start, end);
+//
+//#ifdef PRINT_OUT
+//	cout << "I am done, the time taken is:" << diff.tv_sec
+//			<< " s, and " << diff.tv_nsec + " ns" << endl;
+//	cout << "--------------------------------"
+//			"----------------------------" << endl;
+//#endif
+//
+//	if (clientLogOS.is_open())
+//	{
+//		clientLogOS << "I am done, the time taken is:" << diff.tv_sec
+//					<< " s, and " << diff.tv_nsec + " ns" << endl;
+//		clientLogOS << "--------------------------------"
+//				"----------------------------" << endl;
+//	}
+//}
+
 /* initialize all the tasks by assigning
  * taskId for each individual task
  * */

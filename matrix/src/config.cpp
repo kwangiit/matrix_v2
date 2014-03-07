@@ -76,6 +76,9 @@ void Configuration::parse_config(const string &configFile)
 	wsPollIntervalUb = str_to_num<long>(
 			configMap.find("WorkStealPollIntervalUpperBound")->second);
 
+	dataSizeThreshold = str_to_num<long>(
+			configMap.find("DataSizeThreshold")->second);
+
 	schedulerMemFile = configMap.find("SchedulerMemlistFile")->second;
 
 	netProtoc = configMap.find("NetworkProtocol")->second;

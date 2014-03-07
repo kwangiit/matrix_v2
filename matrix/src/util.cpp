@@ -314,6 +314,27 @@ void gen_dag_indegree(adjList &dagAdjList, inDegree &dagInDegree)
 	}
 }
 
+void gen_dag_parents(adjList &dagAdjList, adjList &dagParentList)
+{
+	for (long i = 0; i < dagAdjList.size(); i++)
+	{
+		vector<long> parents;
+		dagParentList.insert(make_pair(i, parents));
+	}
+
+	for (adjList::iterator it = dagAdjList.begin();
+						it != dagAdjList.end(); ++it)
+	{
+		long index = it->first;
+		vector<long> existList = it->second;
+
+		for (long i = 0; i < existList.size(); i++)
+		{
+			dagParentList.find(existList.at(i))->second.push_back(index);
+		}
+	}
+}
+
 double get_time_usec()
 {
 	struct timeval currentTime;

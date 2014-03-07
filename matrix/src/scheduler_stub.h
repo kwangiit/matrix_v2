@@ -10,6 +10,7 @@
 
 #include "util.h"
 #include "ZHT/src/meta.pb.h"
+#include <queue>
 
 class MatrixScheduler: public Peer
 {
@@ -92,6 +93,11 @@ class MatrixScheduler: public Peer
 		Mutex wqMutex;	// Mutex of waiting queue
 		Mutex rqMutex;	// Mutex of ready queue
 		Mutex cqMutex;	// Mutex of complete queue
+		Mutex lqMutex;
+		Mutex wsqMutex;
+
+		priority_queue<TaskItem, vector<TaskItem>, HighPriorityByDataSize> localQueue;
+		priority_queue<TaskItem, vector<TaskItem>, HighPriorityByDataSize> wsQueue;
 
 		deque<string> waitQueue;	// waiting queue
 		deque<string> readyQueue;	// ready queue
@@ -100,4 +106,22 @@ class MatrixScheduler: public Peer
 		ofstream schedulerLogOS;	// scheduler log output stream
 };
 
+
+class TaskItem
+{
+	string taskId;
+	string user;
+	string dir;
+	string cmd;
+	long dataSize;
+};
+
+struct HighPriorityByDataSize
+{
+	bool operator()(const TaskItem &hpTaskItem,
+			const TaskItem &lpTaskItem) const
+	{
+		return hpTaskItem.dataSize > lpTaskItem.dataSize;
+	}
+};
 #endif /* SCHEDULER_STUB_H_ */

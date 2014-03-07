@@ -85,6 +85,8 @@ extern void gen_dag_adjlist(adjList&, string&, long, long);
  * number of parents for each task */
 extern void gen_dag_indegree(adjList&, inDegree&);
 
+extern void gen_dag_parents(adjList&, adjList&);
+
 /* get the current time of day in micro-second */
 extern double get_time_usec();
 
