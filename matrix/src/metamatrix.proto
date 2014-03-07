@@ -1,0 +1,16 @@
+message MatrixMsg
+{
+	required string msgType = 1;
+	optional int64 count = 2;
+	
+	message TaskMsg
+	{
+		required string taskId = 1;
+		required string user = 2;
+		required string dir = 3;
+		required string cmd = 4;
+		required int64 dataLength = 5; 
+	}
+	
+	repeated TaskMsg tasks = 3;
+}

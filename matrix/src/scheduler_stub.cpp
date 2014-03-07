@@ -35,6 +35,8 @@ MatrixScheduler::MatrixScheduler(const string
 	wqMutex = Mutex();
 	rqMutex = Mutex();
 	cqMutex = Mutex();
+	lqMutex = Mutex();
+	wsqMutex = Mutex();
 
 	clock_gettime(0, &end);
 

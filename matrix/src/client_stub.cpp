@@ -6,7 +6,7 @@
  */
 
 #include "client_stub.h"
-#include "ZHT/src/meta.pb.h"
+#include "metamatrix.pb.h"
 
 MatrixClient::MatrixClient(const string &configFile) : Peer(configFile)
 {
@@ -234,7 +234,14 @@ void MatrixClient::init_task()
 		ss << get_index() << i;
 		string taskId(ss.str());
 
-		taskVec.at(i) = taskId + " " + taskVec.at(i);
+		vector<string> taskItemStr = tokenize(taskId + " " + taskVec.at(i), " ");
+		MatrixMsg_TaskMsg tm;
+		tm.set_taskid(taskItemStr.at(0));
+		tm.set_user(taskItemStr.at(1));
+		tm.set_dir(taskItemStr.at(2));
+		tm.set_cmd(taskItemStr.at(3));
+		tm.set_datalength(0);
+		tasks.push_back(tm);
 	}
 }
 
@@ -263,21 +270,20 @@ void MatrixClient::submit_task()
 	 * time of all the tasks. This might be not
 	 * accurate with tasks sent batch by batch
 	 * */
-	double time_us = get_time_usec();
 	long increment = 0;
 
 	for (long i = 0; i < config->numTaskPerClient; i++)
 	{
-		vector<string> taskSpec = tokenize(taskVec.at(i), " ");
+		string taskId = tasks.at(i).taskid();
 		string taskDetail;
-		zc.lookup(taskSpec.at(0), taskDetail);
+		zc.lookup(taskId, taskDetail);
 
 		Value value;
 		value.ParseFromString(taskDetail);
-		value.set_submittime(time_us);
+		value.set_submittime(get_time_usec());
 
 		taskDetail = value.SerializeAsString();
-		zc.insert(taskSpec.at(0), taskDetail);
+		zc.insert(taskId, taskDetail);
 
 		increment += 2;
 	}
@@ -295,7 +301,7 @@ void MatrixClient::submit_task()
 		 * selecting a scheduler to submit all the tasks
 		 * */
 		int toScheIdx = rand() % schedulerVec.size();
-		submit_task_wc(taskVec, toScheIdx);
+		submit_task_wc(tasks, toScheIdx);
 	}
 
 	clock_gettime(0, &end);
@@ -324,12 +330,12 @@ void MatrixClient::submit_task()
 void MatrixClient::submit_task_bc()
 {
 	int toScheIdx = -1, numSche = schedulerVec.size();
-	vector<string> *taskVecs = new vector<string>(numSche);
+	vector<MatrixMsg_TaskMsg> *tasksVec = new vector<MatrixMsg_TaskMsg>(numSche);
 
 	for (int i = 0; i < config->numTaskPerClient; i++)
 	{
 		toScheIdx = i % numSche;	// task index modular number of scheduler
-		taskVecs[toScheIdx].push_back(taskVec.at(i));
+		tasksVec[toScheIdx].push_back(tasks.at(i));
 	}
 
 	/* as long as all the tasks are distributed evenly,
@@ -338,7 +344,7 @@ void MatrixClient::submit_task_bc()
 	 * */
 	for (int i = 0; i < numSche; i++)
 	{
-		submit_task_wc(taskVecs[i], i);
+		submit_task_wc(tasksVec[i], i);
 	}
 }
 
@@ -346,9 +352,9 @@ void MatrixClient::submit_task_bc()
  * all the tasks (listed in "taskVec") are submitted to
  * one scheduler (index is "toScheIdx")
  * */
-void MatrixClient::submit_task_wc(vector<string> taskVec, int toScheIdx)
+void MatrixClient::submit_task_wc(vector<MatrixMsg_TaskMsg> tmVec, int toScheIdx)
 {
-	long numTaskLeft = taskVec.size();
+	long numTaskLeft = tmVec.size();
 	long numTaskBeenSent = 0;
 	long numTaskSendPerPkg = config->maxTaskPerPkg;
 
@@ -359,21 +365,21 @@ void MatrixClient::submit_task_wc(vector<string> taskVec, int toScheIdx)
 			numTaskSendPerPkg = numTaskLeft;
 		}
 
-		string tasks;
-
 		numTaskBeenSent = config->numTaskPerClient - numTaskLeft;
 
+		MatrixMsg mm;
+		mm.set_msgtype("client send task");
+		mm.set_count(numTaskSendPerPkg);
+
+		long pos = 0;
 		for (long i = 0; i < numTaskSendPerPkg; i++)
 		{
-			tasks += taskVec.at(i + numTaskBeenSent);
-			tasks += "eot";
+			pos = i + numTaskBeenSent;
+			MatrixMsg_TaskMsg *tm = mm.add_tasks();
+			*tm = tmVec.at(pos);
 		}
 
-		Package taskPkg;
-		taskPkg.set_virtualpath("send task");
-		taskPkg.set_realfullpath(tasks);
-
-		string taskPkgStr = taskPkg.SerializeAsString();
+		string taskPkgStr = mm.SerializeAsString();
 		// send the taskPkgStr to the server scheduler_vector.at(toScheIdx)
 		// and receive acks
 

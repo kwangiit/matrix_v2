@@ -96,32 +96,17 @@ class MatrixScheduler: public Peer
 		Mutex lqMutex;
 		Mutex wsqMutex;
 
-		priority_queue<TaskItem, vector<TaskItem>, HighPriorityByDataSize> localQueue;
-		priority_queue<TaskItem, vector<TaskItem>, HighPriorityByDataSize> wsQueue;
+		priority_queue<MatrixMsg_TaskMsg, vector<MatrixMsg_TaskMsg>,
+		HighPriorityByDataSize> localQueue;
 
-		deque<string> waitQueue;	// waiting queue
-		deque<string> readyQueue;	// ready queue
+		priority_queue<MatrixMsg_TaskMsg, vector<MatrixMsg_TaskMsg>,
+		HighPriorityByDataSize> wsQueue;
+
+		deque<MatrixMsg_TaskMsg> waitQueue;	// waiting queue
+		//deque<string> readyQueue;	// ready queue
 		deque<string> completeQueue;	// complete queue
 
 		ofstream schedulerLogOS;	// scheduler log output stream
 };
 
-
-class TaskItem
-{
-	string taskId;
-	string user;
-	string dir;
-	string cmd;
-	long dataSize;
-};
-
-struct HighPriorityByDataSize
-{
-	bool operator()(const TaskItem &hpTaskItem,
-			const TaskItem &lpTaskItem) const
-	{
-		return hpTaskItem.dataSize > lpTaskItem.dataSize;
-	}
-};
 #endif /* SCHEDULER_STUB_H_ */

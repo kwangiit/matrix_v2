@@ -31,6 +31,7 @@
 #include <sys/ioctl.h>
 
 #include "metazht.pb.h"
+#include "metamatrix.pb.h"
 #include "ZHT/src/cpp_zhtclient.h"
 #include "config.h"
 
@@ -144,4 +145,27 @@ class Peer
 		int index;
 };
 
+/*class TaskItem
+{
+	public:
+		TaskItem(const string&, const string&,
+			const string&, const string&, long);
+		~TaskItem();
+		string taskId;
+		string user;
+		string dir;
+		string cmd;
+		long dataSize;
+
+
+};*/
+
+struct HighPriorityByDataSize
+{
+	bool operator()(const MatrixMsg_TaskMsg &hpTaskMsg,
+			const MatrixMsg_TaskMsg &lpTaskMsg) const
+	{
+		return hpTaskMsg.datalength() > lpTaskMsg.datalength();
+	}
+};
 #endif /* UTIL_H_ */

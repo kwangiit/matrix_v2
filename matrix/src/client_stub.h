@@ -40,7 +40,7 @@ class MatrixClient : public Peer
 		/* the worst case senario where tasks are submitted
 		 * to just one random chosen scheduler
 		 * */
-		void submit_task_wc(const vector<string>, int);
+		void submit_task_wc(vector<MatrixMsg_TaskMsg>, int);
 
 		/* monitoring thread function */
 		//void *monitoring(void*);
@@ -49,6 +49,7 @@ class MatrixClient : public Peer
 		void do_monitoring();
 
 		vector<string> taskVec;	// vectors to store all the tasks of this client
+		vector<MatrixMsg_TaskMsg> tasks;
 
 		timespec start, end;	// start and end time stamps
 
