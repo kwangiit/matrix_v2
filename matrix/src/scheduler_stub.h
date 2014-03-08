@@ -25,8 +25,10 @@ class MatrixScheduler: public Peer
 		 * */
 		void recv_task_from_scheduler(int, long);
 
+		void recv_pushing_task(MatrixMsg&, int, sockaddr);
+
 		/* receive tasks submitted by client */
-		void recv_task_from_client(string&, int, sockaddr);
+		void recv_task_from_client(MatrixMsg&, int, sockaddr);
 
 		/* pack and send tasks to another thief scheduler */
 		void pack_send_task(int, int, sockaddr);
@@ -64,7 +66,7 @@ class MatrixScheduler: public Peer
 		void fork_exec_task_thread();	// fork execute task threads
 
 		/* decrease the number of waiting parents for a given task */
-		long decrease_indegree(const string&);
+		long notify_children(const CmpQueueItem&);
 
 		/* fork check compute task thread */
 		void fork_cct_thread();
