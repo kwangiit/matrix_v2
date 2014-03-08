@@ -53,12 +53,13 @@ class MatrixScheduler: public Peer
 
 		void fork_ws_thread(void);	// fork work stealing thread
 
-		/* check if a given task is ready to run */
-		bool check_a_ready_task(const string&);
+		bool task_ready_process(const Value&, MatrixMsg_TaskMsg&);
+		/* check if a given task is ready to run, and put it in the right queue */
+		long check_a_ready_task(MatrixMsg_TaskMsg&);
 
 		void fork_crt_thread();	// fork check ready task thread
 
-		void exec_a_task(string&);	// execute a task
+		void exec_a_task(MatrixMsg_TaskMsg&);	// execute a task
 
 		void fork_exec_task_thread();	// fork execute task threads
 
@@ -95,6 +96,7 @@ class MatrixScheduler: public Peer
 		Mutex cqMutex;	// Mutex of complete queue
 		Mutex lqMutex;
 		Mutex wsqMutex;
+		Mutex ldMutex;
 
 		priority_queue<MatrixMsg_TaskMsg, vector<MatrixMsg_TaskMsg>,
 		HighPriorityByDataSize> localQueue;
@@ -104,9 +106,21 @@ class MatrixScheduler: public Peer
 
 		deque<MatrixMsg_TaskMsg> waitQueue;	// waiting queue
 		//deque<string> readyQueue;	// ready queue
-		deque<string> completeQueue;	// complete queue
+		deque<CmpQueueItem> completeQueue;	// complete queue
 
+		map<string, string> localData;
 		ofstream schedulerLogOS;	// scheduler log output stream
+};
+
+class CmpQueueItem
+{
+	public:
+		CmpQueueItem(const string &taskId, const string &key, long dataSize);
+		~CmpQueueItem();
+
+		string taskId;
+		string key;
+		long dataSize;
 };
 
 #endif /* SCHEDULER_STUB_H_ */

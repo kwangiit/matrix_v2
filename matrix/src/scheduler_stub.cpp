@@ -37,6 +37,7 @@ MatrixScheduler::MatrixScheduler(const string
 	cqMutex = Mutex();
 	lqMutex = Mutex();
 	wsqMutex = Mutex();
+	ldMutex = Mutex();
 
 	clock_gettime(0, &end);
 
@@ -476,33 +477,49 @@ void MatrixScheduler::fork_ws_thread()
  * delimited with space. After a task is done, move it to the
  * complete queue.
  * */
-void MatrixScheduler::exec_a_task(string &taskStr)
+void MatrixScheduler::exec_a_task(MatrixMsg_TaskMsg &tm)
 {
-	/*
-	 * taskStrVec.at(0) = taskId
-	 * taskStrVec.at(1) = user
-	 * taskStrVec.at(2) = directory
-	 * taskStrVec.at(3) = cmd
-	 * taskStrVec.at(4) = arguments
-	 */
-	vector<string> taskStrVec = tokenize(taskStr, " ");
 	string taskDetail;
-	zc.lookup(taskStrVec.at(0), taskDetail);
+	zc.lookup(tm.taskid(), taskDetail);
 	Value value;
 	value.ParseFromString(taskDetail);
 	value.set_exetime(get_time_usec());
 
-	const char *execmd = (taskStrVec.at(3) + taskStrVec.at(4)).c_str();
+	string data("");
+
+	for (int i = 0; i < value.parents_size(); i++)
+	{
+		if (value.datasize_size() > 0)
+		{
+			if (value.parents(i).compare(get_id()) == 0)
+			{
+				data += localData.find(value.datanamelist(i))->second;
+			}
+			else
+			{
+				/* send and receive data for that task */;
+			}
+		}
+	}
+
+	const char *execmd = tm.cmd().c_str();
 	string result = exec(execmd);
+	string key = get_id() + tm.taskid() + "data";
+
+	ldMutex.lock();
+	localData.insert(make_pair(key, result));
+	ldMutex.unlock();
+
 	value.set_fintime(get_time_usec());
 	taskDetail = value.SerializeAsString();
-	zc.insert(taskStrVec.at(0), taskDetail);
+	zc.insert(tm.taskid(), taskDetail);
 
 	numTaskFinMutex.lock();
 	numTaskFin++;
 	numTaskFinMutex.unlock();
+
 	cqMutex.lock();
-	completeQueue.push_back(taskStrVec.at(0));
+	completeQueue.push_back(CmpQueueItem(tm.taskid(), key, result.length()));
 	cqMutex.unlock();
 
 	ZHTMsgCountMutex.lock();
@@ -517,17 +534,17 @@ void MatrixScheduler::exec_a_task(string &taskStr)
 void *executing_task(void *args)
 {
 	MatrixScheduler *ms = (MatrixScheduler*)args;
-	string taskStr;
+	MatrixMsg_TaskMsg tm;
 
 	while (ms->running)
 	{
-		while (ms->readyQueue.size() > 0)
+		while (ms->localQueue.size() > 0)
 		{
-			ms->rqMutex.lock();
-			if (ms->readyQueue.size() > 0)
+			ms->lqMutex.lock();
+			if (ms->localQueue.size() > 0)
 			{
-				taskStr = ms->readyQueue.front();
-				ms->readyQueue.pop_front();
+				tm = ms->localQueue.top();
+				ms->localQueue.pop();
 				ms->rqMutex.unlock();
 			}
 			else
@@ -539,7 +556,7 @@ void *executing_task(void *args)
 			ms->numIdleCore--;
 			ms->numIdleCoreMutex.unlock();
 
-			ms->exec_a_task(taskStr);
+			ms->exec_a_task(tm);
 
 			ms->numIdleCoreMutex.lock();
 			ms->numIdleCore++;
@@ -568,34 +585,86 @@ void MatrixScheduler::fork_exec_task_thread()
 	}
 }
 
+bool MatrixScheduler::task_ready_process(
+		const Value &valuePkg, MatrixMsg_TaskMsg &tm)
+{
+	bool flag = false;
+
+	if (valuePkg.alldatasize() <= config->dataSizeThreshold)
+	{
+		tm.set_datalength(valuePkg.alldatasize());
+		wsqMutex.lock();
+		wsQueue.push(tm);
+		wsqMutex.unlock();
+		flag = true;
+	}
+	else
+	{
+		long maxDataSize = -1000000;
+		string maxDataScheduler;
+		for (int i = 0; i < valuePkg.datasize_size(); i++)
+		{
+			if (valuePkg.datasize(i) > maxDataSize)
+			{
+				maxDataSize = valuePkg.datasize(i);
+				maxDataScheduler = valuePkg.parents(i);
+			}
+		}
+		tm.set_datalength(maxDataSize);
+		if (maxDataScheduler.compare(get_id()) == 0)
+		{
+			lqMutex.lock();
+			localQueue.push(tm);
+			lqMutex.unlock();
+			flag = true;
+		}
+		else
+		{
+			MatrixMsg mm;
+			mm.set_msgtype("scheduler push task");
+			mm.set_count(1);
+			MatrixMsg_TaskMsg *mmtm = mm.add_tasks();
+			*mmtm = tm;
+			string mmStr = mm.SerializeAsString();
+			/* send a message to maxDataScheduler, and recv ack*/
+		}
+	}
+
+	return flag;
+}
 /* check to see whether a task is ready to run or not. A task is
  * ready only if all of its parants are done (the indegree counter
  * equals to 0).
  * */
-bool MatrixScheduler::check_a_ready_task(const string &taskStr)
+long MatrixScheduler::check_a_ready_task(MatrixMsg_TaskMsg &tm)
 {
-	vector<string> taskStrVec = tokenize(taskStr, " ");
 	string taskDetail;
-	zc.lookup(taskStrVec.at(0), taskDetail);
+	long incre = 0;
+
+	zc.lookup(tm.taskid(), taskDetail);
+	incre++;
 
 	Value valuePkg;
 	valuePkg.ParseFromString(taskDetail);
+
 	if (valuePkg.indegree() == 0)
 	{
-		valuePkg.set_rqueuedtime(get_time_usec());
-		taskDetail = valuePkg.SerializeAsString();
-		zc.insert(taskStrVec.at(0), taskDetail);
-		return true;
+		if (task_ready_process(valuePkg, tm))
+		{
+			valuePkg.set_rqueuedtime(get_time_usec());
+			taskDetail = valuePkg.SerializeAsString();
+			zc.insert(tm.taskid(), taskDetail);
+			incre++;
+		}
+		return incre;
 	}
-	else
-	{
-		return false;
-	}
+
+	return 0;
 }
 
-bool check_empty(string &str)
+bool check_empty(MatrixMsg_TaskMsg &tm)
 {
-	return str.empty();
+	return tm.taskid().empty();
 }
 
 /* checking ready task thread function, under the condition
@@ -608,7 +677,7 @@ void *checking_ready_task(void *args)
 {
 	MatrixScheduler *ms = (MatrixScheduler*)args;
 	int size = 0;
-	string taskStr;
+	MatrixMsg_TaskMsg tm;
 	long increment = 0;
 
 	while (ms->running)
@@ -619,20 +688,18 @@ void *checking_ready_task(void *args)
 
 			for (int i = 0; i < size; i++)
 			{
-				taskStr = ms->waitQueue[i];
-				if (!taskStr.empty())
+				tm = ms->waitQueue[i];
+				if (!tm.taskid().empty())
 				{
-					increment++;
-					if (ms->check_a_ready_task(taskStr))
+					int ret = ms->check_a_ready_task(tm);
+					if (ret != 0)
 					{
-						increment++;
-						ms->rqMutex.lock();
-						ms->readyQueue.push_back(taskStr);
-						ms->rqMutex.unlock();
-
-						ms->wqMutex.lock();
-						ms->waitQueue[i] = "";
-						ms->wqMutex.unlock();
+						increment += ret;
+						ms->waitQueue[i].set_taskid("");
+					}
+					else
+					{
+						increment += 1;
 					}
 				}
 			}
@@ -642,7 +709,7 @@ void *checking_ready_task(void *args)
 			 * set to be empty
 			 * */
 			ms->wqMutex.lock();
-			deque<string>::iterator last = remove_if(ms->waitQueue.begin(),
+			deque<MatrixMsg_TaskMsg>::iterator last = remove_if(ms->waitQueue.begin(),
 					ms->waitQueue.end(), check_empty);
 			ms->waitQueue.erase(last, ms->waitQueue.end());
 			ms->wqMutex.unlock();
@@ -858,4 +925,12 @@ void MatrixScheduler::fork_record_stat_thread()
 	{
 		sleep(1);
 	}
+}
+
+CmpQueueItem::CmpQueueItem(const string &taskId,
+		const string &key, long dataSize)
+{
+	this->taskId = taskId;
+	this->key = key;
+	this->dataSize;
 }

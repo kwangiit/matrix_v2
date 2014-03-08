@@ -465,18 +465,3 @@ void Peer::incre_ZHT_msg_count(long increment)
 {
 	numZHTMsg += increment;
 }
-
-TaskItem::TaskItem(const string &taskId, const string &user,
-		const string &dir, const string &cmd, long dataSize)
-{
-	this->taskId = taskId;
-	this->user = user;
-	this->dir = dir;
-	this->cmd = cmd;
-	this->dataSize = dataSize;
-}
-
-TaskItem::~TaskItem()
-{
-
-}
