@@ -810,6 +810,7 @@ long MatrixScheduler::notify_children(const CmpQueueItem &cqItem)
 		childVal.add_parents(get_id());
 		childVal.add_datanamelist(cqItem.key);
 		childVal.add_datasize(cqItem.dataSize);
+		childVal.set_alldatasize(childVal.alldatasize() + cqItem.dataSize);
 		childTaskDetailAttempt = childVal.SerializeAsString();
 
 		increment++;
@@ -821,6 +822,7 @@ long MatrixScheduler::notify_children(const CmpQueueItem &cqItem)
 			childVal.add_parents(get_id());
 			childVal.add_datanamelist(cqItem.key);
 			childVal.add_datasize(cqItem.dataSize);
+			childVal.set_alldatasize(childVal.alldatasize() + cqItem.dataSize);
 			childTaskDetailAttempt = childVal.SerializeAsString();
 			increment++;
 		}
