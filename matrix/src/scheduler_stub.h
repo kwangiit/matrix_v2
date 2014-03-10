@@ -12,6 +12,18 @@
 #include "ZHT/src/meta.pb.h"
 #include <queue>
 
+class CmpQueueItem
+{
+	public:
+		CmpQueueItem(const string &taskId, const string &key, long dataSize);
+		CmpQueueItem();
+		~CmpQueueItem();
+
+		string taskId;
+		string key;
+		long dataSize;
+};
+
 class MatrixScheduler: public Peer
 {
 	public:
@@ -112,17 +124,6 @@ class MatrixScheduler: public Peer
 
 		map<string, string> localData;
 		ofstream schedulerLogOS;	// scheduler log output stream
-};
-
-class CmpQueueItem
-{
-	public:
-		CmpQueueItem(const string &taskId, const string &key, long dataSize);
-		~CmpQueueItem();
-
-		string taskId;
-		string key;
-		long dataSize;
 };
 
 #endif /* SCHEDULER_STUB_H_ */

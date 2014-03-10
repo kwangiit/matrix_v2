@@ -237,7 +237,9 @@ void MatrixScheduler::recv_pushing_task(MatrixMsg &mm, int sockfd, sockaddr from
 int MatrixScheduler::proc_req(int sockfd, void *buf, sockaddr fromAddr)
 {
 	MatrixMsg mm;
-	string bufStr(buf);
+	string *sbuf = static_cast<string*>(buf);
+	string bufStr = *sbuf;
+	delete sbuf;
 	mm.ParseFromString(bufStr);
 
 	long increment = 0;
@@ -997,4 +999,16 @@ CmpQueueItem::CmpQueueItem(const string &taskId,
 	this->taskId = taskId;
 	this->key = key;
 	this->dataSize;
+}
+
+CmpQueueItem::CmpQueueItem()
+{
+	this->taskId = "";
+	this->key = "";
+	this->dataSize = 0;
+}
+
+CmpQueueItem::~CmpQueueItem()
+{
+
 }

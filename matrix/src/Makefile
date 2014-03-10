@@ -11,11 +11,10 @@ LIBFLAGS = -lstdc++ -lrt -lpthread -lm -lc -lprotobuf -lprotobuf-c -L../../ZHT/s
 
 all:	$(TARGETS)
 
-client: client.o client_stub.o config.o util.o metazht.pb.o \
-../../ZHT/src/cpp_zhtclient.o ../../ZHT/src/lru_cache.o ../../ZHT/src/meta.pb.o ../../ZHT/src/novoht.o ../../ZHT/src/lock_guard.o
+client: client.o client_stub.o config.o util.o metazht.pb.o metamatrix.pb.o ../../ZHT/src/cpp_zhtclient.o
 	$(CC) $(CCFLAGS) -o $@ $^ $(LIBFLAGS)
 
-scheduler: scheduler.o scheduler_stub.o config.o util.o matrix_epoll_server.o metazht.pb.o
+scheduler: scheduler.o scheduler_stub.o config.o util.o matrix_epoll_server.o metazht.pb.o metamatrix.pb.o
 	$(CC) $(CCFLAGS) -o $@ $^ $(LIBFLAGS)
 	
 %.o: %.cpp
@@ -28,6 +27,7 @@ config.o: config.cpp
 util.o: util.cpp
 matrix_epoll_server.o: matrix_epoll_server.cpp
 metazht.pb.o: metazht.pb.cc
+metamatrix.pb.o: metamatrix.pb.cc
 
 client_stub.o: client_stub.cpp
 client.o: client.cpp
