@@ -519,6 +519,14 @@ void MatrixScheduler::exec_a_task(MatrixMsg_TaskMsg &tm)
 
 	string data("");
 
+#ifdef ZHT_STORAGE
+	string dataPiece;
+	for (int i = 0; i < value.parents_size(); i++)
+	{
+		zc.lookup(value.datanamelist(i), dataPiece);
+		data += dataPiece;
+	}
+#else
 	for (int i = 0; i < value.parents_size(); i++)
 	{
 		if (value.datasize_size() > 0)
@@ -533,14 +541,19 @@ void MatrixScheduler::exec_a_task(MatrixMsg_TaskMsg &tm)
 			}
 		}
 	}
+#endif
 
 	const char *execmd = tm.cmd().c_str();
 	string result = exec(execmd);
 	string key = get_id() + tm.taskid() + "data";
 
+#ifdef ZHT_STORAGE
+	zc.insert(key, result);
+#else
 	ldMutex.lock();
 	localData.insert(make_pair(key, result));
 	ldMutex.unlock();
+#endif
 
 	value.set_fintime(get_time_usec());
 	taskDetail = value.SerializeAsString();
@@ -641,6 +654,13 @@ bool MatrixScheduler::task_ready_process(
 {
 	bool flag = false;
 
+#ifdef ZHT_STORAGE
+	tm.set_datalength(valuePkg.alldatasize());
+	wsqMutex.lock();
+	wsQueue.push(tm);
+	wsqMutex.unlock();
+	flag = true;
+#else
 	if (valuePkg.alldatasize() <= config->dataSizeThreshold)
 	{
 		tm.set_datalength(valuePkg.alldatasize());
@@ -680,6 +700,7 @@ bool MatrixScheduler::task_ready_process(
 			/* send a message to maxDataScheduler, and recv ack*/
 		}
 	}
+#endif
 
 	return flag;
 }
@@ -998,7 +1019,7 @@ CmpQueueItem::CmpQueueItem(const string &taskId,
 {
 	this->taskId = taskId;
 	this->key = key;
-	this->dataSize;
+	this->dataSize = dataSize;
 }
 
 CmpQueueItem::CmpQueueItem()
