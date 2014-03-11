@@ -19,6 +19,11 @@ MatrixScheduler::MatrixScheduler(const string
 	/* number of neighbors is equal to the
 	 * squared root of all number of schedulers
 	 * */
+	if (schedulerVec.size() == 1)
+	{
+		config->workStealingOn = 0;
+	}
+
 	numNeigh = (int)(sqrt(schedulerVec.size()));
 
 	neighIdx = new int[numNeigh];
@@ -130,7 +135,7 @@ void MatrixScheduler::pack_send_task(
 	}
 
 	string strTasks = mmTasks.SerializeAsString();
-	/*send taskPkgStr*/
+	send_bf(sockfd, strTasks);
 }
 
 /* send tasks to another thief scheduler */
@@ -148,7 +153,7 @@ void MatrixScheduler::send_task(int sockfd, sockaddr fromAddr)
 	MatrixMsg mmNumTask;
 	mmNumTask.set_count(numTaskToSend);
 	string strNumTask = mmNumTask.SerializeAsString();
-	/* send back how many task will be sent*/
+	send_bf(sockfd, strNumTask);
 
 	if (numTaskToSend > 0)
 	{
@@ -197,8 +202,12 @@ void MatrixScheduler::recv_task_from_client(
 	}
 	wqMutex.unlock();
 
-	string numTaskStr = num_to_str<long>(mm.count());
-	/* send number of task string back*/
+	MatrixMsg mmNumTask;
+	mmNumTask.set_msgtype("return to client");
+	mmNumTask.set_count(mm.count());
+	string numTaskStr = mmNumTask.SerializeAsString();
+	send_bf(sockfd, numTaskStr);
+
 	if (increment > 0)
 	{
 		ZHTMsgCountMutex.lock();
@@ -227,7 +236,11 @@ void MatrixScheduler::recv_pushing_task(MatrixMsg &mm, int sockfd, sockaddr from
 	zc.insert(mm.tasks(0).taskid(), taskDetail);
 	increment += 2;
 
-	/* send success */
+	MatrixMsg mmSuc;
+	mmSuc.set_msgtype("success receiving pushing task");
+	string mmSucStr = mmSuc.SerializeAsString();
+	send_bf(sockfd, mmSucStr);
+
 	ZHTMsgCountMutex.lock();
 	incre_ZHT_msg_count(increment);
 	ZHTMsgCountMutex.unlock();
@@ -255,7 +268,7 @@ int MatrixScheduler::proc_req(int sockfd, void *buf, sockaddr fromAddr)
 		mmLoad.set_count(load);
 		string strLoad;
 		strLoad = mmLoad.SerializeAsString();
-		/* do a send back the load */
+		send_bf(sockfd, strLoad);
 	}
 	else if (msg.compare("steal task") == 0)	// thief steals tasks
 	{
@@ -270,7 +283,15 @@ int MatrixScheduler::proc_req(int sockfd, void *buf, sockaddr fromAddr)
 	{
 		recv_pushing_task(mm, sockfd, fromAddr);
 	}
-
+	else if (msg.compare("scheduler require data") == 0)
+	{
+		string dataPiece = localData.find(mm.extrainfo())->second;
+		MatrixMsg mmDataPiece;
+		mmDataPiece.set_msgtype("scheduler send data");
+		mmDataPiece.set_extrainfo(dataPiece);
+		string dataStr = mmDataPiece.SerializeAsString();
+		send_bf(sockfd, dataStr);
+	}
 	return 1;
 }
 
@@ -345,8 +366,9 @@ void MatrixScheduler::find_most_loaded_neigh()
 	for (int i = 0; i < numNeigh; i++)
 	{
 		string result;
-//		send
-//		recv(scheduler_vecotr.at[neighIdx[i]], config->scheduler_port_num, result, ***);
+		int sockfd = send_first(schedulerVec.at(neighIdx[i]),
+				config->schedulerPortNo, strLoadQuery);
+		recv_bf(sockfd, result);
 		MatrixMsg mmLoad;
 		mmLoad.ParseFromString(result);
 
@@ -377,7 +399,7 @@ void MatrixScheduler::recv_task_from_scheduler(int sockfd, long numTask)
 	for (long i = 0; i < numRecv; i++)
 	{
 		string taskPkgStr;
-		//recv(sockfd, taskPkgStr);
+		recv_bf(sockfd, taskPkgStr);
 		MatrixMsg mm;
 		mm.ParseFromString(taskPkgStr);
 
@@ -427,8 +449,8 @@ bool MatrixScheduler::steal_task()
 	string strStealTask = mm.SerializeAsString();
 
 	string numTaskPkgStr;
-	int sockfd = 0;//send
-	// recv(scheduler_vector.at(maxLoadedIdx), config->scheduler_port_num, taskStr, ***);
+	int sockfd = send_first(schedulerVec.at(maxLoadedIdx), config->schedulerPortNo, strStealTask);
+	recv_bf(sockfd, numTaskPkgStr);
 	MatrixMsg mmNumTask;
 	mmNumTask.ParseFromString(numTaskPkgStr);
 
@@ -453,7 +475,7 @@ bool MatrixScheduler::steal_task()
 void *workstealing(void* args)
 {
 	MatrixScheduler *ms = (MatrixScheduler*)args;
-	while (ms->running)
+	while (ms->running && ms->config->workStealingOn)
 	{
 		while (ms->localQueue.size() + ms->wsQueue.size() == 0 &&
 				ms->pollInterval < ms->config->wsPollIntervalUb)
@@ -537,7 +559,17 @@ void MatrixScheduler::exec_a_task(MatrixMsg_TaskMsg &tm)
 			}
 			else
 			{
-				/* send and receive data for that task */;
+				MatrixMsg mm;
+				mm.set_msgtype("scheduler require data");
+				mm.set_extrainfo(value.datanamelist(i));
+				string mmStr;
+				mmStr = mm.SerializeAsString();
+				int sockfd = send_first(value.parents(i), config->schedulerPortNo, mmStr);
+				string dataPiece;
+				recv_bf(sockfd, dataPiece);
+				MatrixMsg mmData;
+				mmData.ParseFromString(dataPiece);
+				data += mmData.extrainfo();
 			}
 		}
 	}
@@ -697,7 +729,9 @@ bool MatrixScheduler::task_ready_process(
 			MatrixMsg_TaskMsg *mmtm = mm.add_tasks();
 			*mmtm = tm;
 			string mmStr = mm.SerializeAsString();
-			/* send a message to maxDataScheduler, and recv ack*/
+			int sockfd = send_first(maxDataScheduler, config->schedulerPortNo, mmStr);
+			string ack;
+			recv_bf(sockfd, ack);
 		}
 	}
 #endif

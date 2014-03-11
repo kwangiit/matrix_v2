@@ -1,41 +1,21 @@
 /*
- * matrix_tcp_proxy_stub.h
+ * net.h
  *
- *  Created on: Feb 13, 2014
+ *  Created on: Feb 27, 2014
  *      Author: kwang
  */
 
-#ifndef MATRIX_TCP_PROXY_STUB_H_
-#define MATRIX_TCP_PROXY_STUB_H_
+#ifndef NET_H_
+#define NET_H_
 
-#include "matrix_proxy_stub.h"
+#include "util.h"
 
 using namespace std;
 
-class MatrixTCPProxy
-{
-	public:
-		MatrixTCPProxy();
-		virtual ~MatrixTCPProxy();
+extern int send_first(const string&, long, const string&);
+extern int send_bf(int, const string&);
+extern int recv_bf(int, string&);
+//extern pthread_t create_es_thread(char*, char*);
 
-		int mmakeClientSocket(const string&, const uint&);
-		int msendTo(int sock, const void*, int);
-		int mrecvFrom(int sock, void* recvbuf);
-		int mloopedrecv(int sock, string &srecv);
-		bool msendrecv(const void *sendbuf, const size_t sendcount,
-				void *recvbuf, size_t &recvcount);
-		bool mteardown();
-};
 
-class MatrixTCPStub
-{
-	public:
-		MatrixTCPStub();
-		virtual ~MatrixTCPStub();
-
-		int msendBack(MatrixProtoAddr addr, const void* sendbuf,
-					int sendcount) const;
-		bool mrecvsend(MatrixProtoAddr addr, const void *recvbuf);
-};
-
-#endif /* MATRIX_TCP_PROXY_STUB_H_ */
+#endif /* NET_H_ */

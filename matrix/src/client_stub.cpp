@@ -6,7 +6,6 @@
  */
 
 #include "client_stub.h"
-#include "metamatrix.pb.h"
 
 MatrixClient::MatrixClient(const string &configFile) : Peer(configFile)
 {
@@ -14,7 +13,7 @@ MatrixClient::MatrixClient(const string &configFile) : Peer(configFile)
 
 	taskVec = read_from_file(config->workloadFile);
 
-	string base;
+	string base("");
 	base.append(num_to_str<int>(schedulerVec.size()));
 	base.append("_");
 	base.append(num_to_str<long>(config->numTaskPerClient));
@@ -226,9 +225,7 @@ void MatrixClient::insert_taskinfo_to_zht(
  * */
 void MatrixClient::init_task()
 {
-	long numTask = config->numTaskPerClient;
-
-	for (long i = 0; i < numTask; i++)
+	for (long i = 0; i < config->numTaskPerClient; i++)
 	{
 		stringstream ss;
 		ss << get_index() << i;
@@ -276,7 +273,7 @@ void MatrixClient::submit_task()
 	{
 		string taskId = tasks.at(i).taskid();
 		string taskDetail;
-		zc.lookup(taskId, taskDetail);
+		zc.lookup(tasks.at(i).taskid(), taskDetail);
 
 		Value value;
 		value.ParseFromString(taskDetail);
@@ -360,7 +357,7 @@ void MatrixClient::submit_task_wc(vector<MatrixMsg_TaskMsg> tmVec, int toScheIdx
 
 	while (numTaskLeft > 0)
 	{
-		if (numTaskLeft <= config->maxTaskPerPkg)
+		if (numTaskLeft < config->maxTaskPerPkg)
 		{
 			numTaskSendPerPkg = numTaskLeft;
 		}
@@ -380,8 +377,10 @@ void MatrixClient::submit_task_wc(vector<MatrixMsg_TaskMsg> tmVec, int toScheIdx
 		}
 
 		string taskPkgStr = mm.SerializeAsString();
-		// send the taskPkgStr to the server scheduler_vector.at(toScheIdx)
-		// and receive acks
+
+		int sockfd = send_first(schedulerVec.at(toScheIdx), config->schedulerPortNo, taskPkgStr);
+		string recvBuf;
+		recv_bf(sockfd, recvBuf);
 
 		numTaskLeft -= numTaskSendPerPkg;
 	}

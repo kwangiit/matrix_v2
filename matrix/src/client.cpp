@@ -9,12 +9,12 @@
 
 using namespace std;
 
-int main(int argc, char* argv[])
+int main(int argc, char *argv[])
 {
 	/* check whether specified a configuration file */
 	if (argc != 2)
 	{
-		fprintf(stderr, "The usage is: client configuration_file!\n");
+		fprintf(stderr, "The usage is: client\tconfiguration_file!\n");
 		exit(-1);
 	}
 

@@ -27,6 +27,7 @@
 #include <net/if.h>
 #include <arpa/inet.h>
 #include <sys/socket.h>
+#include <netdb.h>
 #include <sys/types.h>
 #include <sys/ioctl.h>
 
@@ -124,7 +125,7 @@ class Peer
 
 		void wait_all_scheduler();
 
-		void set_id(string);
+		void set_id(const string&);
 
 		string get_id(void);
 

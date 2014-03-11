@@ -247,10 +247,21 @@ class MatrixMsg : public ::google::protobuf::Message {
   inline ::google::protobuf::int64 count() const;
   inline void set_count(::google::protobuf::int64 value);
   
-  // repeated .MatrixMsg.TaskMsg tasks = 3;
+  // optional string extraInfo = 3;
+  inline bool has_extrainfo() const;
+  inline void clear_extrainfo();
+  static const int kExtraInfoFieldNumber = 3;
+  inline const ::std::string& extrainfo() const;
+  inline void set_extrainfo(const ::std::string& value);
+  inline void set_extrainfo(const char* value);
+  inline void set_extrainfo(const char* value, size_t size);
+  inline ::std::string* mutable_extrainfo();
+  inline ::std::string* release_extrainfo();
+  
+  // repeated .MatrixMsg.TaskMsg tasks = 4;
   inline int tasks_size() const;
   inline void clear_tasks();
-  static const int kTasksFieldNumber = 3;
+  static const int kTasksFieldNumber = 4;
   inline const ::MatrixMsg_TaskMsg& tasks(int index) const;
   inline ::MatrixMsg_TaskMsg* mutable_tasks(int index);
   inline ::MatrixMsg_TaskMsg* add_tasks();
@@ -265,15 +276,18 @@ class MatrixMsg : public ::google::protobuf::Message {
   inline void clear_has_msgtype();
   inline void set_has_count();
   inline void clear_has_count();
+  inline void set_has_extrainfo();
+  inline void clear_has_extrainfo();
   
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
   
   ::std::string* msgtype_;
   ::google::protobuf::int64 count_;
+  ::std::string* extrainfo_;
   ::google::protobuf::RepeatedPtrField< ::MatrixMsg_TaskMsg > tasks_;
   
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(3 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(4 + 31) / 32];
   
   friend void  protobuf_AddDesc_metamatrix_2eproto();
   friend void protobuf_AssignDesc_metamatrix_2eproto();
@@ -627,7 +641,65 @@ inline void MatrixMsg::set_count(::google::protobuf::int64 value) {
   count_ = value;
 }
 
-// repeated .MatrixMsg.TaskMsg tasks = 3;
+// optional string extraInfo = 3;
+inline bool MatrixMsg::has_extrainfo() const {
+  return (_has_bits_[0] & 0x00000004u) != 0;
+}
+inline void MatrixMsg::set_has_extrainfo() {
+  _has_bits_[0] |= 0x00000004u;
+}
+inline void MatrixMsg::clear_has_extrainfo() {
+  _has_bits_[0] &= ~0x00000004u;
+}
+inline void MatrixMsg::clear_extrainfo() {
+  if (extrainfo_ != &::google::protobuf::internal::kEmptyString) {
+    extrainfo_->clear();
+  }
+  clear_has_extrainfo();
+}
+inline const ::std::string& MatrixMsg::extrainfo() const {
+  return *extrainfo_;
+}
+inline void MatrixMsg::set_extrainfo(const ::std::string& value) {
+  set_has_extrainfo();
+  if (extrainfo_ == &::google::protobuf::internal::kEmptyString) {
+    extrainfo_ = new ::std::string;
+  }
+  extrainfo_->assign(value);
+}
+inline void MatrixMsg::set_extrainfo(const char* value) {
+  set_has_extrainfo();
+  if (extrainfo_ == &::google::protobuf::internal::kEmptyString) {
+    extrainfo_ = new ::std::string;
+  }
+  extrainfo_->assign(value);
+}
+inline void MatrixMsg::set_extrainfo(const char* value, size_t size) {
+  set_has_extrainfo();
+  if (extrainfo_ == &::google::protobuf::internal::kEmptyString) {
+    extrainfo_ = new ::std::string;
+  }
+  extrainfo_->assign(reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* MatrixMsg::mutable_extrainfo() {
+  set_has_extrainfo();
+  if (extrainfo_ == &::google::protobuf::internal::kEmptyString) {
+    extrainfo_ = new ::std::string;
+  }
+  return extrainfo_;
+}
+inline ::std::string* MatrixMsg::release_extrainfo() {
+  clear_has_extrainfo();
+  if (extrainfo_ == &::google::protobuf::internal::kEmptyString) {
+    return NULL;
+  } else {
+    ::std::string* temp = extrainfo_;
+    extrainfo_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
+    return temp;
+  }
+}
+
+// repeated .MatrixMsg.TaskMsg tasks = 4;
 inline int MatrixMsg::tasks_size() const {
   return tasks_.size();
 }

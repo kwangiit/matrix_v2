@@ -8,8 +8,7 @@
 #ifndef SCHEDULER_STUB_H_
 #define SCHEDULER_STUB_H_
 
-#include "util.h"
-#include "ZHT/src/meta.pb.h"
+#include "matrix_tcp_proxy_stub.h"
 #include <queue>
 
 class CmpQueueItem

@@ -10,11 +10,10 @@
 
 #include <sstream>
 
-#include <netdb.h>
 #include <pthread.h>
 #include <error.h>
 
-#include "util.h"
+#include "matrix_tcp_proxy_stub.h"
 
 class MatrixClient : public Peer
 {

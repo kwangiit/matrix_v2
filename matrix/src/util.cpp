@@ -98,18 +98,18 @@ string get_host_id(const string &type)
 {
 	string id;
 
-	if (!type.compare("localhost"))
+	if (type.compare("localhost") == 0)
 	{
 		id = "localhost";
 	}
-	else if (!type.compare("ip"))
+	else if (type.compare("ip") == 0)
 	{
 		char ip_cstr[30];
 		memset(ip_cstr, '\0', 30);
 		get_ip(ip_cstr);
 		id.assign(ip_cstr);
 	}
-	else
+	else if (type.compare("hostname") == 0)
 	{
 		id = exec("hostname");
 	}
@@ -430,7 +430,7 @@ bool Peer::init_zht_client(const string &zhtcfgFile, const string &neighFile)
 	}
 }
 
-void Peer::set_id(string id)
+void Peer::set_id(const string &id)
 {
 	this->id = id;
 }
