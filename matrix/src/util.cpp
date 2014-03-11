@@ -7,7 +7,7 @@
 
 #include "util.h"
 
-uint _BUF_SIZE = 512 + 38;
+uint _BUF_SIZE = 1000;
 
 vector<string> tokenize(const string &source, const char *delimiter)
 {
@@ -114,6 +114,7 @@ string get_host_id(const string &type)
 		id = exec("hostname");
 	}
 
+	cout << "The id is: " << id << endl;
 	return id;
 }
 
@@ -128,7 +129,7 @@ vector<string> read_from_file(const string &fileName)
 		return fileVec;
 	}
 
-	while(fileStream >> line)
+	while(getline(fileStream, line))
 	{
 		fileVec.push_back(line);
 	}
@@ -142,6 +143,7 @@ int get_self_idx(const string &str, vector<string> strVec)
 
 	for (int i = 0; i < strVec.size(); i++)
 	{
+		cout << "string is:" << str << " and target is:" << strVec.at(i) << endl;
 		if (str.compare(strVec.at(i)) == 0)
 		{
 			idx = i;
@@ -293,6 +295,7 @@ void gen_dag_adjlist(adjList &dagAdjList, string &dagType,
 	{
 		gen_pipeline_adjlist(dagAdjList, dagArg, numTask);
 	}
+	print_adjlist(dagAdjList);
 }
 
 void gen_dag_indegree(adjList &dagAdjList, inDegree &dagInDegree)

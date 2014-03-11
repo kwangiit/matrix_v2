@@ -124,7 +124,7 @@ void MatrixClient::insert_taskinfo_to_zht(
 
 #ifdef PRINT_OUT
 	cout << "I am done, the time taken is:" << diff.tv_sec
-			<< " s, and " << diff.tv_nsec + " ns" << endl;
+			<< " s, and " << diff.tv_nsec << " ns" << endl;
 	cout << "--------------------------------"
 			"----------------------------" << endl;
 #endif
@@ -132,7 +132,7 @@ void MatrixClient::insert_taskinfo_to_zht(
 	if (clientLogOS.is_open())
 	{
 		clientLogOS << "I am done, the time taken is:" << diff.tv_sec
-					<< " s, and " << diff.tv_nsec + " ns" << endl;
+					<< " s, and " << diff.tv_nsec << " ns" << endl;
 		clientLogOS << "--------------------------------"
 				"----------------------------" << endl;
 	}
@@ -231,7 +231,12 @@ void MatrixClient::init_task()
 		ss << get_index() << i;
 		string taskId(ss.str());
 
+		cout << taskVec.at(i) << endl;
 		vector<string> taskItemStr = tokenize(taskId + " " + taskVec.at(i), " ");
+		for (int j = 0; j < taskItemStr.size(); j++)
+		{
+			cout << taskItemStr.at(j) << endl;
+		}
 		MatrixMsg_TaskMsg tm;
 		tm.set_taskid(taskItemStr.at(0));
 		tm.set_user(taskItemStr.at(1));
@@ -288,11 +293,11 @@ void MatrixClient::submit_task()
 	incre_ZHT_msg_count(increment);
 
 	/* if the submission mode is best case */
-	if (config->submitMode.compare("best case") == 0)
+	if (config->submitMode.compare("bestcase") == 0)
 	{
 		submit_task_bc();
 	}
-	else if (config->submitMode.compare("worst case") == 0)
+	else if (config->submitMode.compare("worstcase") == 0)
 	{
 		/* otherwise, do the worst case scenario by randomly
 		 * selecting a scheduler to submit all the tasks
@@ -327,7 +332,12 @@ void MatrixClient::submit_task()
 void MatrixClient::submit_task_bc()
 {
 	int toScheIdx = -1, numSche = schedulerVec.size();
-	vector<MatrixMsg_TaskMsg> *tasksVec = new vector<MatrixMsg_TaskMsg>(numSche);
+
+	vector< vector<MatrixMsg_TaskMsg> > tasksVec;
+	for (int i = 0; i < numSche; i++)
+	{
+		tasksVec.push_back(vector<MatrixMsg_TaskMsg>());
+	}
 
 	for (int i = 0; i < config->numTaskPerClient; i++)
 	{
@@ -354,6 +364,7 @@ void MatrixClient::submit_task_wc(vector<MatrixMsg_TaskMsg> tmVec, int toScheIdx
 	long numTaskLeft = tmVec.size();
 	long numTaskBeenSent = 0;
 	long numTaskSendPerPkg = config->maxTaskPerPkg;
+	cout << "The size is:" << tmVec.size() << endl;
 
 	while (numTaskLeft > 0)
 	{
@@ -377,10 +388,14 @@ void MatrixClient::submit_task_wc(vector<MatrixMsg_TaskMsg> tmVec, int toScheIdx
 		}
 
 		string taskPkgStr = mm.SerializeAsString();
+		cout << "The task string is:" << taskPkgStr << ", and the length is:" << taskPkgStr.length() << endl;
 
+		cout << "The ip address is:" << schedulerVec.at(toScheIdx) <<", and the port number is:" << config->schedulerPortNo << endl;
 		int sockfd = send_first(schedulerVec.at(toScheIdx), config->schedulerPortNo, taskPkgStr);
+		cout << "The socket is:" << sockfd << endl;
 		string recvBuf;
 		recv_bf(sockfd, recvBuf);
+		cout << "The receive value is:" << recvBuf << endl;
 
 		numTaskLeft -= numTaskSendPerPkg;
 	}

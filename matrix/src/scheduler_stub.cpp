@@ -182,8 +182,10 @@ void MatrixScheduler::recv_task_from_client(
 	long increment = 0;
 
 	wqMutex.lock();
+	cout << "number of tasks received is:" << mm.count() << endl;
 	for (int i = 0; i < mm.count(); i++)
 	{
+		cout << mm.tasks(i).taskid() << " " << mm.tasks(i).user() << " " << mm.tasks(i).dir() << " " << mm.tasks(i).cmd() << endl;
 		waitQueue.push_back(mm.tasks(i));
 
 		/* update the task metadata in ZHT */
@@ -249,9 +251,11 @@ void MatrixScheduler::recv_pushing_task(MatrixMsg &mm, int sockfd, sockaddr from
 /* processing requests received by the epoll server */
 int MatrixScheduler::proc_req(int sockfd, void *buf, sockaddr fromAddr)
 {
+	cout << "THe received value is:" << buf << ", and size is:" << sizeof(buf) << endl;
 	MatrixMsg mm;
 	string *sbuf = static_cast<string*>(buf);
 	string bufStr = *sbuf;
+
 	delete sbuf;
 	mm.ParseFromString(bufStr);
 
@@ -260,7 +264,7 @@ int MatrixScheduler::proc_req(int sockfd, void *buf, sockaddr fromAddr)
 	/* message type is stored in pkg.virtualpath(), and contents
 	 * are stored in pkg.readfullpath() */
 	string msg = mm.msgtype();
-	if (msg.compare("query_load") == 0)	// thief quering load
+	if (msg.compare("query load") == 0)	// thief quering load
 	{
 		int load = wsQueue.size();
 		MatrixMsg mmLoad;
@@ -277,6 +281,7 @@ int MatrixScheduler::proc_req(int sockfd, void *buf, sockaddr fromAddr)
 	else if (msg.compare("client send task") == 0)	// client sent tasks
 	{
 		/* add tasks and then send ack back */
+		cout << "I am receiving tasks from client " << endl;
 		recv_task_from_client(mm, sockfd, fromAddr);
 	}
 	else if (msg.compare("scheduler push task") == 0)
@@ -299,7 +304,9 @@ int MatrixScheduler::proc_req(int sockfd, void *buf, sockaddr fromAddr)
 void *epoll_serving(void *args)
 {
 	MatrixEpollServer *mes = (MatrixEpollServer*)args;
+	cout << "I am starting to serve request!" << endl;
 	mes->serve();
+	cout << "What happenend!" << endl;
 	pthread_exit(NULL);
 	return NULL;
 }
@@ -307,11 +314,7 @@ void *epoll_serving(void *args)
 /* fork epoll server thread */
 void MatrixScheduler::fork_es_thread()
 {
-	long portNum = config->schedulerPortNo;
-	string portStr = num_to_str<long>(portNum);
-	const char *port = portStr.c_str();
-
-	MatrixEpollServer *mes = new MatrixEpollServer(port, this);
+	MatrixEpollServer *mes = new MatrixEpollServer(config->schedulerPortNo, this);
 
 	pthread_t esThread;
 

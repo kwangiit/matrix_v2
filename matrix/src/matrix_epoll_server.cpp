@@ -82,7 +82,7 @@ const sockaddr* const MatrixEpollData::sender() const
 
 const int MatrixEpollServer::MAX_EVENTS = 4096;
 
-MatrixEpollServer::MatrixEpollServer(const char *port,
+MatrixEpollServer::MatrixEpollServer(long port,
 		MatrixScheduler *ms) : _port(port), _ms(ms), _eventQueue()
 {
 
@@ -169,7 +169,8 @@ int MatrixEpollServer::make_socket_non_blocking(const int& sfd)
 
 int MatrixEpollServer::make_svr_socket()
 {
-	int port = atoi(_port);
+	long port = _port;
+	cout << "The converted port is:" << port << endl;
 	struct sockaddr_in svrAdd_in; /* socket info about our server */
 	int svrSock = -1;
 
@@ -192,7 +193,7 @@ int MatrixEpollServer::make_svr_socket()
 		if (svrSock < 0)
 		{
 			printf("Error occurred when creating the socket:"
-					"%d to the server port:%d\n", svrSock, port);
+					"%d to the server port:%ld\n", svrSock, port);
 			printf("%s\n", strerror(errno));
 
 			close(svrSock);
@@ -203,7 +204,7 @@ int MatrixEpollServer::make_svr_socket()
 				sizeof(struct sockaddr)) < 0)
 		{
 			printf("Error occurred binding the socket:%d "
-					"to the server port:%d\n", svrSock, port);
+					"to the server port:%ld\n", svrSock, port);
 			printf("%s", strerror(errno));
 
 			close(svrSock);
@@ -266,7 +267,7 @@ void* MatrixEpollServer::threaded_serve(void *arg)
 		while (!mes->_eventQueue.empty())
 		{
 			MatrixEventData eventData = mes->_eventQueue.front();
-
+			cout << "OK, I am receiving an event!" << endl;
 			/*pes->_ZProcessor->process(eventData.fd(), eventData.buf(),
 					eventData.fromaddr()); replace this part with matrix logic */
 			mes->_ms->proc_req(eventData.fd(), eventData.buf(), eventData.fromaddr());
@@ -329,7 +330,9 @@ void MatrixEpollServer::serve()
 	{
 		int n, i;
 
+		cout << "I am waiting" << endl;
 		n = epoll_wait(efd, events, MAX_EVENTS, -1);
+		cout << "I have received something " << endl;
 
 		for (i = 0; i < n; i++)
 		{

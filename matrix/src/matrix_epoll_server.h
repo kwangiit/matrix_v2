@@ -52,7 +52,7 @@ class MatrixEpollData
 class MatrixEpollServer
 {
 	public:
-		MatrixEpollServer(const char*, MatrixScheduler*);
+		MatrixEpollServer(long, MatrixScheduler*);
 		virtual ~MatrixEpollServer();
 
 		void serve();
@@ -73,7 +73,7 @@ class MatrixEpollServer
 
 	private:
 		MatrixScheduler *_ms;
-		const char* _port;
+		long _port;
 		queue<MatrixEventData> _eventQueue;
 
 	private:

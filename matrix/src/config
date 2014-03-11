@@ -1,23 +1,27 @@
 NumTaskPerClient	10
-NumAllTask	100
+NumAllTask	10
+NumCorePerExecutor	4
 MaxTaskPerPkg	10
+
 MonitorInterval	1000
 SchedulerPortNo	60000
 SleepLength	1000
-WorkStealPollIntervalStart	1
-WorkStealPollIntervalUpperBound	1000
+WorkStealOn	0
+WorkStealPollIntervalStart	1000
+WorkStealPollIntervalUpperBound	1000000
 
-#hello
-
-
-#kjfldajof fkjdliel
-SchedulerMemlistFile	./hello.txt
+DataSizeThreshold	1000
+SchedulerMemlistFile	./memlist
 NetworkProtocol	TCP
-SubmissionMode	bestcase
-WorkloadFile	workload.txt
-ClientLog	yes
-SchedulerLog	yes
-ZhtMemlistFile	./zhtmem;
-ZhtConfigFile ./zhtconfig;
+DagType	BOT
+DagArgument	0
+HostIdentityType	ip
 
-NumCorePerExecutor	4
+SubmissionMode	bestcase
+WorkloadFile	./workload
+ClientLog	1
+SystemLog	1
+SchedulerLog	1
+
+ZhtMemlistFile	../../ZHT/src/neighbor
+ZhtConfigFile ../../ZHT/src/zht.conf
