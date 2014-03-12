@@ -1,0 +1,8 @@
+message TaskMsg
+{
+	required string taskId = 1;
+	required string user = 2;
+	required string dir = 3;
+	required string cmd = 4;
+	required int64 dataLength = 5; 
+}

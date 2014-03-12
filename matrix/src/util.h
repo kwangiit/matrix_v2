@@ -33,6 +33,7 @@
 
 #include "metazht.pb.h"
 #include "metamatrix.pb.h"
+#include "metatask.pb.h"
 #include "ZHT/src/cpp_zhtclient.h"
 #include "config.h"
 
@@ -101,6 +102,9 @@ extern double get_time_sec();
 /* calculate the time duration between two times */
 extern timespec time_diff(timespec, timespec);
 
+extern string taskmsg_to_str(const TaskMsg &taskMsg);
+extern TaskMsg str_to_taskmsg(const string &str);
+
 /* a mutex class for locking and uncloking */
 class Mutex
 {
@@ -163,8 +167,8 @@ class Peer
 
 struct HighPriorityByDataSize
 {
-	bool operator()(const MatrixMsg_TaskMsg &hpTaskMsg,
-			const MatrixMsg_TaskMsg &lpTaskMsg) const
+	bool operator()(const TaskMsg &hpTaskMsg,
+			const TaskMsg &lpTaskMsg) const
 	{
 		return hpTaskMsg.datalength() > lpTaskMsg.datalength();
 	}

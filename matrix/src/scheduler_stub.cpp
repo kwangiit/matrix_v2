@@ -129,8 +129,7 @@ void MatrixScheduler::pack_send_task(
 
 	for (int j = 0; j < numTask; j++)
 	{
-		MatrixMsg_TaskMsg *tm = mmTasks.add_tasks();
-		*tm = wsQueue.top();
+		mmTasks.add_tasks(taskmsg_to_str(wsQueue.top()));
 		wsQueue.pop();
 	}
 
@@ -185,12 +184,12 @@ void MatrixScheduler::recv_task_from_client(
 	cout << "number of tasks received is:" << mm.count() << endl;
 	for (int i = 0; i < mm.count(); i++)
 	{
-		cout << mm.tasks(i).taskid() << " " << mm.tasks(i).user() << " " << mm.tasks(i).dir() << " " << mm.tasks(i).cmd() << endl;
-		waitQueue.push_back(mm.tasks(i));
+		TaskMsg tm = str_to_taskmsg(mm.tasks(i));
+		waitQueue.push_back(tm);
 
 		/* update the task metadata in ZHT */
 		string taskDetail;
-		zc.lookup(mm.tasks(i).taskid(), taskDetail);
+		zc.lookup(tm.taskid(), taskDetail);
 
 		Value value;
 		value.ParseFromString(taskDetail);
@@ -199,7 +198,7 @@ void MatrixScheduler::recv_task_from_client(
 		value.set_history(value.history() + "->" + get_id());
 		taskDetail = value.SerializeAsString();
 
-		zc.insert(mm.tasks(i).taskid(), taskDetail);
+		zc.insert(tm.taskid(), taskDetail);
 		increment += 2;
 	}
 	wqMutex.unlock();
@@ -221,12 +220,13 @@ void MatrixScheduler::recv_task_from_client(
 void MatrixScheduler::recv_pushing_task(MatrixMsg &mm, int sockfd, sockaddr fromAddr)
 {
 	long increment = 0;
+	TaskMsg tm = str_to_taskmsg(mm.tasks(0));
 
 	lqMutex.lock();
-	localQueue.push(mm.tasks(0));
+	localQueue.push(tm);
 
 	string taskDetail;
-	zc.lookup(mm.tasks(0).taskid(), taskDetail);
+	zc.lookup(tm.taskid(), taskDetail);
 
 	Value value;
 	value.ParseFromString(taskDetail);
@@ -235,7 +235,7 @@ void MatrixScheduler::recv_pushing_task(MatrixMsg &mm, int sockfd, sockaddr from
 	value.set_history(value.history() + "->" + get_id());
 	taskDetail = value.SerializeAsString();
 
-	zc.insert(mm.tasks(0).taskid(), taskDetail);
+	zc.insert(tm.taskid(), taskDetail);
 	increment += 2;
 
 	MatrixMsg mmSuc;
@@ -251,7 +251,7 @@ void MatrixScheduler::recv_pushing_task(MatrixMsg &mm, int sockfd, sockaddr from
 /* processing requests received by the epoll server */
 int MatrixScheduler::proc_req(int sockfd, char *buf, sockaddr fromAddr)
 {
-	 printf("THe received value is:%s\n", buf);
+	printf("THe received value is:%s\n", buf);
 	MatrixMsg mm;
 	//string *sbuf = static_cast<string*>(buf);
 	//string bufStr = *sbuf;
@@ -409,17 +409,18 @@ void MatrixScheduler::recv_task_from_scheduler(int sockfd, long numTask)
 		wsqMutex.lock();
 		for (long j = 0; j < mm.count(); j++)
 		{
-			wsQueue.push(mm.tasks(i));
+			TaskMsg tm = str_to_taskmsg(mm.tasks(i));
+			wsQueue.push(tm);
 			/* update task metadata */
 			string taskDetailStr;
-			zc.lookup(mm.tasks(i).taskid(), taskDetailStr);
+			zc.lookup(tm.taskid(), taskDetailStr);
 			Value value;
 			value.ParseFromString(taskDetailStr);
 			value.set_nummove(value.nummove() + 1);
 			value.set_history(value.history() + "->" + get_id());
 			value.set_rqueuedtime(get_time_usec());
 			taskDetailStr = value.SerializeAsString();
-			zc.insert(mm.tasks(i).taskid(), taskDetailStr);
+			zc.insert(tm.taskid(), taskDetailStr);
 			increment += 2;
 		}
 		wsqMutex.unlock();
@@ -534,7 +535,7 @@ void MatrixScheduler::fork_ws_thread()
  * delimited with space. After a task is done, move it to the
  * complete queue.
  * */
-void MatrixScheduler::exec_a_task(MatrixMsg_TaskMsg &tm)
+void MatrixScheduler::exec_a_task(TaskMsg &tm)
 {
 	string taskDetail;
 	zc.lookup(tm.taskid(), taskDetail);
@@ -614,7 +615,7 @@ void MatrixScheduler::exec_a_task(MatrixMsg_TaskMsg &tm)
 void *executing_task(void *args)
 {
 	MatrixScheduler *ms = (MatrixScheduler*)args;
-	MatrixMsg_TaskMsg tm;
+	TaskMsg tm;
 
 	while (ms->running)
 	{
@@ -685,7 +686,7 @@ void MatrixScheduler::fork_exec_task_thread()
 }
 
 bool MatrixScheduler::task_ready_process(
-		const Value &valuePkg, MatrixMsg_TaskMsg &tm)
+		const Value &valuePkg, TaskMsg &tm)
 {
 	bool flag = false;
 
@@ -729,8 +730,7 @@ bool MatrixScheduler::task_ready_process(
 			MatrixMsg mm;
 			mm.set_msgtype("scheduler push task");
 			mm.set_count(1);
-			MatrixMsg_TaskMsg *mmtm = mm.add_tasks();
-			*mmtm = tm;
+			mm.add_tasks(taskmsg_to_str(tm));
 			string mmStr = mm.SerializeAsString();
 			int sockfd = send_first(maxDataScheduler, config->schedulerPortNo, mmStr);
 			string ack;
@@ -745,7 +745,7 @@ bool MatrixScheduler::task_ready_process(
  * ready only if all of its parants are done (the indegree counter
  * equals to 0).
  * */
-long MatrixScheduler::check_a_ready_task(MatrixMsg_TaskMsg &tm)
+long MatrixScheduler::check_a_ready_task(TaskMsg &tm)
 {
 	string taskDetail;
 	long incre = 0;
@@ -771,7 +771,7 @@ long MatrixScheduler::check_a_ready_task(MatrixMsg_TaskMsg &tm)
 	return 0;
 }
 
-bool check_empty(MatrixMsg_TaskMsg &tm)
+bool check_empty(TaskMsg &tm)
 {
 	return tm.taskid().empty();
 }
@@ -786,7 +786,7 @@ void *checking_ready_task(void *args)
 {
 	MatrixScheduler *ms = (MatrixScheduler*)args;
 	int size = 0;
-	MatrixMsg_TaskMsg tm;
+	TaskMsg tm;
 	long increment = 0;
 
 	while (ms->running)
@@ -818,7 +818,7 @@ void *checking_ready_task(void *args)
 			 * set to be empty
 			 * */
 			ms->wqMutex.lock();
-			deque<MatrixMsg_TaskMsg>::iterator last = remove_if(ms->waitQueue.begin(),
+			deque<TaskMsg>::iterator last = remove_if(ms->waitQueue.begin(),
 					ms->waitQueue.end(), check_empty);
 			ms->waitQueue.erase(last, ms->waitQueue.end());
 			ms->wqMutex.unlock();

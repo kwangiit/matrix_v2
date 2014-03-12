@@ -66,13 +66,13 @@ class MatrixScheduler: public Peer
 
 		void fork_ws_thread(void);	// fork work stealing thread
 
-		bool task_ready_process(const Value&, MatrixMsg_TaskMsg&);
+		bool task_ready_process(const Value&, TaskMsg&);
 		/* check if a given task is ready to run, and put it in the right queue */
-		long check_a_ready_task(MatrixMsg_TaskMsg&);
+		long check_a_ready_task(TaskMsg&);
 
 		void fork_crt_thread();	// fork check ready task thread
 
-		void exec_a_task(MatrixMsg_TaskMsg&);	// execute a task
+		void exec_a_task(TaskMsg&);	// execute a task
 
 		void fork_exec_task_thread();	// fork execute task threads
 
@@ -111,13 +111,11 @@ class MatrixScheduler: public Peer
 		Mutex wsqMutex;
 		Mutex ldMutex;
 
-		priority_queue<MatrixMsg_TaskMsg, vector<MatrixMsg_TaskMsg>,
-		HighPriorityByDataSize> localQueue;
+		priority_queue<TaskMsg, vector<TaskMsg>, HighPriorityByDataSize> localQueue;
 
-		priority_queue<MatrixMsg_TaskMsg, vector<MatrixMsg_TaskMsg>,
-		HighPriorityByDataSize> wsQueue;
+		priority_queue<TaskMsg, vector<TaskMsg>, HighPriorityByDataSize> wsQueue;
 
-		deque<MatrixMsg_TaskMsg> waitQueue;	// waiting queue
+		deque<TaskMsg> waitQueue;	// waiting queue
 		//deque<string> readyQueue;	// ready queue
 		deque<CmpQueueItem> completeQueue;	// complete queue
 

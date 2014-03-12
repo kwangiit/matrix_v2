@@ -231,13 +231,8 @@ void MatrixClient::init_task()
 		ss << get_index() << i;
 		string taskId(ss.str());
 
-		cout << taskVec.at(i) << endl;
 		vector<string> taskItemStr = tokenize(taskId + " " + taskVec.at(i), " ");
-		for (int j = 0; j < taskItemStr.size(); j++)
-		{
-			cout << taskItemStr.at(j) << endl;
-		}
-		MatrixMsg_TaskMsg tm;
+		TaskMsg tm;
 		tm.set_taskid(taskItemStr.at(0));
 		tm.set_user(taskItemStr.at(1));
 		tm.set_dir(taskItemStr.at(2));
@@ -333,10 +328,10 @@ void MatrixClient::submit_task_bc()
 {
 	int toScheIdx = -1, numSche = schedulerVec.size();
 
-	vector< vector<MatrixMsg_TaskMsg> > tasksVec;
+	vector< vector<TaskMsg> > tasksVec;
 	for (int i = 0; i < numSche; i++)
 	{
-		tasksVec.push_back(vector<MatrixMsg_TaskMsg>());
+		tasksVec.push_back(vector<TaskMsg>());
 	}
 
 	for (int i = 0; i < config->numTaskPerClient; i++)
@@ -359,7 +354,7 @@ void MatrixClient::submit_task_bc()
  * all the tasks (listed in "taskVec") are submitted to
  * one scheduler (index is "toScheIdx")
  * */
-void MatrixClient::submit_task_wc(vector<MatrixMsg_TaskMsg> tmVec, int toScheIdx)
+void MatrixClient::submit_task_wc(vector<TaskMsg> tmVec, int toScheIdx)
 {
 	long numTaskLeft = tmVec.size();
 	long numTaskBeenSent = 0;
@@ -383,18 +378,10 @@ void MatrixClient::submit_task_wc(vector<MatrixMsg_TaskMsg> tmVec, int toScheIdx
 		for (long i = 0; i < numTaskSendPerPkg; i++)
 		{
 			pos = i + numTaskBeenSent;
-			MatrixMsg_TaskMsg *tm = mm.add_tasks();
-			*tm = tmVec.at(pos);
+			mm.add_tasks(taskmsg_to_str(tmVec.at(pos)));
 		}
 
-		int numByte = mm.ByteSize();
-		char *strByte = new char[numByte];
-		mm.SerializeToArray(strByte, numByte);
-
 		string taskPkgStr = mm.SerializeAsString();
-		const char *another = taskPkgStr.data();
-
-		printf("Another char is:%s\n", another);
 
 		int sockfd = send_first(schedulerVec.at(toScheIdx), config->schedulerPortNo, taskPkgStr);
 		cout << "The socket is:" << sockfd << endl;

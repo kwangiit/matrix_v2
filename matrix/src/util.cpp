@@ -378,6 +378,37 @@ timespec time_diff(timespec start, timespec end)
 	return diff;
 }
 
+extern string taskmsg_to_str(const TaskMsg &taskMsg)
+{
+	string str("");
+
+	str.append(taskMsg.taskid());
+	str.append(" ");
+	str.append(taskMsg.user());
+	str.append(" ");
+	str.append(taskMsg.dir());
+	str.append(" ");
+	str.append(taskMsg.cmd());
+	str.append(" ");
+	str.append(num_to_str<long>(taskMsg.datalength()));
+
+	return str;
+}
+
+extern TaskMsg str_to_taskmsg(const string &str)
+{
+	vector<string> vecStr = tokenize(str, " ");
+
+	TaskMsg tm;
+	tm.set_taskid(vecStr.at(0));
+	tm.set_user(vecStr.at(1));
+	tm.set_dir(vecStr.at(2));
+	tm.set_cmd(vecStr.at(3));
+	tm.set_datalength(str_to_num<long>(vecStr.at(4)));
+
+	return tm;
+}
+
 Mutex::Mutex()
 {
 	int ret = pthread_mutex_init (&mutex, NULL);
