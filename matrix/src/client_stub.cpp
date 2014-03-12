@@ -112,8 +112,11 @@ void MatrixClient::insert_taskinfo_to_zht(
 		value.set_exetime(0.0);
 		value.set_fintime(0.0);
 
-		string seriValue = value.SerializeAsString();
+		string seriValue;
+		seriValue = value.SerializeAsString();
 
+
+		cout << "the id is:" << taskId << ", the string is:" << seriValue << ",the children size is:" << value.children_size() << endl;
 		zc.insert(taskId, seriValue);
 	}
 
@@ -273,11 +276,12 @@ void MatrixClient::submit_task()
 	{
 		string taskId = tasks.at(i).taskid();
 		string taskDetail;
-		zc.lookup(tasks.at(i).taskid(), taskDetail);
+		zc.lookup(taskId, taskDetail);
 
 		Value value;
 		value.ParseFromString(taskDetail);
 		value.set_submittime(get_time_usec());
+		cout << "The task id is:" << taskId <<", and number of children is:" << value.children_size() << endl;
 
 		taskDetail = value.SerializeAsString();
 		zc.insert(taskId, taskDetail);
@@ -359,7 +363,6 @@ void MatrixClient::submit_task_wc(vector<TaskMsg> tmVec, int toScheIdx)
 	long numTaskLeft = tmVec.size();
 	long numTaskBeenSent = 0;
 	long numTaskSendPerPkg = config->maxTaskPerPkg;
-	cout << "The size is:" << tmVec.size() << endl;
 
 	while (numTaskLeft > 0)
 	{
@@ -384,10 +387,8 @@ void MatrixClient::submit_task_wc(vector<TaskMsg> tmVec, int toScheIdx)
 		string taskPkgStr = mm.SerializeAsString();
 
 		int sockfd = send_first(schedulerVec.at(toScheIdx), config->schedulerPortNo, taskPkgStr);
-		cout << "The socket is:" << sockfd << endl;
 		string recvBuf;
 		recv_bf(sockfd, recvBuf);
-		cout << "The receive value is:" << recvBuf << endl;
 
 		numTaskLeft -= numTaskSendPerPkg;
 	}

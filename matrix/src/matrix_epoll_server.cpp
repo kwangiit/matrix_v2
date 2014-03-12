@@ -170,7 +170,6 @@ int MatrixEpollServer::make_socket_non_blocking(const int& sfd)
 int MatrixEpollServer::make_svr_socket()
 {
 	long port = _port;
-	cout << "The converted port is:" << port << endl;
 	struct sockaddr_in svrAdd_in; /* socket info about our server */
 	int svrSock = -1;
 
@@ -267,7 +266,6 @@ void* MatrixEpollServer::threaded_serve(void *arg)
 		while (!mes->_eventQueue.empty())
 		{
 			MatrixEventData eventData = mes->_eventQueue.front();
-			cout << "OK, I am receiving an event!" << endl;
 			/*pes->_ZProcessor->process(eventData.fd(), eventData.buf(),
 					eventData.fromaddr()); replace this part with matrix logic */
 			mes->_ms->proc_req(eventData.fd(), eventData.buf(), eventData.fromaddr());
@@ -330,9 +328,7 @@ void MatrixEpollServer::serve()
 	{
 		int n, i;
 
-		cout << "I am waiting" << endl;
 		n = epoll_wait(efd, events, MAX_EVENTS, -1);
-		cout << "I have received something " << endl;
 
 		for (i = 0; i < n; i++)
 		{

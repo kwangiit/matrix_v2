@@ -1,7 +1,7 @@
 NumTaskPerClient	10
 NumAllTask	10
 NumCorePerExecutor	4
-MaxTaskPerPkg	2
+MaxTaskPerPkg	10
 
 MonitorInterval	1000
 SchedulerPortNo	60000
@@ -13,8 +13,8 @@ WorkStealPollIntervalUpperBound	1000000
 DataSizeThreshold	1000
 SchedulerMemlistFile	./memlist
 NetworkProtocol	TCP
-DagType	BOT
-DagArgument	0
+DagType	FanOut
+DagArgument	2
 HostIdentityType	ip
 
 SubmissionMode	bestcase

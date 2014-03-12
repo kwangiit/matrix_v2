@@ -99,10 +99,126 @@ class Value : public ::google::protobuf::Message {
   inline ::std::string* mutable_id();
   inline ::std::string* release_id();
   
-  // repeated string parents = 2;
+  // optional int64 indegree = 2;
+  inline bool has_indegree() const;
+  inline void clear_indegree();
+  static const int kIndegreeFieldNumber = 2;
+  inline ::google::protobuf::int64 indegree() const;
+  inline void set_indegree(::google::protobuf::int64 value);
+  
+  // optional int64 allDataSize = 3;
+  inline bool has_alldatasize() const;
+  inline void clear_alldatasize();
+  static const int kAllDataSizeFieldNumber = 3;
+  inline ::google::protobuf::int64 alldatasize() const;
+  inline void set_alldatasize(::google::protobuf::int64 value);
+  
+  // optional int32 numMove = 4;
+  inline bool has_nummove() const;
+  inline void clear_nummove();
+  static const int kNumMoveFieldNumber = 4;
+  inline ::google::protobuf::int32 nummove() const;
+  inline void set_nummove(::google::protobuf::int32 value);
+  
+  // optional string history = 5;
+  inline bool has_history() const;
+  inline void clear_history();
+  static const int kHistoryFieldNumber = 5;
+  inline const ::std::string& history() const;
+  inline void set_history(const ::std::string& value);
+  inline void set_history(const char* value);
+  inline void set_history(const char* value, size_t size);
+  inline ::std::string* mutable_history();
+  inline ::std::string* release_history();
+  
+  // optional double submitTime = 6;
+  inline bool has_submittime() const;
+  inline void clear_submittime();
+  static const int kSubmitTimeFieldNumber = 6;
+  inline double submittime() const;
+  inline void set_submittime(double value);
+  
+  // optional double arriveTime = 7;
+  inline bool has_arrivetime() const;
+  inline void clear_arrivetime();
+  static const int kArriveTimeFieldNumber = 7;
+  inline double arrivetime() const;
+  inline void set_arrivetime(double value);
+  
+  // optional double rqueuedTime = 8;
+  inline bool has_rqueuedtime() const;
+  inline void clear_rqueuedtime();
+  static const int kRqueuedTimeFieldNumber = 8;
+  inline double rqueuedtime() const;
+  inline void set_rqueuedtime(double value);
+  
+  // optional double exeTime = 9;
+  inline bool has_exetime() const;
+  inline void clear_exetime();
+  static const int kExeTimeFieldNumber = 9;
+  inline double exetime() const;
+  inline void set_exetime(double value);
+  
+  // optional double finTime = 10;
+  inline bool has_fintime() const;
+  inline void clear_fintime();
+  static const int kFinTimeFieldNumber = 10;
+  inline double fintime() const;
+  inline void set_fintime(double value);
+  
+  // optional int64 numTaskFin = 11;
+  inline bool has_numtaskfin() const;
+  inline void clear_numtaskfin();
+  static const int kNumTaskFinFieldNumber = 11;
+  inline ::google::protobuf::int64 numtaskfin() const;
+  inline void set_numtaskfin(::google::protobuf::int64 value);
+  
+  // optional int32 numTaskWait = 12;
+  inline bool has_numtaskwait() const;
+  inline void clear_numtaskwait();
+  static const int kNumTaskWaitFieldNumber = 12;
+  inline ::google::protobuf::int32 numtaskwait() const;
+  inline void set_numtaskwait(::google::protobuf::int32 value);
+  
+  // optional int32 numTaskReady = 13;
+  inline bool has_numtaskready() const;
+  inline void clear_numtaskready();
+  static const int kNumTaskReadyFieldNumber = 13;
+  inline ::google::protobuf::int32 numtaskready() const;
+  inline void set_numtaskready(::google::protobuf::int32 value);
+  
+  // optional int32 numCoreAvilable = 14;
+  inline bool has_numcoreavilable() const;
+  inline void clear_numcoreavilable();
+  static const int kNumCoreAvilableFieldNumber = 14;
+  inline ::google::protobuf::int32 numcoreavilable() const;
+  inline void set_numcoreavilable(::google::protobuf::int32 value);
+  
+  // optional int32 numAllCore = 15;
+  inline bool has_numallcore() const;
+  inline void clear_numallcore();
+  static const int kNumAllCoreFieldNumber = 15;
+  inline ::google::protobuf::int32 numallcore() const;
+  inline void set_numallcore(::google::protobuf::int32 value);
+  
+  // optional int64 numWorkSteal = 16;
+  inline bool has_numworksteal() const;
+  inline void clear_numworksteal();
+  static const int kNumWorkStealFieldNumber = 16;
+  inline ::google::protobuf::int64 numworksteal() const;
+  inline void set_numworksteal(::google::protobuf::int64 value);
+  
+  // optional int64 numWorkStealFail = 17;
+  inline bool has_numworkstealfail() const;
+  inline void clear_numworkstealfail();
+  static const int kNumWorkStealFailFieldNumber = 17;
+  inline ::google::protobuf::int64 numworkstealfail() const;
+  inline void set_numworkstealfail(::google::protobuf::int64 value);
+  
+  // repeated string parents = 18;
   inline int parents_size() const;
   inline void clear_parents();
-  static const int kParentsFieldNumber = 2;
+  static const int kParentsFieldNumber = 18;
   inline const ::std::string& parents(int index) const;
   inline ::std::string* mutable_parents(int index);
   inline void set_parents(int index, const ::std::string& value);
@@ -115,17 +231,10 @@ class Value : public ::google::protobuf::Message {
   inline const ::google::protobuf::RepeatedPtrField< ::std::string>& parents() const;
   inline ::google::protobuf::RepeatedPtrField< ::std::string>* mutable_parents();
   
-  // optional int64 indegree = 3;
-  inline bool has_indegree() const;
-  inline void clear_indegree();
-  static const int kIndegreeFieldNumber = 3;
-  inline ::google::protobuf::int64 indegree() const;
-  inline void set_indegree(::google::protobuf::int64 value);
-  
-  // repeated string children = 4;
+  // repeated string children = 19;
   inline int children_size() const;
   inline void clear_children();
-  static const int kChildrenFieldNumber = 4;
+  static const int kChildrenFieldNumber = 19;
   inline const ::std::string& children(int index) const;
   inline ::std::string* mutable_children(int index);
   inline void set_children(int index, const ::std::string& value);
@@ -138,10 +247,10 @@ class Value : public ::google::protobuf::Message {
   inline const ::google::protobuf::RepeatedPtrField< ::std::string>& children() const;
   inline ::google::protobuf::RepeatedPtrField< ::std::string>* mutable_children();
   
-  // repeated string dataNameList = 5;
+  // repeated string dataNameList = 20;
   inline int datanamelist_size() const;
   inline void clear_datanamelist();
-  static const int kDataNameListFieldNumber = 5;
+  static const int kDataNameListFieldNumber = 20;
   inline const ::std::string& datanamelist(int index) const;
   inline ::std::string* mutable_datanamelist(int index);
   inline void set_datanamelist(int index, const ::std::string& value);
@@ -154,10 +263,10 @@ class Value : public ::google::protobuf::Message {
   inline const ::google::protobuf::RepeatedPtrField< ::std::string>& datanamelist() const;
   inline ::google::protobuf::RepeatedPtrField< ::std::string>* mutable_datanamelist();
   
-  // repeated int64 dataSize = 6;
+  // repeated int64 dataSize = 21;
   inline int datasize_size() const;
   inline void clear_datasize();
-  static const int kDataSizeFieldNumber = 6;
+  static const int kDataSizeFieldNumber = 21;
   inline ::google::protobuf::int64 datasize(int index) const;
   inline void set_datasize(int index, ::google::protobuf::int64 value);
   inline void add_datasize(::google::protobuf::int64 value);
@@ -165,115 +274,6 @@ class Value : public ::google::protobuf::Message {
       datasize() const;
   inline ::google::protobuf::RepeatedField< ::google::protobuf::int64 >*
       mutable_datasize();
-  
-  // optional int64 allDataSize = 7;
-  inline bool has_alldatasize() const;
-  inline void clear_alldatasize();
-  static const int kAllDataSizeFieldNumber = 7;
-  inline ::google::protobuf::int64 alldatasize() const;
-  inline void set_alldatasize(::google::protobuf::int64 value);
-  
-  // optional int32 numMove = 8;
-  inline bool has_nummove() const;
-  inline void clear_nummove();
-  static const int kNumMoveFieldNumber = 8;
-  inline ::google::protobuf::int32 nummove() const;
-  inline void set_nummove(::google::protobuf::int32 value);
-  
-  // optional string history = 9;
-  inline bool has_history() const;
-  inline void clear_history();
-  static const int kHistoryFieldNumber = 9;
-  inline const ::std::string& history() const;
-  inline void set_history(const ::std::string& value);
-  inline void set_history(const char* value);
-  inline void set_history(const char* value, size_t size);
-  inline ::std::string* mutable_history();
-  inline ::std::string* release_history();
-  
-  // optional double submitTime = 10;
-  inline bool has_submittime() const;
-  inline void clear_submittime();
-  static const int kSubmitTimeFieldNumber = 10;
-  inline double submittime() const;
-  inline void set_submittime(double value);
-  
-  // optional double arriveTime = 11;
-  inline bool has_arrivetime() const;
-  inline void clear_arrivetime();
-  static const int kArriveTimeFieldNumber = 11;
-  inline double arrivetime() const;
-  inline void set_arrivetime(double value);
-  
-  // optional double rqueuedTime = 12;
-  inline bool has_rqueuedtime() const;
-  inline void clear_rqueuedtime();
-  static const int kRqueuedTimeFieldNumber = 12;
-  inline double rqueuedtime() const;
-  inline void set_rqueuedtime(double value);
-  
-  // optional double exeTime = 13;
-  inline bool has_exetime() const;
-  inline void clear_exetime();
-  static const int kExeTimeFieldNumber = 13;
-  inline double exetime() const;
-  inline void set_exetime(double value);
-  
-  // optional double finTime = 14;
-  inline bool has_fintime() const;
-  inline void clear_fintime();
-  static const int kFinTimeFieldNumber = 14;
-  inline double fintime() const;
-  inline void set_fintime(double value);
-  
-  // optional int64 numTaskFin = 15;
-  inline bool has_numtaskfin() const;
-  inline void clear_numtaskfin();
-  static const int kNumTaskFinFieldNumber = 15;
-  inline ::google::protobuf::int64 numtaskfin() const;
-  inline void set_numtaskfin(::google::protobuf::int64 value);
-  
-  // optional int32 numTaskWait = 16;
-  inline bool has_numtaskwait() const;
-  inline void clear_numtaskwait();
-  static const int kNumTaskWaitFieldNumber = 16;
-  inline ::google::protobuf::int32 numtaskwait() const;
-  inline void set_numtaskwait(::google::protobuf::int32 value);
-  
-  // optional int32 numTaskReady = 17;
-  inline bool has_numtaskready() const;
-  inline void clear_numtaskready();
-  static const int kNumTaskReadyFieldNumber = 17;
-  inline ::google::protobuf::int32 numtaskready() const;
-  inline void set_numtaskready(::google::protobuf::int32 value);
-  
-  // optional int32 numCoreAvilable = 18;
-  inline bool has_numcoreavilable() const;
-  inline void clear_numcoreavilable();
-  static const int kNumCoreAvilableFieldNumber = 18;
-  inline ::google::protobuf::int32 numcoreavilable() const;
-  inline void set_numcoreavilable(::google::protobuf::int32 value);
-  
-  // optional int32 numAllCore = 19;
-  inline bool has_numallcore() const;
-  inline void clear_numallcore();
-  static const int kNumAllCoreFieldNumber = 19;
-  inline ::google::protobuf::int32 numallcore() const;
-  inline void set_numallcore(::google::protobuf::int32 value);
-  
-  // optional int64 numWorkSteal = 20;
-  inline bool has_numworksteal() const;
-  inline void clear_numworksteal();
-  static const int kNumWorkStealFieldNumber = 20;
-  inline ::google::protobuf::int64 numworksteal() const;
-  inline void set_numworksteal(::google::protobuf::int64 value);
-  
-  // optional int64 numWorkStealFail = 21;
-  inline bool has_numworkstealfail() const;
-  inline void clear_numworkstealfail();
-  static const int kNumWorkStealFailFieldNumber = 21;
-  inline ::google::protobuf::int64 numworkstealfail() const;
-  inline void set_numworkstealfail(::google::protobuf::int64 value);
   
   // @@protoc_insertion_point(class_scope:Value)
  private:
@@ -315,11 +315,7 @@ class Value : public ::google::protobuf::Message {
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
   
   ::std::string* id_;
-  ::google::protobuf::RepeatedPtrField< ::std::string> parents_;
   ::google::protobuf::int64 indegree_;
-  ::google::protobuf::RepeatedPtrField< ::std::string> children_;
-  ::google::protobuf::RepeatedPtrField< ::std::string> datanamelist_;
-  ::google::protobuf::RepeatedField< ::google::protobuf::int64 > datasize_;
   ::google::protobuf::int64 alldatasize_;
   ::std::string* history_;
   double submittime_;
@@ -334,6 +330,10 @@ class Value : public ::google::protobuf::Message {
   ::google::protobuf::int32 numcoreavilable_;
   ::google::protobuf::int64 numworksteal_;
   ::google::protobuf::int64 numworkstealfail_;
+  ::google::protobuf::RepeatedPtrField< ::std::string> parents_;
+  ::google::protobuf::RepeatedPtrField< ::std::string> children_;
+  ::google::protobuf::RepeatedPtrField< ::std::string> datanamelist_;
+  ::google::protobuf::RepeatedField< ::google::protobuf::int64 > datasize_;
   ::google::protobuf::int32 numallcore_;
   
   mutable int _cached_size_;
@@ -411,59 +411,15 @@ inline ::std::string* Value::release_id() {
   }
 }
 
-// repeated string parents = 2;
-inline int Value::parents_size() const {
-  return parents_.size();
-}
-inline void Value::clear_parents() {
-  parents_.Clear();
-}
-inline const ::std::string& Value::parents(int index) const {
-  return parents_.Get(index);
-}
-inline ::std::string* Value::mutable_parents(int index) {
-  return parents_.Mutable(index);
-}
-inline void Value::set_parents(int index, const ::std::string& value) {
-  parents_.Mutable(index)->assign(value);
-}
-inline void Value::set_parents(int index, const char* value) {
-  parents_.Mutable(index)->assign(value);
-}
-inline void Value::set_parents(int index, const char* value, size_t size) {
-  parents_.Mutable(index)->assign(
-    reinterpret_cast<const char*>(value), size);
-}
-inline ::std::string* Value::add_parents() {
-  return parents_.Add();
-}
-inline void Value::add_parents(const ::std::string& value) {
-  parents_.Add()->assign(value);
-}
-inline void Value::add_parents(const char* value) {
-  parents_.Add()->assign(value);
-}
-inline void Value::add_parents(const char* value, size_t size) {
-  parents_.Add()->assign(reinterpret_cast<const char*>(value), size);
-}
-inline const ::google::protobuf::RepeatedPtrField< ::std::string>&
-Value::parents() const {
-  return parents_;
-}
-inline ::google::protobuf::RepeatedPtrField< ::std::string>*
-Value::mutable_parents() {
-  return &parents_;
-}
-
-// optional int64 indegree = 3;
+// optional int64 indegree = 2;
 inline bool Value::has_indegree() const {
-  return (_has_bits_[0] & 0x00000004u) != 0;
+  return (_has_bits_[0] & 0x00000002u) != 0;
 }
 inline void Value::set_has_indegree() {
-  _has_bits_[0] |= 0x00000004u;
+  _has_bits_[0] |= 0x00000002u;
 }
 inline void Value::clear_has_indegree() {
-  _has_bits_[0] &= ~0x00000004u;
+  _has_bits_[0] &= ~0x00000002u;
 }
 inline void Value::clear_indegree() {
   indegree_ = GOOGLE_LONGLONG(0);
@@ -477,128 +433,15 @@ inline void Value::set_indegree(::google::protobuf::int64 value) {
   indegree_ = value;
 }
 
-// repeated string children = 4;
-inline int Value::children_size() const {
-  return children_.size();
-}
-inline void Value::clear_children() {
-  children_.Clear();
-}
-inline const ::std::string& Value::children(int index) const {
-  return children_.Get(index);
-}
-inline ::std::string* Value::mutable_children(int index) {
-  return children_.Mutable(index);
-}
-inline void Value::set_children(int index, const ::std::string& value) {
-  children_.Mutable(index)->assign(value);
-}
-inline void Value::set_children(int index, const char* value) {
-  children_.Mutable(index)->assign(value);
-}
-inline void Value::set_children(int index, const char* value, size_t size) {
-  children_.Mutable(index)->assign(
-    reinterpret_cast<const char*>(value), size);
-}
-inline ::std::string* Value::add_children() {
-  return children_.Add();
-}
-inline void Value::add_children(const ::std::string& value) {
-  children_.Add()->assign(value);
-}
-inline void Value::add_children(const char* value) {
-  children_.Add()->assign(value);
-}
-inline void Value::add_children(const char* value, size_t size) {
-  children_.Add()->assign(reinterpret_cast<const char*>(value), size);
-}
-inline const ::google::protobuf::RepeatedPtrField< ::std::string>&
-Value::children() const {
-  return children_;
-}
-inline ::google::protobuf::RepeatedPtrField< ::std::string>*
-Value::mutable_children() {
-  return &children_;
-}
-
-// repeated string dataNameList = 5;
-inline int Value::datanamelist_size() const {
-  return datanamelist_.size();
-}
-inline void Value::clear_datanamelist() {
-  datanamelist_.Clear();
-}
-inline const ::std::string& Value::datanamelist(int index) const {
-  return datanamelist_.Get(index);
-}
-inline ::std::string* Value::mutable_datanamelist(int index) {
-  return datanamelist_.Mutable(index);
-}
-inline void Value::set_datanamelist(int index, const ::std::string& value) {
-  datanamelist_.Mutable(index)->assign(value);
-}
-inline void Value::set_datanamelist(int index, const char* value) {
-  datanamelist_.Mutable(index)->assign(value);
-}
-inline void Value::set_datanamelist(int index, const char* value, size_t size) {
-  datanamelist_.Mutable(index)->assign(
-    reinterpret_cast<const char*>(value), size);
-}
-inline ::std::string* Value::add_datanamelist() {
-  return datanamelist_.Add();
-}
-inline void Value::add_datanamelist(const ::std::string& value) {
-  datanamelist_.Add()->assign(value);
-}
-inline void Value::add_datanamelist(const char* value) {
-  datanamelist_.Add()->assign(value);
-}
-inline void Value::add_datanamelist(const char* value, size_t size) {
-  datanamelist_.Add()->assign(reinterpret_cast<const char*>(value), size);
-}
-inline const ::google::protobuf::RepeatedPtrField< ::std::string>&
-Value::datanamelist() const {
-  return datanamelist_;
-}
-inline ::google::protobuf::RepeatedPtrField< ::std::string>*
-Value::mutable_datanamelist() {
-  return &datanamelist_;
-}
-
-// repeated int64 dataSize = 6;
-inline int Value::datasize_size() const {
-  return datasize_.size();
-}
-inline void Value::clear_datasize() {
-  datasize_.Clear();
-}
-inline ::google::protobuf::int64 Value::datasize(int index) const {
-  return datasize_.Get(index);
-}
-inline void Value::set_datasize(int index, ::google::protobuf::int64 value) {
-  datasize_.Set(index, value);
-}
-inline void Value::add_datasize(::google::protobuf::int64 value) {
-  datasize_.Add(value);
-}
-inline const ::google::protobuf::RepeatedField< ::google::protobuf::int64 >&
-Value::datasize() const {
-  return datasize_;
-}
-inline ::google::protobuf::RepeatedField< ::google::protobuf::int64 >*
-Value::mutable_datasize() {
-  return &datasize_;
-}
-
-// optional int64 allDataSize = 7;
+// optional int64 allDataSize = 3;
 inline bool Value::has_alldatasize() const {
-  return (_has_bits_[0] & 0x00000040u) != 0;
+  return (_has_bits_[0] & 0x00000004u) != 0;
 }
 inline void Value::set_has_alldatasize() {
-  _has_bits_[0] |= 0x00000040u;
+  _has_bits_[0] |= 0x00000004u;
 }
 inline void Value::clear_has_alldatasize() {
-  _has_bits_[0] &= ~0x00000040u;
+  _has_bits_[0] &= ~0x00000004u;
 }
 inline void Value::clear_alldatasize() {
   alldatasize_ = GOOGLE_LONGLONG(0);
@@ -612,15 +455,15 @@ inline void Value::set_alldatasize(::google::protobuf::int64 value) {
   alldatasize_ = value;
 }
 
-// optional int32 numMove = 8;
+// optional int32 numMove = 4;
 inline bool Value::has_nummove() const {
-  return (_has_bits_[0] & 0x00000080u) != 0;
+  return (_has_bits_[0] & 0x00000008u) != 0;
 }
 inline void Value::set_has_nummove() {
-  _has_bits_[0] |= 0x00000080u;
+  _has_bits_[0] |= 0x00000008u;
 }
 inline void Value::clear_has_nummove() {
-  _has_bits_[0] &= ~0x00000080u;
+  _has_bits_[0] &= ~0x00000008u;
 }
 inline void Value::clear_nummove() {
   nummove_ = 0;
@@ -634,15 +477,15 @@ inline void Value::set_nummove(::google::protobuf::int32 value) {
   nummove_ = value;
 }
 
-// optional string history = 9;
+// optional string history = 5;
 inline bool Value::has_history() const {
-  return (_has_bits_[0] & 0x00000100u) != 0;
+  return (_has_bits_[0] & 0x00000010u) != 0;
 }
 inline void Value::set_has_history() {
-  _has_bits_[0] |= 0x00000100u;
+  _has_bits_[0] |= 0x00000010u;
 }
 inline void Value::clear_has_history() {
-  _has_bits_[0] &= ~0x00000100u;
+  _has_bits_[0] &= ~0x00000010u;
 }
 inline void Value::clear_history() {
   if (history_ != &::google::protobuf::internal::kEmptyString) {
@@ -692,15 +535,15 @@ inline ::std::string* Value::release_history() {
   }
 }
 
-// optional double submitTime = 10;
+// optional double submitTime = 6;
 inline bool Value::has_submittime() const {
-  return (_has_bits_[0] & 0x00000200u) != 0;
+  return (_has_bits_[0] & 0x00000020u) != 0;
 }
 inline void Value::set_has_submittime() {
-  _has_bits_[0] |= 0x00000200u;
+  _has_bits_[0] |= 0x00000020u;
 }
 inline void Value::clear_has_submittime() {
-  _has_bits_[0] &= ~0x00000200u;
+  _has_bits_[0] &= ~0x00000020u;
 }
 inline void Value::clear_submittime() {
   submittime_ = 0;
@@ -714,15 +557,15 @@ inline void Value::set_submittime(double value) {
   submittime_ = value;
 }
 
-// optional double arriveTime = 11;
+// optional double arriveTime = 7;
 inline bool Value::has_arrivetime() const {
-  return (_has_bits_[0] & 0x00000400u) != 0;
+  return (_has_bits_[0] & 0x00000040u) != 0;
 }
 inline void Value::set_has_arrivetime() {
-  _has_bits_[0] |= 0x00000400u;
+  _has_bits_[0] |= 0x00000040u;
 }
 inline void Value::clear_has_arrivetime() {
-  _has_bits_[0] &= ~0x00000400u;
+  _has_bits_[0] &= ~0x00000040u;
 }
 inline void Value::clear_arrivetime() {
   arrivetime_ = 0;
@@ -736,15 +579,15 @@ inline void Value::set_arrivetime(double value) {
   arrivetime_ = value;
 }
 
-// optional double rqueuedTime = 12;
+// optional double rqueuedTime = 8;
 inline bool Value::has_rqueuedtime() const {
-  return (_has_bits_[0] & 0x00000800u) != 0;
+  return (_has_bits_[0] & 0x00000080u) != 0;
 }
 inline void Value::set_has_rqueuedtime() {
-  _has_bits_[0] |= 0x00000800u;
+  _has_bits_[0] |= 0x00000080u;
 }
 inline void Value::clear_has_rqueuedtime() {
-  _has_bits_[0] &= ~0x00000800u;
+  _has_bits_[0] &= ~0x00000080u;
 }
 inline void Value::clear_rqueuedtime() {
   rqueuedtime_ = 0;
@@ -758,15 +601,15 @@ inline void Value::set_rqueuedtime(double value) {
   rqueuedtime_ = value;
 }
 
-// optional double exeTime = 13;
+// optional double exeTime = 9;
 inline bool Value::has_exetime() const {
-  return (_has_bits_[0] & 0x00001000u) != 0;
+  return (_has_bits_[0] & 0x00000100u) != 0;
 }
 inline void Value::set_has_exetime() {
-  _has_bits_[0] |= 0x00001000u;
+  _has_bits_[0] |= 0x00000100u;
 }
 inline void Value::clear_has_exetime() {
-  _has_bits_[0] &= ~0x00001000u;
+  _has_bits_[0] &= ~0x00000100u;
 }
 inline void Value::clear_exetime() {
   exetime_ = 0;
@@ -780,15 +623,15 @@ inline void Value::set_exetime(double value) {
   exetime_ = value;
 }
 
-// optional double finTime = 14;
+// optional double finTime = 10;
 inline bool Value::has_fintime() const {
-  return (_has_bits_[0] & 0x00002000u) != 0;
+  return (_has_bits_[0] & 0x00000200u) != 0;
 }
 inline void Value::set_has_fintime() {
-  _has_bits_[0] |= 0x00002000u;
+  _has_bits_[0] |= 0x00000200u;
 }
 inline void Value::clear_has_fintime() {
-  _has_bits_[0] &= ~0x00002000u;
+  _has_bits_[0] &= ~0x00000200u;
 }
 inline void Value::clear_fintime() {
   fintime_ = 0;
@@ -802,15 +645,15 @@ inline void Value::set_fintime(double value) {
   fintime_ = value;
 }
 
-// optional int64 numTaskFin = 15;
+// optional int64 numTaskFin = 11;
 inline bool Value::has_numtaskfin() const {
-  return (_has_bits_[0] & 0x00004000u) != 0;
+  return (_has_bits_[0] & 0x00000400u) != 0;
 }
 inline void Value::set_has_numtaskfin() {
-  _has_bits_[0] |= 0x00004000u;
+  _has_bits_[0] |= 0x00000400u;
 }
 inline void Value::clear_has_numtaskfin() {
-  _has_bits_[0] &= ~0x00004000u;
+  _has_bits_[0] &= ~0x00000400u;
 }
 inline void Value::clear_numtaskfin() {
   numtaskfin_ = GOOGLE_LONGLONG(0);
@@ -824,15 +667,15 @@ inline void Value::set_numtaskfin(::google::protobuf::int64 value) {
   numtaskfin_ = value;
 }
 
-// optional int32 numTaskWait = 16;
+// optional int32 numTaskWait = 12;
 inline bool Value::has_numtaskwait() const {
-  return (_has_bits_[0] & 0x00008000u) != 0;
+  return (_has_bits_[0] & 0x00000800u) != 0;
 }
 inline void Value::set_has_numtaskwait() {
-  _has_bits_[0] |= 0x00008000u;
+  _has_bits_[0] |= 0x00000800u;
 }
 inline void Value::clear_has_numtaskwait() {
-  _has_bits_[0] &= ~0x00008000u;
+  _has_bits_[0] &= ~0x00000800u;
 }
 inline void Value::clear_numtaskwait() {
   numtaskwait_ = 0;
@@ -846,15 +689,15 @@ inline void Value::set_numtaskwait(::google::protobuf::int32 value) {
   numtaskwait_ = value;
 }
 
-// optional int32 numTaskReady = 17;
+// optional int32 numTaskReady = 13;
 inline bool Value::has_numtaskready() const {
-  return (_has_bits_[0] & 0x00010000u) != 0;
+  return (_has_bits_[0] & 0x00001000u) != 0;
 }
 inline void Value::set_has_numtaskready() {
-  _has_bits_[0] |= 0x00010000u;
+  _has_bits_[0] |= 0x00001000u;
 }
 inline void Value::clear_has_numtaskready() {
-  _has_bits_[0] &= ~0x00010000u;
+  _has_bits_[0] &= ~0x00001000u;
 }
 inline void Value::clear_numtaskready() {
   numtaskready_ = 0;
@@ -868,15 +711,15 @@ inline void Value::set_numtaskready(::google::protobuf::int32 value) {
   numtaskready_ = value;
 }
 
-// optional int32 numCoreAvilable = 18;
+// optional int32 numCoreAvilable = 14;
 inline bool Value::has_numcoreavilable() const {
-  return (_has_bits_[0] & 0x00020000u) != 0;
+  return (_has_bits_[0] & 0x00002000u) != 0;
 }
 inline void Value::set_has_numcoreavilable() {
-  _has_bits_[0] |= 0x00020000u;
+  _has_bits_[0] |= 0x00002000u;
 }
 inline void Value::clear_has_numcoreavilable() {
-  _has_bits_[0] &= ~0x00020000u;
+  _has_bits_[0] &= ~0x00002000u;
 }
 inline void Value::clear_numcoreavilable() {
   numcoreavilable_ = 0;
@@ -890,15 +733,15 @@ inline void Value::set_numcoreavilable(::google::protobuf::int32 value) {
   numcoreavilable_ = value;
 }
 
-// optional int32 numAllCore = 19;
+// optional int32 numAllCore = 15;
 inline bool Value::has_numallcore() const {
-  return (_has_bits_[0] & 0x00040000u) != 0;
+  return (_has_bits_[0] & 0x00004000u) != 0;
 }
 inline void Value::set_has_numallcore() {
-  _has_bits_[0] |= 0x00040000u;
+  _has_bits_[0] |= 0x00004000u;
 }
 inline void Value::clear_has_numallcore() {
-  _has_bits_[0] &= ~0x00040000u;
+  _has_bits_[0] &= ~0x00004000u;
 }
 inline void Value::clear_numallcore() {
   numallcore_ = 0;
@@ -912,15 +755,15 @@ inline void Value::set_numallcore(::google::protobuf::int32 value) {
   numallcore_ = value;
 }
 
-// optional int64 numWorkSteal = 20;
+// optional int64 numWorkSteal = 16;
 inline bool Value::has_numworksteal() const {
-  return (_has_bits_[0] & 0x00080000u) != 0;
+  return (_has_bits_[0] & 0x00008000u) != 0;
 }
 inline void Value::set_has_numworksteal() {
-  _has_bits_[0] |= 0x00080000u;
+  _has_bits_[0] |= 0x00008000u;
 }
 inline void Value::clear_has_numworksteal() {
-  _has_bits_[0] &= ~0x00080000u;
+  _has_bits_[0] &= ~0x00008000u;
 }
 inline void Value::clear_numworksteal() {
   numworksteal_ = GOOGLE_LONGLONG(0);
@@ -934,15 +777,15 @@ inline void Value::set_numworksteal(::google::protobuf::int64 value) {
   numworksteal_ = value;
 }
 
-// optional int64 numWorkStealFail = 21;
+// optional int64 numWorkStealFail = 17;
 inline bool Value::has_numworkstealfail() const {
-  return (_has_bits_[0] & 0x00100000u) != 0;
+  return (_has_bits_[0] & 0x00010000u) != 0;
 }
 inline void Value::set_has_numworkstealfail() {
-  _has_bits_[0] |= 0x00100000u;
+  _has_bits_[0] |= 0x00010000u;
 }
 inline void Value::clear_has_numworkstealfail() {
-  _has_bits_[0] &= ~0x00100000u;
+  _has_bits_[0] &= ~0x00010000u;
 }
 inline void Value::clear_numworkstealfail() {
   numworkstealfail_ = GOOGLE_LONGLONG(0);
@@ -954,6 +797,163 @@ inline ::google::protobuf::int64 Value::numworkstealfail() const {
 inline void Value::set_numworkstealfail(::google::protobuf::int64 value) {
   set_has_numworkstealfail();
   numworkstealfail_ = value;
+}
+
+// repeated string parents = 18;
+inline int Value::parents_size() const {
+  return parents_.size();
+}
+inline void Value::clear_parents() {
+  parents_.Clear();
+}
+inline const ::std::string& Value::parents(int index) const {
+  return parents_.Get(index);
+}
+inline ::std::string* Value::mutable_parents(int index) {
+  return parents_.Mutable(index);
+}
+inline void Value::set_parents(int index, const ::std::string& value) {
+  parents_.Mutable(index)->assign(value);
+}
+inline void Value::set_parents(int index, const char* value) {
+  parents_.Mutable(index)->assign(value);
+}
+inline void Value::set_parents(int index, const char* value, size_t size) {
+  parents_.Mutable(index)->assign(
+    reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* Value::add_parents() {
+  return parents_.Add();
+}
+inline void Value::add_parents(const ::std::string& value) {
+  parents_.Add()->assign(value);
+}
+inline void Value::add_parents(const char* value) {
+  parents_.Add()->assign(value);
+}
+inline void Value::add_parents(const char* value, size_t size) {
+  parents_.Add()->assign(reinterpret_cast<const char*>(value), size);
+}
+inline const ::google::protobuf::RepeatedPtrField< ::std::string>&
+Value::parents() const {
+  return parents_;
+}
+inline ::google::protobuf::RepeatedPtrField< ::std::string>*
+Value::mutable_parents() {
+  return &parents_;
+}
+
+// repeated string children = 19;
+inline int Value::children_size() const {
+  return children_.size();
+}
+inline void Value::clear_children() {
+  children_.Clear();
+}
+inline const ::std::string& Value::children(int index) const {
+  return children_.Get(index);
+}
+inline ::std::string* Value::mutable_children(int index) {
+  return children_.Mutable(index);
+}
+inline void Value::set_children(int index, const ::std::string& value) {
+  children_.Mutable(index)->assign(value);
+}
+inline void Value::set_children(int index, const char* value) {
+  children_.Mutable(index)->assign(value);
+}
+inline void Value::set_children(int index, const char* value, size_t size) {
+  children_.Mutable(index)->assign(
+    reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* Value::add_children() {
+  return children_.Add();
+}
+inline void Value::add_children(const ::std::string& value) {
+  children_.Add()->assign(value);
+}
+inline void Value::add_children(const char* value) {
+  children_.Add()->assign(value);
+}
+inline void Value::add_children(const char* value, size_t size) {
+  children_.Add()->assign(reinterpret_cast<const char*>(value), size);
+}
+inline const ::google::protobuf::RepeatedPtrField< ::std::string>&
+Value::children() const {
+  return children_;
+}
+inline ::google::protobuf::RepeatedPtrField< ::std::string>*
+Value::mutable_children() {
+  return &children_;
+}
+
+// repeated string dataNameList = 20;
+inline int Value::datanamelist_size() const {
+  return datanamelist_.size();
+}
+inline void Value::clear_datanamelist() {
+  datanamelist_.Clear();
+}
+inline const ::std::string& Value::datanamelist(int index) const {
+  return datanamelist_.Get(index);
+}
+inline ::std::string* Value::mutable_datanamelist(int index) {
+  return datanamelist_.Mutable(index);
+}
+inline void Value::set_datanamelist(int index, const ::std::string& value) {
+  datanamelist_.Mutable(index)->assign(value);
+}
+inline void Value::set_datanamelist(int index, const char* value) {
+  datanamelist_.Mutable(index)->assign(value);
+}
+inline void Value::set_datanamelist(int index, const char* value, size_t size) {
+  datanamelist_.Mutable(index)->assign(
+    reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* Value::add_datanamelist() {
+  return datanamelist_.Add();
+}
+inline void Value::add_datanamelist(const ::std::string& value) {
+  datanamelist_.Add()->assign(value);
+}
+inline void Value::add_datanamelist(const char* value) {
+  datanamelist_.Add()->assign(value);
+}
+inline void Value::add_datanamelist(const char* value, size_t size) {
+  datanamelist_.Add()->assign(reinterpret_cast<const char*>(value), size);
+}
+inline const ::google::protobuf::RepeatedPtrField< ::std::string>&
+Value::datanamelist() const {
+  return datanamelist_;
+}
+inline ::google::protobuf::RepeatedPtrField< ::std::string>*
+Value::mutable_datanamelist() {
+  return &datanamelist_;
+}
+
+// repeated int64 dataSize = 21;
+inline int Value::datasize_size() const {
+  return datasize_.size();
+}
+inline void Value::clear_datasize() {
+  datasize_.Clear();
+}
+inline ::google::protobuf::int64 Value::datasize(int index) const {
+  return datasize_.Get(index);
+}
+inline void Value::set_datasize(int index, ::google::protobuf::int64 value) {
+  datasize_.Set(index, value);
+}
+inline void Value::add_datasize(::google::protobuf::int64 value) {
+  datasize_.Add(value);
+}
+inline const ::google::protobuf::RepeatedField< ::google::protobuf::int64 >&
+Value::datasize() const {
+  return datasize_;
+}
+inline ::google::protobuf::RepeatedField< ::google::protobuf::int64 >*
+Value::mutable_datasize() {
+  return &datasize_;
 }
 
 

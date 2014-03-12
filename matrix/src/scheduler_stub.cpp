@@ -58,6 +58,19 @@ MatrixScheduler::MatrixScheduler(const string
 				diff.tv_sec << "s, and " << diff.tv_nsec <<
 				" ns for initialization!" << endl;
 	}
+
+	numIdleCore = config->numCorePerExecutor;
+	prevNumTaskFin = 0;
+	numTaskFin = 0;
+	numTaskSteal = 0;
+	numTaskStolen = 0;
+	numWS = 0;
+	numWSFail = 0;
+
+	waitQueue = deque<TaskMsg>();
+	localQueue = priority_queue<TaskMsg, vector<TaskMsg>, HighPriorityByDataSize>();
+	wsQueue = priority_queue<TaskMsg, vector<TaskMsg>, HighPriorityByDataSize>();
+	completeQueue = deque<CmpQueueItem>();
 }
 
 MatrixScheduler::~MatrixScheduler(void)
@@ -181,7 +194,7 @@ void MatrixScheduler::recv_task_from_client(
 	long increment = 0;
 
 	wqMutex.lock();
-	cout << "number of tasks received is:" << mm.count() << endl;
+
 	for (int i = 0; i < mm.count(); i++)
 	{
 		TaskMsg tm = str_to_taskmsg(mm.tasks(i));
@@ -251,7 +264,6 @@ void MatrixScheduler::recv_pushing_task(MatrixMsg &mm, int sockfd, sockaddr from
 /* processing requests received by the epoll server */
 int MatrixScheduler::proc_req(int sockfd, char *buf, sockaddr fromAddr)
 {
-	printf("THe received value is:%s\n", buf);
 	MatrixMsg mm;
 	//string *sbuf = static_cast<string*>(buf);
 	//string bufStr = *sbuf;
@@ -281,7 +293,6 @@ int MatrixScheduler::proc_req(int sockfd, char *buf, sockaddr fromAddr)
 	else if (msg.compare("client send task") == 0)	// client sent tasks
 	{
 		/* add tasks and then send ack back */
-		cout << "I am receiving tasks from client " << endl;
 		recv_task_from_client(mm, sockfd, fromAddr);
 	}
 	else if (msg.compare("scheduler push task") == 0)
@@ -304,9 +315,7 @@ int MatrixScheduler::proc_req(int sockfd, char *buf, sockaddr fromAddr)
 void *epoll_serving(void *args)
 {
 	MatrixEpollServer *mes = (MatrixEpollServer*)args;
-	cout << "I am starting to serve request!" << endl;
 	mes->serve();
-	cout << "What happenend!" << endl;
 	pthread_exit(NULL);
 	return NULL;
 }
@@ -583,6 +592,8 @@ void MatrixScheduler::exec_a_task(TaskMsg &tm)
 	string result = exec(execmd);
 	string key = get_id() + tm.taskid() + "data";
 
+	cout << "The key is:" << key << ", and the value is:" << result << endl;
+
 #ifdef ZHT_STORAGE
 	zc.insert(key, result);
 #else
@@ -639,6 +650,7 @@ void *executing_task(void *args)
 			else if (ms->wsQueue.size() > 0)
 			{
 				ms->wsqMutex.lock();
+
 				if (ms->wsQueue.size() > 0)
 				{
 					tm = ms->wsQueue.top();
@@ -771,10 +783,10 @@ long MatrixScheduler::check_a_ready_task(TaskMsg &tm)
 	return 0;
 }
 
-bool check_empty(TaskMsg &tm)
+/*bool check_empty(TaskMsg &tm)
 {
 	return tm.taskid().empty();
-}
+}*/
 
 /* checking ready task thread function, under the condition
  * that the scheduler is still processing tasks, if the
@@ -793,35 +805,21 @@ void *checking_ready_task(void *args)
 	{
 		while (ms->waitQueue.size() > 0)
 		{
-			size = ms->waitQueue.size();
+			tm = ms->waitQueue.front();
+			ms->waitQueue.pop_front();
 
-			for (int i = 0; i < size; i++)
+			int ret = ms->check_a_ready_task(tm);
+			if (ret != 0)
 			{
-				tm = ms->waitQueue[i];
-				if (!tm.taskid().empty())
-				{
-					int ret = ms->check_a_ready_task(tm);
-					if (ret != 0)
-					{
-						increment += ret;
-						ms->waitQueue[i].set_taskid("");
-					}
-					else
-					{
-						increment += 1;
-					}
-				}
+				increment += ret;
 			}
-
-			/* erase all the task entries that have been
-			 * moved to the ready queue. Those entries are
-			 * set to be empty
-			 * */
-			ms->wqMutex.lock();
-			deque<TaskMsg>::iterator last = remove_if(ms->waitQueue.begin(),
-					ms->waitQueue.end(), check_empty);
-			ms->waitQueue.erase(last, ms->waitQueue.end());
-			ms->wqMutex.unlock();
+			else
+			{
+				increment += 1;
+				ms->wqMutex.lock();
+				ms->waitQueue.push_back(tm);
+				ms->wqMutex.unlock();
+			}
 		}
 	}
 
@@ -853,12 +851,15 @@ long MatrixScheduler::notify_children(const CmpQueueItem &cqItem)
 	long increment = 0;
 
 	zc.lookup(cqItem.taskId, taskDetail);
+	cout << "The task detail is:" << taskDetail << endl;
 	Value value;
 	value.ParseFromString(taskDetail);
 
 	increment++;
 	string childTaskId, childTaskDetail, childTaskDetailAttempt, query_value;
 	Value childVal;
+
+	cout << "task id is:" << value.id() << ",Children size is:" << value.children_size() << endl;
 
 	for (int i = 0; i < value.children_size(); i++)
 	{
@@ -910,8 +911,10 @@ void *checking_complete_task(void *args)
 			ms->cqMutex.lock();
 			if (ms->completeQueue.size() > 0)
 			{
+				cout << "The size is:" << ms->completeQueue.size() << endl;
 				cqItem = ms->completeQueue.front();
-				ms->completeQueue.pop_back();
+				cout << cqItem.taskId << " " << cqItem.key << " " << cqItem.dataSize << endl;
+				ms->completeQueue.pop_front();
 				ms->cqMutex.unlock();
 			}
 			else

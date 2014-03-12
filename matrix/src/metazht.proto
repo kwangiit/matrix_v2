@@ -1,25 +1,26 @@
 message Value
 {
 	required string id = 1;
-	repeated string parents = 2;
-	
-	optional int64 indegree = 3;
+	optional string history = 2;
+	repeated string parents = 3;
 	repeated string children = 4;
 	repeated string dataNameList = 5;
-	repeated int64 dataSize = 6;
+	
+	optional int64 indegree = 6;
 	optional int64 allDataSize = 7;
-	optional int32 numMove = 8;
-	optional string history = 9;
-	optional double submitTime = 10;
-	optional double arriveTime = 11;
-	optional double rqueuedTime = 12;
-	optional double exeTime = 13;
-	optional double finTime = 14;
-	optional int64 numTaskFin = 15;
-	optional int32 numTaskWait = 16;
-	optional int32 numTaskReady = 17;
-	optional int32 numCoreAvilable = 18;
-	optional int32 numAllCore = 19;
-	optional int64 numWorkSteal = 20;
-	optional int64 numWorkStealFail = 21;
+	optional int64 numTaskFin = 8;
+	optional int64 numWorkSteal = 9;
+	optional int64 numWorkStealFail = 10;
+	repeated int64 dataSize = 11;
+	
+	optional int32 numMove = 12;
+	optional int32 numTaskWait = 13;
+	optional int32 numTaskReady = 14;
+	optional int32 numCoreAvilable = 15;
+	optional int32 numAllCore = 16;
+	optional double submitTime = 17;
+	optional double arriveTime = 18;
+	optional double rqueuedTime = 19;
+	optional double exeTime = 20;
+	optional double finTime = 21;
 }

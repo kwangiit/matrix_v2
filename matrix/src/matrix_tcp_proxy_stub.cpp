@@ -13,7 +13,6 @@ int send_first(const string &ip, long port, const string &buf)
 	int to_sock;
 	struct sockaddr_in dest;
 	memset(&dest, 0, sizeof(struct sockaddr_in)); /*zero the struct*/
-	cout << ip.c_str() << endl;
 	const char *ipChar = ip.c_str();
 	struct hostent * hinfo = gethostbyname(ipChar);
 
@@ -29,14 +28,12 @@ int send_first(const string &ip, long port, const string &buf)
 	to_sock = socket(PF_INET, SOCK_STREAM, 0); //try change here.................................................
 	if (to_sock < 0)
 	{
-		cout << "I can not create a socket!" << endl;
 		return -1;
 	}
 	int ret_con = connect(to_sock, (struct sockaddr *) &dest,
 			sizeof(sockaddr));
 	if (ret_con < 0)
 	{
-		cout << "I can not connect!, and the return code is:" << ret_con << endl;
 		return -1;
 	}
 	send_bf(to_sock, buf);
@@ -46,9 +43,7 @@ int send_first(const string &ip, long port, const string &buf)
 
 int send_bf(int sock, const string &buf)
 {
-	cout << "The string to send is:" << buf << ", and length is:" << buf.length() << endl;
 	return send(sock, buf.data(), buf.length(), 0);
-	//return send(sock, "Hello, I am Ke Wang", 19, 0);
 }
 
 int recv_bf(int sock, string &buf)

@@ -114,7 +114,6 @@ string get_host_id(const string &type)
 		id = exec("hostname");
 	}
 
-	cout << "The id is: " << id << endl;
 	return id;
 }
 
@@ -143,7 +142,6 @@ int get_self_idx(const string &str, vector<string> strVec)
 
 	for (int i = 0; i < strVec.size(); i++)
 	{
-		cout << "string is:" << str << " and target is:" << strVec.at(i) << endl;
 		if (str.compare(strVec.at(i)) == 0)
 		{
 			idx = i;
@@ -343,7 +341,7 @@ double get_time_usec()
 	struct timeval currentTime;
 
 	gettimeofday(&currentTime, NULL);
-	return static_cast<double>(currentTime.tv_sec) * 1E6
+	return static_cast<double>(currentTime.tv_sec) * 1000000
 				+ static_cast<double>(currentTime.tv_usec);
 }
 
@@ -352,8 +350,8 @@ double get_time_msec()
 	struct timeval currentTime;
 
 	gettimeofday(&currentTime, NULL);
-	return static_cast<double>(currentTime.tv_sec) * 1E3
-			+ static_cast<double>(currentTime.tv_usec) / 1E3;
+	return static_cast<double>(currentTime.tv_sec) * 1000
+			+ static_cast<double>(currentTime.tv_usec) / 1000;
 }
 
 double get_time_sec()
@@ -362,7 +360,7 @@ double get_time_sec()
 
 	gettimeofday(&currentTime, NULL);
 	return static_cast<double>(currentTime.tv_sec)
-			+ static_cast<double>(currentTime.tv_usec) / 1E6;
+			+ static_cast<double>(currentTime.tv_usec) / 1000000;
 }
 
 timespec time_diff(timespec start, timespec end)
