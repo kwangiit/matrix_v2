@@ -1,9 +1,5 @@
 message MatrixMsg
 {
-	required string msgType = 1;
-	optional int64 count = 2;
-	optional string extraInfo = 3;
-	
 	message TaskMsg
 	{
 		required string taskId = 1;
@@ -13,5 +9,8 @@ message MatrixMsg
 		required int64 dataLength = 5; 
 	}
 	
-	repeated TaskMsg tasks = 4;
+	repeated TaskMsg tasks = 1;
+	required string msgType = 2;
+	optional int64 count = 3;
+	optional string extraInfo = 4;
 }

@@ -1,7 +1,7 @@
 NumTaskPerClient	10
 NumAllTask	10
 NumCorePerExecutor	4
-MaxTaskPerPkg	10
+MaxTaskPerPkg	2
 
 MonitorInterval	1000
 SchedulerPortNo	60000

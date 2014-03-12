@@ -46,9 +46,9 @@ int send_first(const string &ip, long port, const string &buf)
 
 int send_bf(int sock, const string &buf)
 {
-	const char *bufStr = buf.c_str();
-	int bufSize = strlen(bufStr);
-	return send(sock, bufStr, bufSize, 0);
+	cout << "The string to send is:" << buf << ", and length is:" << buf.length() << endl;
+	return send(sock, buf.data(), buf.length(), 0);
+	//return send(sock, "Hello, I am Ke Wang", 19, 0);
 }
 
 int recv_bf(int sock, string &buf)

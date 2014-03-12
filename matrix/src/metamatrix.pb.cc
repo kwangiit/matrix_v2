@@ -33,10 +33,10 @@ void protobuf_AssignDesc_metamatrix_2eproto() {
   GOOGLE_CHECK(file != NULL);
   MatrixMsg_descriptor_ = file->message_type(0);
   static const int MatrixMsg_offsets_[4] = {
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(MatrixMsg, tasks_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(MatrixMsg, msgtype_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(MatrixMsg, count_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(MatrixMsg, extrainfo_),
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(MatrixMsg, tasks_),
   };
   MatrixMsg_reflection_ =
     new ::google::protobuf::internal::GeneratedMessageReflection(
@@ -102,9 +102,9 @@ void protobuf_AddDesc_metamatrix_2eproto() {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
 
   ::google::protobuf::DescriptorPool::InternalAddGeneratedFile(
-    "\n\020metamatrix.proto\"\270\001\n\tMatrixMsg\022\017\n\007msgT"
-    "ype\030\001 \002(\t\022\r\n\005count\030\002 \001(\003\022\021\n\textraInfo\030\003 "
-    "\001(\t\022!\n\005tasks\030\004 \003(\0132\022.MatrixMsg.TaskMsg\032U"
+    "\n\020metamatrix.proto\"\270\001\n\tMatrixMsg\022!\n\005task"
+    "s\030\001 \003(\0132\022.MatrixMsg.TaskMsg\022\017\n\007msgType\030\002"
+    " \002(\t\022\r\n\005count\030\003 \001(\003\022\021\n\textraInfo\030\004 \001(\t\032U"
     "\n\007TaskMsg\022\016\n\006taskId\030\001 \002(\t\022\014\n\004user\030\002 \002(\t\022"
     "\013\n\003dir\030\003 \002(\t\022\013\n\003cmd\030\004 \002(\t\022\022\n\ndataLength\030"
     "\005 \002(\003", 205);
@@ -564,10 +564,10 @@ void MatrixMsg_TaskMsg::Swap(MatrixMsg_TaskMsg* other) {
 // -------------------------------------------------------------------
 
 #ifndef _MSC_VER
+const int MatrixMsg::kTasksFieldNumber;
 const int MatrixMsg::kMsgTypeFieldNumber;
 const int MatrixMsg::kCountFieldNumber;
 const int MatrixMsg::kExtraInfoFieldNumber;
-const int MatrixMsg::kTasksFieldNumber;
 #endif  // !_MSC_VER
 
 MatrixMsg::MatrixMsg()
@@ -628,7 +628,7 @@ MatrixMsg* MatrixMsg::New() const {
 }
 
 void MatrixMsg::Clear() {
-  if (_has_bits_[0 / 32] & (0xffu << (0 % 32))) {
+  if (_has_bits_[1 / 32] & (0xffu << (1 % 32))) {
     if (has_msgtype()) {
       if (msgtype_ != &::google::protobuf::internal::kEmptyString) {
         msgtype_->clear();
@@ -652,10 +652,26 @@ bool MatrixMsg::MergePartialFromCodedStream(
   ::google::protobuf::uint32 tag;
   while ((tag = input->ReadTag()) != 0) {
     switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
-      // required string msgType = 1;
+      // repeated .MatrixMsg.TaskMsg tasks = 1;
       case 1: {
         if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
             ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
+         parse_tasks:
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
+                input, add_tasks()));
+        } else {
+          goto handle_uninterpreted;
+        }
+        if (input->ExpectTag(10)) goto parse_tasks;
+        if (input->ExpectTag(18)) goto parse_msgType;
+        break;
+      }
+      
+      // required string msgType = 2;
+      case 2: {
+        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
+         parse_msgType:
           DO_(::google::protobuf::internal::WireFormatLite::ReadString(
                 input, this->mutable_msgtype()));
           ::google::protobuf::internal::WireFormat::VerifyUTF8String(
@@ -664,12 +680,12 @@ bool MatrixMsg::MergePartialFromCodedStream(
         } else {
           goto handle_uninterpreted;
         }
-        if (input->ExpectTag(16)) goto parse_count;
+        if (input->ExpectTag(24)) goto parse_count;
         break;
       }
       
-      // optional int64 count = 2;
-      case 2: {
+      // optional int64 count = 3;
+      case 3: {
         if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
             ::google::protobuf::internal::WireFormatLite::WIRETYPE_VARINT) {
          parse_count:
@@ -680,12 +696,12 @@ bool MatrixMsg::MergePartialFromCodedStream(
         } else {
           goto handle_uninterpreted;
         }
-        if (input->ExpectTag(26)) goto parse_extraInfo;
+        if (input->ExpectTag(34)) goto parse_extraInfo;
         break;
       }
       
-      // optional string extraInfo = 3;
-      case 3: {
+      // optional string extraInfo = 4;
+      case 4: {
         if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
             ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
          parse_extraInfo:
@@ -697,21 +713,6 @@ bool MatrixMsg::MergePartialFromCodedStream(
         } else {
           goto handle_uninterpreted;
         }
-        if (input->ExpectTag(34)) goto parse_tasks;
-        break;
-      }
-      
-      // repeated .MatrixMsg.TaskMsg tasks = 4;
-      case 4: {
-        if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
-            ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
-         parse_tasks:
-          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
-                input, add_tasks()));
-        } else {
-          goto handle_uninterpreted;
-        }
-        if (input->ExpectTag(34)) goto parse_tasks;
         if (input->ExpectAtEnd()) return true;
         break;
       }
@@ -734,33 +735,33 @@ bool MatrixMsg::MergePartialFromCodedStream(
 
 void MatrixMsg::SerializeWithCachedSizes(
     ::google::protobuf::io::CodedOutputStream* output) const {
-  // required string msgType = 1;
+  // repeated .MatrixMsg.TaskMsg tasks = 1;
+  for (int i = 0; i < this->tasks_size(); i++) {
+    ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
+      1, this->tasks(i), output);
+  }
+  
+  // required string msgType = 2;
   if (has_msgtype()) {
     ::google::protobuf::internal::WireFormat::VerifyUTF8String(
       this->msgtype().data(), this->msgtype().length(),
       ::google::protobuf::internal::WireFormat::SERIALIZE);
     ::google::protobuf::internal::WireFormatLite::WriteString(
-      1, this->msgtype(), output);
+      2, this->msgtype(), output);
   }
   
-  // optional int64 count = 2;
+  // optional int64 count = 3;
   if (has_count()) {
-    ::google::protobuf::internal::WireFormatLite::WriteInt64(2, this->count(), output);
+    ::google::protobuf::internal::WireFormatLite::WriteInt64(3, this->count(), output);
   }
   
-  // optional string extraInfo = 3;
+  // optional string extraInfo = 4;
   if (has_extrainfo()) {
     ::google::protobuf::internal::WireFormat::VerifyUTF8String(
       this->extrainfo().data(), this->extrainfo().length(),
       ::google::protobuf::internal::WireFormat::SERIALIZE);
     ::google::protobuf::internal::WireFormatLite::WriteString(
-      3, this->extrainfo(), output);
-  }
-  
-  // repeated .MatrixMsg.TaskMsg tasks = 4;
-  for (int i = 0; i < this->tasks_size(); i++) {
-    ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
-      4, this->tasks(i), output);
+      4, this->extrainfo(), output);
   }
   
   if (!unknown_fields().empty()) {
@@ -771,36 +772,36 @@ void MatrixMsg::SerializeWithCachedSizes(
 
 ::google::protobuf::uint8* MatrixMsg::SerializeWithCachedSizesToArray(
     ::google::protobuf::uint8* target) const {
-  // required string msgType = 1;
+  // repeated .MatrixMsg.TaskMsg tasks = 1;
+  for (int i = 0; i < this->tasks_size(); i++) {
+    target = ::google::protobuf::internal::WireFormatLite::
+      WriteMessageNoVirtualToArray(
+        1, this->tasks(i), target);
+  }
+  
+  // required string msgType = 2;
   if (has_msgtype()) {
     ::google::protobuf::internal::WireFormat::VerifyUTF8String(
       this->msgtype().data(), this->msgtype().length(),
       ::google::protobuf::internal::WireFormat::SERIALIZE);
     target =
       ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
-        1, this->msgtype(), target);
+        2, this->msgtype(), target);
   }
   
-  // optional int64 count = 2;
+  // optional int64 count = 3;
   if (has_count()) {
-    target = ::google::protobuf::internal::WireFormatLite::WriteInt64ToArray(2, this->count(), target);
+    target = ::google::protobuf::internal::WireFormatLite::WriteInt64ToArray(3, this->count(), target);
   }
   
-  // optional string extraInfo = 3;
+  // optional string extraInfo = 4;
   if (has_extrainfo()) {
     ::google::protobuf::internal::WireFormat::VerifyUTF8String(
       this->extrainfo().data(), this->extrainfo().length(),
       ::google::protobuf::internal::WireFormat::SERIALIZE);
     target =
       ::google::protobuf::internal::WireFormatLite::WriteStringToArray(
-        3, this->extrainfo(), target);
-  }
-  
-  // repeated .MatrixMsg.TaskMsg tasks = 4;
-  for (int i = 0; i < this->tasks_size(); i++) {
-    target = ::google::protobuf::internal::WireFormatLite::
-      WriteMessageNoVirtualToArray(
-        4, this->tasks(i), target);
+        4, this->extrainfo(), target);
   }
   
   if (!unknown_fields().empty()) {
@@ -813,22 +814,22 @@ void MatrixMsg::SerializeWithCachedSizes(
 int MatrixMsg::ByteSize() const {
   int total_size = 0;
   
-  if (_has_bits_[0 / 32] & (0xffu << (0 % 32))) {
-    // required string msgType = 1;
+  if (_has_bits_[1 / 32] & (0xffu << (1 % 32))) {
+    // required string msgType = 2;
     if (has_msgtype()) {
       total_size += 1 +
         ::google::protobuf::internal::WireFormatLite::StringSize(
           this->msgtype());
     }
     
-    // optional int64 count = 2;
+    // optional int64 count = 3;
     if (has_count()) {
       total_size += 1 +
         ::google::protobuf::internal::WireFormatLite::Int64Size(
           this->count());
     }
     
-    // optional string extraInfo = 3;
+    // optional string extraInfo = 4;
     if (has_extrainfo()) {
       total_size += 1 +
         ::google::protobuf::internal::WireFormatLite::StringSize(
@@ -836,7 +837,7 @@ int MatrixMsg::ByteSize() const {
     }
     
   }
-  // repeated .MatrixMsg.TaskMsg tasks = 4;
+  // repeated .MatrixMsg.TaskMsg tasks = 1;
   total_size += 1 * this->tasks_size();
   for (int i = 0; i < this->tasks_size(); i++) {
     total_size +=
@@ -870,7 +871,7 @@ void MatrixMsg::MergeFrom(const ::google::protobuf::Message& from) {
 void MatrixMsg::MergeFrom(const MatrixMsg& from) {
   GOOGLE_CHECK_NE(&from, this);
   tasks_.MergeFrom(from.tasks_);
-  if (from._has_bits_[0 / 32] & (0xffu << (0 % 32))) {
+  if (from._has_bits_[1 / 32] & (0xffu << (1 % 32))) {
     if (from.has_msgtype()) {
       set_msgtype(from.msgtype());
     }
@@ -897,7 +898,7 @@ void MatrixMsg::CopyFrom(const MatrixMsg& from) {
 }
 
 bool MatrixMsg::IsInitialized() const {
-  if ((_has_bits_[0] & 0x00000001) != 0x00000001) return false;
+  if ((_has_bits_[0] & 0x00000002) != 0x00000002) return false;
   
   for (int i = 0; i < tasks_size(); i++) {
     if (!this->tasks(i).IsInitialized()) return false;
@@ -907,10 +908,10 @@ bool MatrixMsg::IsInitialized() const {
 
 void MatrixMsg::Swap(MatrixMsg* other) {
   if (other != this) {
+    tasks_.Swap(&other->tasks_);
     std::swap(msgtype_, other->msgtype_);
     std::swap(count_, other->count_);
     std::swap(extrainfo_, other->extrainfo_);
-    tasks_.Swap(&other->tasks_);
     std::swap(_has_bits_[0], other->_has_bits_[0]);
     _unknown_fields_.Swap(&other->_unknown_fields_);
     std::swap(_cached_size_, other->_cached_size_);

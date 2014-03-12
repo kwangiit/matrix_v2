@@ -48,7 +48,7 @@ class MatrixScheduler: public Peer
 		void send_task(int, sockaddr);
 
 		/* processing requests received by the epoll server */
-		int proc_req(int, void*, sockaddr);
+		int proc_req(int, char*, sockaddr);
 
 		void fork_es_thread();	// fork epoll server thread
 

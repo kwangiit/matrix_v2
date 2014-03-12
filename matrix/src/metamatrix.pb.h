@@ -229,39 +229,10 @@ class MatrixMsg : public ::google::protobuf::Message {
   
   // accessors -------------------------------------------------------
   
-  // required string msgType = 1;
-  inline bool has_msgtype() const;
-  inline void clear_msgtype();
-  static const int kMsgTypeFieldNumber = 1;
-  inline const ::std::string& msgtype() const;
-  inline void set_msgtype(const ::std::string& value);
-  inline void set_msgtype(const char* value);
-  inline void set_msgtype(const char* value, size_t size);
-  inline ::std::string* mutable_msgtype();
-  inline ::std::string* release_msgtype();
-  
-  // optional int64 count = 2;
-  inline bool has_count() const;
-  inline void clear_count();
-  static const int kCountFieldNumber = 2;
-  inline ::google::protobuf::int64 count() const;
-  inline void set_count(::google::protobuf::int64 value);
-  
-  // optional string extraInfo = 3;
-  inline bool has_extrainfo() const;
-  inline void clear_extrainfo();
-  static const int kExtraInfoFieldNumber = 3;
-  inline const ::std::string& extrainfo() const;
-  inline void set_extrainfo(const ::std::string& value);
-  inline void set_extrainfo(const char* value);
-  inline void set_extrainfo(const char* value, size_t size);
-  inline ::std::string* mutable_extrainfo();
-  inline ::std::string* release_extrainfo();
-  
-  // repeated .MatrixMsg.TaskMsg tasks = 4;
+  // repeated .MatrixMsg.TaskMsg tasks = 1;
   inline int tasks_size() const;
   inline void clear_tasks();
-  static const int kTasksFieldNumber = 4;
+  static const int kTasksFieldNumber = 1;
   inline const ::MatrixMsg_TaskMsg& tasks(int index) const;
   inline ::MatrixMsg_TaskMsg* mutable_tasks(int index);
   inline ::MatrixMsg_TaskMsg* add_tasks();
@@ -269,6 +240,35 @@ class MatrixMsg : public ::google::protobuf::Message {
       tasks() const;
   inline ::google::protobuf::RepeatedPtrField< ::MatrixMsg_TaskMsg >*
       mutable_tasks();
+  
+  // required string msgType = 2;
+  inline bool has_msgtype() const;
+  inline void clear_msgtype();
+  static const int kMsgTypeFieldNumber = 2;
+  inline const ::std::string& msgtype() const;
+  inline void set_msgtype(const ::std::string& value);
+  inline void set_msgtype(const char* value);
+  inline void set_msgtype(const char* value, size_t size);
+  inline ::std::string* mutable_msgtype();
+  inline ::std::string* release_msgtype();
+  
+  // optional int64 count = 3;
+  inline bool has_count() const;
+  inline void clear_count();
+  static const int kCountFieldNumber = 3;
+  inline ::google::protobuf::int64 count() const;
+  inline void set_count(::google::protobuf::int64 value);
+  
+  // optional string extraInfo = 4;
+  inline bool has_extrainfo() const;
+  inline void clear_extrainfo();
+  static const int kExtraInfoFieldNumber = 4;
+  inline const ::std::string& extrainfo() const;
+  inline void set_extrainfo(const ::std::string& value);
+  inline void set_extrainfo(const char* value);
+  inline void set_extrainfo(const char* value, size_t size);
+  inline ::std::string* mutable_extrainfo();
+  inline ::std::string* release_extrainfo();
   
   // @@protoc_insertion_point(class_scope:MatrixMsg)
  private:
@@ -281,10 +281,10 @@ class MatrixMsg : public ::google::protobuf::Message {
   
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
   
+  ::google::protobuf::RepeatedPtrField< ::MatrixMsg_TaskMsg > tasks_;
   ::std::string* msgtype_;
   ::google::protobuf::int64 count_;
   ::std::string* extrainfo_;
-  ::google::protobuf::RepeatedPtrField< ::MatrixMsg_TaskMsg > tasks_;
   
   mutable int _cached_size_;
   ::google::protobuf::uint32 _has_bits_[(4 + 31) / 32];
@@ -561,15 +561,40 @@ inline void MatrixMsg_TaskMsg::set_datalength(::google::protobuf::int64 value) {
 
 // MatrixMsg
 
-// required string msgType = 1;
+// repeated .MatrixMsg.TaskMsg tasks = 1;
+inline int MatrixMsg::tasks_size() const {
+  return tasks_.size();
+}
+inline void MatrixMsg::clear_tasks() {
+  tasks_.Clear();
+}
+inline const ::MatrixMsg_TaskMsg& MatrixMsg::tasks(int index) const {
+  return tasks_.Get(index);
+}
+inline ::MatrixMsg_TaskMsg* MatrixMsg::mutable_tasks(int index) {
+  return tasks_.Mutable(index);
+}
+inline ::MatrixMsg_TaskMsg* MatrixMsg::add_tasks() {
+  return tasks_.Add();
+}
+inline const ::google::protobuf::RepeatedPtrField< ::MatrixMsg_TaskMsg >&
+MatrixMsg::tasks() const {
+  return tasks_;
+}
+inline ::google::protobuf::RepeatedPtrField< ::MatrixMsg_TaskMsg >*
+MatrixMsg::mutable_tasks() {
+  return &tasks_;
+}
+
+// required string msgType = 2;
 inline bool MatrixMsg::has_msgtype() const {
-  return (_has_bits_[0] & 0x00000001u) != 0;
+  return (_has_bits_[0] & 0x00000002u) != 0;
 }
 inline void MatrixMsg::set_has_msgtype() {
-  _has_bits_[0] |= 0x00000001u;
+  _has_bits_[0] |= 0x00000002u;
 }
 inline void MatrixMsg::clear_has_msgtype() {
-  _has_bits_[0] &= ~0x00000001u;
+  _has_bits_[0] &= ~0x00000002u;
 }
 inline void MatrixMsg::clear_msgtype() {
   if (msgtype_ != &::google::protobuf::internal::kEmptyString) {
@@ -619,15 +644,15 @@ inline ::std::string* MatrixMsg::release_msgtype() {
   }
 }
 
-// optional int64 count = 2;
+// optional int64 count = 3;
 inline bool MatrixMsg::has_count() const {
-  return (_has_bits_[0] & 0x00000002u) != 0;
+  return (_has_bits_[0] & 0x00000004u) != 0;
 }
 inline void MatrixMsg::set_has_count() {
-  _has_bits_[0] |= 0x00000002u;
+  _has_bits_[0] |= 0x00000004u;
 }
 inline void MatrixMsg::clear_has_count() {
-  _has_bits_[0] &= ~0x00000002u;
+  _has_bits_[0] &= ~0x00000004u;
 }
 inline void MatrixMsg::clear_count() {
   count_ = GOOGLE_LONGLONG(0);
@@ -641,15 +666,15 @@ inline void MatrixMsg::set_count(::google::protobuf::int64 value) {
   count_ = value;
 }
 
-// optional string extraInfo = 3;
+// optional string extraInfo = 4;
 inline bool MatrixMsg::has_extrainfo() const {
-  return (_has_bits_[0] & 0x00000004u) != 0;
+  return (_has_bits_[0] & 0x00000008u) != 0;
 }
 inline void MatrixMsg::set_has_extrainfo() {
-  _has_bits_[0] |= 0x00000004u;
+  _has_bits_[0] |= 0x00000008u;
 }
 inline void MatrixMsg::clear_has_extrainfo() {
-  _has_bits_[0] &= ~0x00000004u;
+  _has_bits_[0] &= ~0x00000008u;
 }
 inline void MatrixMsg::clear_extrainfo() {
   if (extrainfo_ != &::google::protobuf::internal::kEmptyString) {
@@ -697,31 +722,6 @@ inline ::std::string* MatrixMsg::release_extrainfo() {
     extrainfo_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
     return temp;
   }
-}
-
-// repeated .MatrixMsg.TaskMsg tasks = 4;
-inline int MatrixMsg::tasks_size() const {
-  return tasks_.size();
-}
-inline void MatrixMsg::clear_tasks() {
-  tasks_.Clear();
-}
-inline const ::MatrixMsg_TaskMsg& MatrixMsg::tasks(int index) const {
-  return tasks_.Get(index);
-}
-inline ::MatrixMsg_TaskMsg* MatrixMsg::mutable_tasks(int index) {
-  return tasks_.Mutable(index);
-}
-inline ::MatrixMsg_TaskMsg* MatrixMsg::add_tasks() {
-  return tasks_.Add();
-}
-inline const ::google::protobuf::RepeatedPtrField< ::MatrixMsg_TaskMsg >&
-MatrixMsg::tasks() const {
-  return tasks_;
-}
-inline ::google::protobuf::RepeatedPtrField< ::MatrixMsg_TaskMsg >*
-MatrixMsg::mutable_tasks() {
-  return &tasks_;
 }
 
 

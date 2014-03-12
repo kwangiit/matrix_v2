@@ -249,15 +249,15 @@ void MatrixScheduler::recv_pushing_task(MatrixMsg &mm, int sockfd, sockaddr from
 }
 
 /* processing requests received by the epoll server */
-int MatrixScheduler::proc_req(int sockfd, void *buf, sockaddr fromAddr)
+int MatrixScheduler::proc_req(int sockfd, char *buf, sockaddr fromAddr)
 {
-	cout << "THe received value is:" << buf << ", and size is:" << sizeof(buf) << endl;
+	 printf("THe received value is:%s\n", buf);
 	MatrixMsg mm;
-	string *sbuf = static_cast<string*>(buf);
-	string bufStr = *sbuf;
+	//string *sbuf = static_cast<string*>(buf);
+	//string bufStr = *sbuf;
 
-	delete sbuf;
-	mm.ParseFromString(bufStr);
+	//delete sbuf;
+	mm.ParseFromArray(buf, strlen(buf));
 
 	long increment = 0;
 

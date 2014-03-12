@@ -387,10 +387,15 @@ void MatrixClient::submit_task_wc(vector<MatrixMsg_TaskMsg> tmVec, int toScheIdx
 			*tm = tmVec.at(pos);
 		}
 
-		string taskPkgStr = mm.SerializeAsString();
-		cout << "The task string is:" << taskPkgStr << ", and the length is:" << taskPkgStr.length() << endl;
+		int numByte = mm.ByteSize();
+		char *strByte = new char[numByte];
+		mm.SerializeToArray(strByte, numByte);
 
-		cout << "The ip address is:" << schedulerVec.at(toScheIdx) <<", and the port number is:" << config->schedulerPortNo << endl;
+		string taskPkgStr = mm.SerializeAsString();
+		const char *another = taskPkgStr.data();
+
+		printf("Another char is:%s\n", another);
+
 		int sockfd = send_first(schedulerVec.at(toScheIdx), config->schedulerPortNo, taskPkgStr);
 		cout << "The socket is:" << sockfd << endl;
 		string recvBuf;
