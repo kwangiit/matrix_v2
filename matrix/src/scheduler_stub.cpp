@@ -204,12 +204,11 @@ void MatrixScheduler::recv_task_from_client(
 		string taskDetail;
 		zc.lookup(tm.taskid(), taskDetail);
 
-		Value value;
-		value.ParseFromString(taskDetail);
+		Value value = str_to_value(taskDetail);
 		value.set_arrivetime(get_time_usec());
 		value.set_nummove(value.nummove() + 1);
-		value.set_history(value.history() + "->" + get_id());
-		taskDetail = value.SerializeAsString();
+		value.set_history(value.history() + "|" + get_id());
+		taskDetail = value_to_str(value);
 
 		zc.insert(tm.taskid(), taskDetail);
 		increment += 2;
@@ -241,12 +240,11 @@ void MatrixScheduler::recv_pushing_task(MatrixMsg &mm, int sockfd, sockaddr from
 	string taskDetail;
 	zc.lookup(tm.taskid(), taskDetail);
 
-	Value value;
-	value.ParseFromString(taskDetail);
+	Value value = str_to_value(taskDetail);
 	value.set_rqueuedtime(get_time_usec());
 	value.set_nummove(value.nummove() + 1);
-	value.set_history(value.history() + "->" + get_id());
-	taskDetail = value.SerializeAsString();
+	value.set_history(value.history() + "|" + get_id());
+	taskDetail = value_to_str(value);
 
 	zc.insert(tm.taskid(), taskDetail);
 	increment += 2;
@@ -423,12 +421,11 @@ void MatrixScheduler::recv_task_from_scheduler(int sockfd, long numTask)
 			/* update task metadata */
 			string taskDetailStr;
 			zc.lookup(tm.taskid(), taskDetailStr);
-			Value value;
-			value.ParseFromString(taskDetailStr);
+			Value value = str_to_value(taskDetailStr);
 			value.set_nummove(value.nummove() + 1);
-			value.set_history(value.history() + "->" + get_id());
+			value.set_history(value.history() + "|" + get_id());
 			value.set_rqueuedtime(get_time_usec());
-			taskDetailStr = value.SerializeAsString();
+			taskDetailStr = value_to_str(value);
 			zc.insert(tm.taskid(), taskDetailStr);
 			increment += 2;
 		}
@@ -548,8 +545,7 @@ void MatrixScheduler::exec_a_task(TaskMsg &tm)
 {
 	string taskDetail;
 	zc.lookup(tm.taskid(), taskDetail);
-	Value value;
-	value.ParseFromString(taskDetail);
+	Value value  = str_to_value(taskDetail);
 	value.set_exetime(get_time_usec());
 
 	string data("");
@@ -590,7 +586,7 @@ void MatrixScheduler::exec_a_task(TaskMsg &tm)
 
 	const char *execmd = tm.cmd().c_str();
 	string result = exec(execmd);
-	string key = get_id() + tm.taskid() + "data";
+	string key = get_id() + tm.taskid();
 
 	cout << "The key is:" << key << ", and the value is:" << result << endl;
 
@@ -603,7 +599,7 @@ void MatrixScheduler::exec_a_task(TaskMsg &tm)
 #endif
 
 	value.set_fintime(get_time_usec());
-	taskDetail = value.SerializeAsString();
+	taskDetail = value_to_str(value);
 	zc.insert(tm.taskid(), taskDetail);
 
 	numTaskFinMutex.lock();
@@ -765,15 +761,14 @@ long MatrixScheduler::check_a_ready_task(TaskMsg &tm)
 	zc.lookup(tm.taskid(), taskDetail);
 	incre++;
 
-	Value valuePkg;
-	valuePkg.ParseFromString(taskDetail);
+	Value valuePkg = str_to_value(taskDetail);
 
 	if (valuePkg.indegree() == 0)
 	{
 		if (task_ready_process(valuePkg, tm))
 		{
 			valuePkg.set_rqueuedtime(get_time_usec());
-			taskDetail = valuePkg.SerializeAsString();
+			taskDetail = value_to_str(valuePkg);
 			zc.insert(tm.taskid(), taskDetail);
 			incre++;
 		}
@@ -852,8 +847,7 @@ long MatrixScheduler::notify_children(const CmpQueueItem &cqItem)
 
 	zc.lookup(cqItem.taskId, taskDetail);
 	cout << "The task detail is:" << taskDetail << endl;
-	Value value;
-	value.ParseFromString(taskDetail);
+	Value value = str_to_value(taskDetail);
 
 	increment++;
 	string childTaskId, childTaskDetail, childTaskDetailAttempt, query_value;
@@ -866,25 +860,25 @@ long MatrixScheduler::notify_children(const CmpQueueItem &cqItem)
 		childTaskId = value.children(i);
 		zc.lookup(childTaskId, childTaskDetail);
 		increment++;
-		childVal.ParseFromString(childTaskDetail);
+		childVal = str_to_value(childTaskDetail);
 		childVal.set_indegree(childVal.indegree() - 1);
 		childVal.add_parents(get_id());
 		childVal.add_datanamelist(cqItem.key);
 		childVal.add_datasize(cqItem.dataSize);
 		childVal.set_alldatasize(childVal.alldatasize() + cqItem.dataSize);
-		childTaskDetailAttempt = childVal.SerializeAsString();
+		childTaskDetailAttempt = value_to_str(childVal);
 
 		increment++;
 		while (zc.compare_swap(childTaskId, childTaskDetail, childTaskDetailAttempt, query_value) != 0)
 		{
 			childTaskDetail = query_value;
-			childVal.ParseFromString(childTaskDetail);
+			childVal = str_to_value(childTaskDetail);
 			childVal.set_indegree(childVal.indegree() - 1);
 			childVal.add_parents(get_id());
 			childVal.add_datanamelist(cqItem.key);
 			childVal.add_datasize(cqItem.dataSize);
 			childVal.set_alldatasize(childVal.alldatasize() + cqItem.dataSize);
-			childTaskDetailAttempt = childVal.SerializeAsString();
+			childTaskDetailAttempt = value_to_str(childVal);
 			increment++;
 		}
 	}
@@ -973,7 +967,7 @@ void *recording_stat(void *args)
 		recordVal.set_numallcore(ms->config->numCorePerExecutor);
 		recordVal.set_numworksteal(ms->numWS);
 		recordVal.set_numworkstealfail(ms->numWSFail);
-		string recordValStr = recordVal.SerializeAsString();
+		string recordValStr = value_to_str(recordVal);
 		ms->zc.insert(ms->get_id(), recordValStr);
 
 		if (ms->schedulerLogOS.is_open())

@@ -13,8 +13,8 @@ WorkStealPollIntervalUpperBound	1000000
 DataSizeThreshold	1000
 SchedulerMemlistFile	./memlist
 NetworkProtocol	TCP
-DagType	FanOut
-DagArgument	2
+DagType	Pipeline
+DagArgument	6
 HostIdentityType	ip
 
 SubmissionMode	bestcase

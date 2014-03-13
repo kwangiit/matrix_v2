@@ -407,6 +407,364 @@ extern TaskMsg str_to_taskmsg(const string &str)
 	return tm;
 }
 
+extern string value_to_str(const Value &value)
+{
+	string str("");
+
+	str.append(value.id()); str.append("->");
+
+	if (value.has_indegree())
+	{
+		str.append(num_to_str<long>(value.indegree()));
+	}
+	else
+	{
+		str.append("noindegree");
+	}
+	str.append("->");
+
+	if (value.parents_size() > 0)
+	{
+		for (int i = 0; i < value.parents_size(); i++)
+		{
+			str.append(value.parents(i));
+			str.append("<eop");
+		}
+	}
+	else
+	{
+		str.append("noparents");
+	}
+	str.append("->");
+
+	if (value.children_size() > 0)
+	{
+		for (int i = 0; i < value.children_size(); i++)
+		{
+			str.append(value.children(i));
+			str.append("<eoc");
+		}
+	}
+	else
+	{
+		str.append("nochildren");
+	}
+	str.append("->");
+
+	if (value.datanamelist_size() > 0)
+	{
+		for (int i = 0; i < value.datanamelist_size(); i++)
+		{
+			str.append(value.datanamelist(i));
+			str.append("<eodn");
+		}
+	}
+	else
+	{
+		str.append("nodataname");
+	}
+	str.append("->");
+
+	if (value.datasize_size() > 0)
+	{
+		for (int i = 0; i < value.datasize_size(); i++)
+		{
+			str.append(num_to_str<long>(value.datasize(i)));
+			str.append("<eods");
+		}
+	}
+	else
+	{
+		str.append("nodatasize");
+	}
+	str.append("->");
+
+	if (value.has_alldatasize())
+	{
+		str.append(num_to_str<long>(value.alldatasize()));
+	}
+	else
+	{
+		str.append("noalldatasize");
+	}
+	str.append("->");
+
+	if (value.has_history())
+	{
+		str.append(value.history());
+	}
+	else
+	{
+		str.append("nohistory");
+	}
+	str.append("->");
+
+	if (value.has_nummove())
+	{
+		str.append(num_to_str<int>(value.nummove()));
+	}
+	else
+	{
+		str.append("nomove");
+	}
+	str.append("->");
+
+	if (value.has_submittime())
+	{
+		str.append(num_to_str<double>(value.submittime()));
+	}
+	else
+	{
+		str.append("nost");
+	}
+	str.append("->");
+
+	if (value.has_arrivetime())
+	{
+		str.append(num_to_str<double>(value.arrivetime()));
+	}
+	else
+	{
+		str.append("noat");
+	}
+	str.append("->");
+
+	if (value.has_rqueuedtime())
+	{
+		str.append(num_to_str<double>(value.rqueuedtime()));
+	}
+	else
+	{
+		str.append("noqt");
+	}
+	str.append("->");
+
+	if (value.has_exetime())
+	{
+		str.append(num_to_str<double>(value.exetime()));
+	}
+	else
+	{
+		str.append("noet");
+	}
+	str.append("->");
+
+	if (value.has_fintime())
+	{
+		str.append(num_to_str<double>(value.fintime()));
+	}
+	else
+	{
+		str.append("noft");
+	}
+	str.append("->");
+
+	if (value.has_numtaskfin())
+	{
+		str.append(num_to_str<long>(value.numtaskfin()));
+	}
+	else
+	{
+		str.append("nonumtaskfin");
+	}
+	str.append("->");
+
+	if (value.has_numworksteal())
+	{
+		str.append(num_to_str<long>(value.numworksteal()));
+	}
+	else
+	{
+		str.append("nonumworksteal");
+	}
+	str.append("->");
+
+	if (value.has_numworkstealfail())
+	{
+		str.append(num_to_str<long>(value.numworkstealfail()));
+	}
+	else
+	{
+		str.append("nonumworkstealfail");
+	}
+	str.append("->");
+
+	if (value.has_numtaskwait())
+	{
+		str.append(num_to_str<int>(value.numtaskwait()));
+	}
+	else
+	{
+		str.append("nonumtaskwait");
+	}
+	str.append("->");
+
+	if (value.has_numtaskready())
+	{
+		str.append(num_to_str<int>(value.numtaskready()));
+	}
+	else
+	{
+		str.append("nonumtaskready");
+	}
+	str.append("->");
+
+	if (value.has_numcoreavilable())
+	{
+		str.append(num_to_str<int>(value.numcoreavilable()));
+	}
+	else
+	{
+		str.append("nonumcoreavail");
+	}
+	str.append("->");
+
+	if (value.has_numallcore())
+	{
+		str.append(num_to_str<int>(value.numallcore()));
+	}
+	else
+	{
+		str.append("nonumallcore");
+	}
+	str.append("->");
+
+	return str;
+}
+
+extern Value str_to_value(const string &str)
+{
+	Value value;
+	vector<string> vec = tokenize(str, "->");
+
+	for (int i = 0; i < vec.size(); i++)
+	{
+		cout << vec.at(i) << " ";
+	}
+	cout << endl;
+	value.set_id(vec[0]);
+
+	if (vec[1].compare("noindegree") != 0)
+	{
+		value.set_indegree(str_to_num<long>(vec[1]));
+	}
+
+	if (vec[2].compare("noparents") != 0)
+	{
+		vector<string> parentVec = tokenize(vec[2], "<eop");
+		for (int i = 0; i < parentVec.size(); i++)
+		{
+			value.add_parents(parentVec.at(i));
+		}
+	}
+
+	if (vec[3].compare("nochildren") != 0)
+	{
+		vector<string> childVec = tokenize(vec[3], "<eoc");
+		cout << "number of children is:" << childVec.size() << endl;
+		for (int i = 0; i < childVec.size(); i++)
+		{
+			cout << childVec.at(i) << endl;
+			value.add_children(childVec.at(i));
+		}
+	}
+
+	if (vec[4].compare("nodataname") != 0)
+	{
+		vector<string> dataNameVec = tokenize(vec[4], "<eodn");
+		for (int i = 0; i < dataNameVec.size(); i++)
+		{
+			value.add_datanamelist(dataNameVec.at(i));
+		}
+	}
+
+	if (vec[5].compare("nodatasize") != 0)
+	{
+		vector<string> dataSizeVec = tokenize(vec[5], "<eods");
+		for (int i = 0; i < dataSizeVec.size(); i++)
+		{
+			value.add_datasize(str_to_num<long>(dataSizeVec.at(i)));
+		}
+	}
+
+	if (vec[6].compare("noalldatasize") != 0)
+	{
+		value.set_alldatasize(str_to_num<long>(vec[6]));
+	}
+
+	if (vec[7].compare("nohistory") != 0)
+	{
+		value.set_history(vec[7]);
+	}
+
+	if (vec[8].compare("nomove") != 0)
+	{
+		value.set_nummove(str_to_num<int>(vec[8]));
+	}
+
+	if (vec[9].compare("nost") != 0)
+	{
+		value.set_submittime(str_to_num<double>(vec[9]));
+	}
+
+	if (vec[10].compare("noat") != 0)
+	{
+		value.set_arrivetime(str_to_num<double>(vec[10]));
+	}
+
+	if (vec[11].compare("noqt") != 0)
+	{
+		value.set_rqueuedtime(str_to_num<double>(vec[11]));
+	}
+
+	if (vec[12].compare("noet") != 0)
+	{
+		value.set_exetime(str_to_num<double>(vec[12]));
+	}
+
+	if (vec[13].compare("noft") != 0)
+	{
+		value.set_fintime(str_to_num<double>(vec[13]));
+	}
+
+	if (vec[14].compare("nonumtaskfin") != 0)
+	{
+		value.set_numtaskfin(str_to_num<long>(vec[14]));
+	}
+
+	if (vec[15].compare("nonumworksteal") != 0)
+	{
+		value.set_numworksteal(str_to_num<long>(vec[15]));
+	}
+
+	if (vec[16].compare("nonumworkstealfail") != 0)
+	{
+		value.set_numworkstealfail(str_to_num<long>(vec[16]));
+	}
+
+	if (vec[17].compare("nonumtaskwait") != 0)
+	{
+		value.set_numtaskwait(str_to_num<int>(vec[17]));
+	}
+
+	if (vec[18].compare("nonumtaskready") != 0)
+	{
+		value.set_numtaskready(str_to_num<int>(vec[18]));
+	}
+
+	if (vec[19].compare("nonumcoreavail") != 0)
+	{
+		value.set_numcoreavilable(str_to_num<int>(vec[19]));
+	}
+
+	if (vec[20].compare("nonumallcore") != 0)
+	{
+		value.set_numallcore(str_to_num<int>(vec[20]));
+	}
+
+	return value;
+}
+
 Mutex::Mutex()
 {
 	int ret = pthread_mutex_init (&mutex, NULL);

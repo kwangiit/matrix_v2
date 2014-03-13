@@ -105,6 +105,9 @@ extern timespec time_diff(timespec, timespec);
 extern string taskmsg_to_str(const TaskMsg &taskMsg);
 extern TaskMsg str_to_taskmsg(const string &str);
 
+extern string value_to_str(const Value &value);
+extern Value str_to_value(const string &str);
+
 /* a mutex class for locking and uncloking */
 class Mutex
 {
@@ -149,21 +152,6 @@ class Peer
 		string id;
 		int index;
 };
-
-/*class TaskItem
-{
-	public:
-		TaskItem(const string&, const string&,
-			const string&, const string&, long);
-		~TaskItem();
-		string taskId;
-		string user;
-		string dir;
-		string cmd;
-		long dataSize;
-
-
-};*/
 
 struct HighPriorityByDataSize
 {

@@ -105,7 +105,6 @@ void MatrixClient::insert_taskinfo_to_zht(
 		}
 
 		value.set_nummove(0);
-		value.set_history("");
 		value.set_submittime(0.0);
 		value.set_arrivetime(0.0);
 		value.set_rqueuedtime(0.0);
@@ -113,10 +112,8 @@ void MatrixClient::insert_taskinfo_to_zht(
 		value.set_fintime(0.0);
 
 		string seriValue;
-		seriValue = value.SerializeAsString();
+		seriValue = value_to_str(value);
 
-
-		cout << "the id is:" << taskId << ", the string is:" << seriValue << ",the children size is:" << value.children_size() << endl;
 		zc.insert(taskId, seriValue);
 	}
 
@@ -197,7 +194,7 @@ void MatrixClient::insert_taskinfo_to_zht(
 //		value.set_exetime(0.0);
 //		value.set_fintime(0.0);
 //
-//		string seriValue = value.SerializeAsString();
+//		string seriValue = value_to_str(value);
 //
 //		zc.insert(taskId, seriValue);
 //	}
@@ -278,12 +275,11 @@ void MatrixClient::submit_task()
 		string taskDetail;
 		zc.lookup(taskId, taskDetail);
 
-		Value value;
-		value.ParseFromString(taskDetail);
+		cout << "The string of ZHT is:" << taskDetail << endl;
+		Value value = str_to_value(taskDetail);
 		value.set_submittime(get_time_usec());
-		cout << "The task id is:" << taskId <<", and number of children is:" << value.children_size() << endl;
 
-		taskDetail = value.SerializeAsString();
+		taskDetail = value_to_str(value);
 		zc.insert(taskId, taskDetail);
 
 		increment += 2;
@@ -437,8 +433,7 @@ void *monitoring(void* args)
 				string schedulerStat;
 				mc->zc.lookup(mc->schedulerVec.at(i), schedulerStat);
 
-				Value value;
-				value.ParseFromString(schedulerStat);
+				Value value = str_to_value(schedulerStat);
 
 				numIdleCore += value.numcoreavilable();
 				numTaskWait += value.numtaskwait();
@@ -509,8 +504,7 @@ void *monitoring(void* args)
 				string taskDetail;
 				mc->zc.lookup(taskId, taskDetail);
 
-				Value value;
-				value.ParseFromString(taskDetail);
+				Value value = str_to_value(taskDetail);
 
 				mc->taskLogOS << taskId << "\t" << value.nummove() << "\t" <<
 						value.history() << "\t" << value.submittime() << "\t" <<
