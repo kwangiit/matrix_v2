@@ -105,6 +105,7 @@ void MatrixClient::insert_taskinfo_to_zht(
 		}
 
 		value.set_nummove(0);
+		value.set_history("|" + get_id());
 		value.set_submittime(0.0);
 		value.set_arrivetime(0.0);
 		value.set_rqueuedtime(0.0);
@@ -113,7 +114,7 @@ void MatrixClient::insert_taskinfo_to_zht(
 
 		string seriValue;
 		seriValue = value_to_str(value);
-
+		cout << taskId << "\t" << seriValue << endl;
 		zc.insert(taskId, seriValue);
 	}
 
@@ -269,6 +270,7 @@ void MatrixClient::submit_task()
 	 * */
 	long increment = 0;
 
+	cout << "Now, update the submit time!" << endl;
 	for (long i = 0; i < config->numTaskPerClient; i++)
 	{
 		string taskId = tasks.at(i).taskid();
@@ -279,6 +281,7 @@ void MatrixClient::submit_task()
 		value.set_submittime(get_time_usec());
 
 		taskDetail = value_to_str(value);
+		cout << taskId << "\t" << taskDetail << endl;
 		zc.insert(taskId, taskDetail);
 
 		increment += 2;
@@ -366,7 +369,7 @@ void MatrixClient::submit_task_wc(vector<TaskMsg> tmVec, int toScheIdx)
 			numTaskSendPerPkg = numTaskLeft;
 		}
 
-		numTaskBeenSent = config->numTaskPerClient - numTaskLeft;
+		numTaskBeenSent = tmVec.size() - numTaskLeft;
 
 		MatrixMsg mm;
 		mm.set_msgtype("client send task");
@@ -492,10 +495,13 @@ void *monitoring(void* args)
 	/* now start to long the execution details of each individual task */
 	if (mc->taskLogOS.is_open())
 	{
+		cout << "Now, log the task info!" << endl;
 		mc->taskLogOS << "TaskId\tNumMove\tHistory\tSubmitTime\tArriveTime\t"
 				"ReadyQueuedTime\tExeTime\tFinTime" << endl;
 
-		for (int i = 0; i < mc->schedulerVec.size(); i++)
+		int numClient = mc->config->numAllTask / mc->config->numTaskPerClient;
+
+		for (int i = 0; i < numClient; i++)
 		{
 			for (long j = 0; j < mc->config->numTaskPerClient; j++)
 			{
@@ -503,6 +509,7 @@ void *monitoring(void* args)
 				string taskDetail;
 				mc->zc.lookup(taskId, taskDetail);
 
+				cout << taskId << "\t" << taskDetail << endl;
 				Value value = str_to_value(taskDetail);
 
 				mc->taskLogOS <<fixed<< taskId << "\t" << value.nummove() << "\t" <<

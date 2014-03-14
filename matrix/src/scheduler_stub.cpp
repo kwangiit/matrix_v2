@@ -194,23 +194,24 @@ void MatrixScheduler::recv_task_from_client(
 	long increment = 0;
 
 	wqMutex.lock();
-
+	cout << "Now, I received task from client" << endl;
 	for (int i = 0; i < mm.count(); i++)
 	{
 		TaskMsg tm = str_to_taskmsg(mm.tasks(i));
-		waitQueue.push_back(tm);
 
 		/* update the task metadata in ZHT */
 		string taskDetail;
 		zc.lookup(tm.taskid(), taskDetail);
-
+		cout << tm.taskid() << "\t" << taskDetail << endl;
 		Value value = str_to_value(taskDetail);
 		value.set_arrivetime(get_time_usec());
 		value.set_nummove(value.nummove() + 1);
 		value.set_history(value.history() + "|" + get_id());
 		taskDetail = value_to_str(value);
+		cout << tm.taskid() << "\t" << taskDetail << endl;
 
 		zc.insert(tm.taskid(), taskDetail);
+		waitQueue.push_back(tm);
 		increment += 2;
 	}
 	wqMutex.unlock();
@@ -235,7 +236,6 @@ void MatrixScheduler::recv_pushing_task(MatrixMsg &mm, int sockfd, sockaddr from
 	TaskMsg tm = str_to_taskmsg(mm.tasks(0));
 
 	lqMutex.lock();
-	localQueue.push(tm);
 
 	string taskDetail;
 	zc.lookup(tm.taskid(), taskDetail);
@@ -247,6 +247,7 @@ void MatrixScheduler::recv_pushing_task(MatrixMsg &mm, int sockfd, sockaddr from
 	taskDetail = value_to_str(value);
 
 	zc.insert(tm.taskid(), taskDetail);
+	localQueue.push(tm);
 	increment += 2;
 
 	MatrixMsg mmSuc;
@@ -417,7 +418,6 @@ void MatrixScheduler::recv_task_from_scheduler(int sockfd, long numTask)
 		for (long j = 0; j < mm.count(); j++)
 		{
 			TaskMsg tm = str_to_taskmsg(mm.tasks(i));
-			wsQueue.push(tm);
 			/* update task metadata */
 			string taskDetailStr;
 			zc.lookup(tm.taskid(), taskDetailStr);
@@ -427,6 +427,7 @@ void MatrixScheduler::recv_task_from_scheduler(int sockfd, long numTask)
 			value.set_rqueuedtime(get_time_usec());
 			taskDetailStr = value_to_str(value);
 			zc.insert(tm.taskid(), taskDetailStr);
+			wsQueue.push(tm);
 			increment += 2;
 		}
 		wsqMutex.unlock();
@@ -543,8 +544,10 @@ void MatrixScheduler::fork_ws_thread()
  * */
 void MatrixScheduler::exec_a_task(TaskMsg &tm)
 {
+	cout << "Now, I am executing a task" << endl;
 	string taskDetail;
 	zc.lookup(tm.taskid(), taskDetail);
+	cout << tm.taskid() << "\t" << taskDetail << endl;
 	Value value  = str_to_value(taskDetail);
 	value.set_exetime(get_time_usec());
 
@@ -599,6 +602,7 @@ void MatrixScheduler::exec_a_task(TaskMsg &tm)
 
 	value.set_fintime(get_time_usec());
 	taskDetail = value_to_str(value);
+	cout << tm.taskid() << "\t" << taskDetail << endl;
 	zc.insert(tm.taskid(), taskDetail);
 
 	numTaskFinMutex.lock();
@@ -692,25 +696,19 @@ void MatrixScheduler::fork_exec_task_thread()
 	}
 }
 
-bool MatrixScheduler::task_ready_process(
+int MatrixScheduler::task_ready_process(
 		const Value &valuePkg, TaskMsg &tm)
 {
-	bool flag = false;
+	int flag = 2;
 
 #ifdef ZHT_STORAGE
 	tm.set_datalength(valuePkg.alldatasize());
-	wsqMutex.lock();
-	wsQueue.push(tm);
-	wsqMutex.unlock();
-	flag = true;
+	flag = 0;
 #else
 	if (valuePkg.alldatasize() <= config->dataSizeThreshold)
 	{
 		tm.set_datalength(valuePkg.alldatasize());
-		wsqMutex.lock();
-		wsQueue.push(tm);
-		wsqMutex.unlock();
-		flag = true;
+		flag = 0;
 	}
 	else
 	{
@@ -727,10 +725,7 @@ bool MatrixScheduler::task_ready_process(
 		tm.set_datalength(maxDataSize);
 		if (maxDataScheduler.compare(get_id()) == 0)
 		{
-			lqMutex.lock();
-			localQueue.push(tm);
-			lqMutex.unlock();
-			flag = true;
+			flag = 1;
 		}
 		else
 		{
@@ -742,6 +737,7 @@ bool MatrixScheduler::task_ready_process(
 			int sockfd = send_first(maxDataScheduler, config->schedulerPortNo, mmStr);
 			string ack;
 			recv_bf(sockfd, ack);
+			flag = 2;
 		}
 	}
 #endif
@@ -756,20 +752,35 @@ long MatrixScheduler::check_a_ready_task(TaskMsg &tm)
 {
 	string taskDetail;
 	long incre = 0;
-
+	cout << "checking a ready task" << endl;
 	zc.lookup(tm.taskid(), taskDetail);
+	cout << tm.taskid() << "\t" << taskDetail << endl;
 	incre++;
 
 	Value valuePkg = str_to_value(taskDetail);
 
 	if (valuePkg.indegree() == 0)
 	{
-		if (task_ready_process(valuePkg, tm))
+		int flag = task_ready_process(valuePkg, tm);
+		if (flag != 2)
 		{
 			valuePkg.set_rqueuedtime(get_time_usec());
 			taskDetail = value_to_str(valuePkg);
+			cout << tm.taskid() << "\t" << taskDetail << endl;
 			zc.insert(tm.taskid(), taskDetail);
 			incre++;
+		}
+		if (flag == 0)
+		{
+			wsqMutex.lock();
+			wsQueue.push(tm);
+			wsqMutex.unlock();
+		}
+		else if (flag == 1)
+		{
+			lqMutex.lock();
+			localQueue.push(tm);
+			lqMutex.unlock();
 		}
 		return incre;
 	}
@@ -799,8 +810,18 @@ void *checking_ready_task(void *args)
 	{
 		while (ms->waitQueue.size() > 0)
 		{
-			tm = ms->waitQueue.front();
-			ms->waitQueue.pop_front();
+			ms->wqMutex.lock();
+			if (ms->waitQueue.size() > 0)
+			{
+				tm = ms->waitQueue.front();
+				ms->waitQueue.pop_front();
+				ms->wqMutex.unlock();
+			}
+			else
+			{
+				ms->wqMutex.unlock();
+				continue;
+			}
 
 			int ret = ms->check_a_ready_task(tm);
 			if (ret != 0)
@@ -843,9 +864,9 @@ long MatrixScheduler::notify_children(const CmpQueueItem &cqItem)
 {
 	string taskDetail;
 	long increment = 0;
-
+	cout << "Now, I am notifying children" << endl;
 	zc.lookup(cqItem.taskId, taskDetail);
-
+	cout << cqItem.taskId << "\t" << taskDetail << endl;
 	Value value = str_to_value(taskDetail);
 
 	increment++;

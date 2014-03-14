@@ -66,7 +66,7 @@ class MatrixScheduler: public Peer
 
 		void fork_ws_thread(void);	// fork work stealing thread
 
-		bool task_ready_process(const Value&, TaskMsg&);
+		int task_ready_process(const Value&, TaskMsg&);
 		/* check if a given task is ready to run, and put it in the right queue */
 		long check_a_ready_task(TaskMsg&);
 

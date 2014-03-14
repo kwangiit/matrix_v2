@@ -161,4 +161,6 @@ struct HighPriorityByDataSize
 		return hpTaskMsg.datalength() > lpTaskMsg.datalength();
 	}
 };
+
+extern Mutex tokenMutex;
 #endif /* UTIL_H_ */

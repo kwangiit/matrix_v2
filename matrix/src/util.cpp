@@ -8,9 +8,11 @@
 #include "util.h"
 
 uint _BUF_SIZE = 1000;
+Mutex tokenMutex = Mutex();
 
-vector<string> tokenize(const string &source, const char *delimiter)
+vector<string> tokenize(const std::string &source, const char *delimiter = " ")
 {
+	tokenMutex.lock();
 	vector<string> results;
 	size_t prev = 0, next = 0;
 
@@ -32,7 +34,7 @@ vector<string> tokenize(const string &source, const char *delimiter)
 	{
 		results.push_back(source.substr(prev));
 	}
-
+	tokenMutex.unlock();
 	return results;
 }
 
@@ -91,6 +93,12 @@ string exec(const char *cmd)
 	}
 
 	pclose(pipe);
+
+	if (!result.empty() && result[result.length() - 1] == '\n')
+	{
+		result.erase(result.length() - 1);
+	}
+
 	return result;
 }
 
@@ -341,10 +349,13 @@ void gen_dag_parents(adjList &dagAdjList, adjList &dagParentList)
 
 double get_time_usec()
 {
-	struct timeval currentTime;
+/*	struct timeval currentTime;
 
 	gettimeofday(&currentTime, NULL);
-	return (double)currentTime.tv_sec * 1000000 + (double)currentTime.tv_usec;
+	return (double)currentTime.tv_sec * 1000000.0 + (double)currentTime.tv_usec;*/
+	timespec current;
+	clock_gettime(0, &current);
+	return current.tv_sec * 1000000000 + (uint64_t)current.tv_nsec;
 }
 
 double get_time_msec()
@@ -352,8 +363,8 @@ double get_time_msec()
 	struct timeval currentTime;
 
 	gettimeofday(&currentTime, NULL);
-	return static_cast<double>(currentTime.tv_sec) * 1000
-			+ static_cast<double>(currentTime.tv_usec) / 1000;
+	return static_cast<double>(currentTime.tv_sec) * 1000.0
+			+ static_cast<double>(currentTime.tv_usec) / 1000.0;
 }
 
 double get_time_sec()
@@ -362,7 +373,7 @@ double get_time_sec()
 
 	gettimeofday(&currentTime, NULL);
 	return static_cast<double>(currentTime.tv_sec)
-			+ static_cast<double>(currentTime.tv_usec) / 1000000;
+			+ static_cast<double>(currentTime.tv_usec) / 1000000.0;
 }
 
 timespec time_diff(timespec start, timespec end)
@@ -383,21 +394,22 @@ extern string taskmsg_to_str(const TaskMsg &taskMsg)
 	string str("");
 
 	str.append(taskMsg.taskid());
-	str.append(" ");
+	str.append("****");
 	str.append(taskMsg.user());
-	str.append(" ");
+	str.append("****");
 	str.append(taskMsg.dir());
-	str.append(" ");
+	str.append("****");
 	str.append(taskMsg.cmd());
-	str.append(" ");
+	str.append("****");
 	str.append(num_to_str<long>(taskMsg.datalength()));
+	str.append("****");
 
 	return str;
 }
 
 extern TaskMsg str_to_taskmsg(const string &str)
 {
-	vector<string> vecStr = tokenize(str, " ");
+	vector<string> vecStr = tokenize(str, "****");
 
 	TaskMsg tm;
 	tm.set_taskid(vecStr.at(0));
@@ -413,7 +425,7 @@ extern string value_to_str(const Value &value)
 {
 	string str("");
 
-	str.append(value.id()); str.append("->");
+	str.append(value.id()); str.append("~~~~");
 
 	if (value.has_indegree())
 	{
@@ -423,63 +435,63 @@ extern string value_to_str(const Value &value)
 	{
 		str.append("noindegree");
 	}
-	str.append("->");
+	str.append("~~~~");
 
 	if (value.parents_size() > 0)
 	{
 		for (int i = 0; i < value.parents_size(); i++)
 		{
 			str.append(value.parents(i));
-			str.append("<eop");
+			str.append("???");
 		}
 	}
 	else
 	{
 		str.append("noparents");
 	}
-	str.append("->");
+	str.append("~~~~");
 
 	if (value.children_size() > 0)
 	{
 		for (int i = 0; i < value.children_size(); i++)
 		{
 			str.append(value.children(i));
-			str.append("<eoc");
+			str.append("???");
 		}
 	}
 	else
 	{
 		str.append("nochildren");
 	}
-	str.append("->");
+	str.append("~~~~");
 
 	if (value.datanamelist_size() > 0)
 	{
 		for (int i = 0; i < value.datanamelist_size(); i++)
 		{
 			str.append(value.datanamelist(i));
-			str.append("<eodn");
+			str.append("???");
 		}
 	}
 	else
 	{
 		str.append("nodataname");
 	}
-	str.append("->");
+	str.append("~~~~");
 
 	if (value.datasize_size() > 0)
 	{
 		for (int i = 0; i < value.datasize_size(); i++)
 		{
 			str.append(num_to_str<long>(value.datasize(i)));
-			str.append("<eods");
+			str.append("???");
 		}
 	}
 	else
 	{
 		str.append("nodatasize");
 	}
-	str.append("->");
+	str.append("~~~~");
 
 	if (value.has_alldatasize())
 	{
@@ -489,7 +501,7 @@ extern string value_to_str(const Value &value)
 	{
 		str.append("noalldatasize");
 	}
-	str.append("->");
+	str.append("~~~~");
 
 	if (value.has_history())
 	{
@@ -499,7 +511,7 @@ extern string value_to_str(const Value &value)
 	{
 		str.append("nohistory");
 	}
-	str.append("->");
+	str.append("~~~~");
 
 	if (value.has_nummove())
 	{
@@ -509,7 +521,7 @@ extern string value_to_str(const Value &value)
 	{
 		str.append("nomove");
 	}
-	str.append("->");
+	str.append("~~~~");
 
 	if (value.has_submittime())
 	{
@@ -519,7 +531,7 @@ extern string value_to_str(const Value &value)
 	{
 		str.append("nost");
 	}
-	str.append("->");
+	str.append("~~~~");
 
 	if (value.has_arrivetime())
 	{
@@ -529,7 +541,7 @@ extern string value_to_str(const Value &value)
 	{
 		str.append("noat");
 	}
-	str.append("->");
+	str.append("~~~~");
 
 	if (value.has_rqueuedtime())
 	{
@@ -539,7 +551,7 @@ extern string value_to_str(const Value &value)
 	{
 		str.append("noqt");
 	}
-	str.append("->");
+	str.append("~~~~");
 
 	if (value.has_exetime())
 	{
@@ -549,7 +561,7 @@ extern string value_to_str(const Value &value)
 	{
 		str.append("noet");
 	}
-	str.append("->");
+	str.append("~~~~");
 
 	if (value.has_fintime())
 	{
@@ -559,7 +571,7 @@ extern string value_to_str(const Value &value)
 	{
 		str.append("noft");
 	}
-	str.append("->");
+	str.append("~~~~");
 
 	if (value.has_numtaskfin())
 	{
@@ -569,7 +581,7 @@ extern string value_to_str(const Value &value)
 	{
 		str.append("nonumtaskfin");
 	}
-	str.append("->");
+	str.append("~~~~");
 
 	if (value.has_numworksteal())
 	{
@@ -579,7 +591,7 @@ extern string value_to_str(const Value &value)
 	{
 		str.append("nonumworksteal");
 	}
-	str.append("->");
+	str.append("~~~~");
 
 	if (value.has_numworkstealfail())
 	{
@@ -589,7 +601,7 @@ extern string value_to_str(const Value &value)
 	{
 		str.append("nonumworkstealfail");
 	}
-	str.append("->");
+	str.append("~~~~");
 
 	if (value.has_numtaskwait())
 	{
@@ -599,7 +611,7 @@ extern string value_to_str(const Value &value)
 	{
 		str.append("nonumtaskwait");
 	}
-	str.append("->");
+	str.append("~~~~");
 
 	if (value.has_numtaskready())
 	{
@@ -609,7 +621,7 @@ extern string value_to_str(const Value &value)
 	{
 		str.append("nonumtaskready");
 	}
-	str.append("->");
+	str.append("~~~~");
 
 	if (value.has_numcoreavilable())
 	{
@@ -619,7 +631,7 @@ extern string value_to_str(const Value &value)
 	{
 		str.append("nonumcoreavail");
 	}
-	str.append("->");
+	str.append("~~~~");
 
 	if (value.has_numallcore())
 	{
@@ -629,7 +641,7 @@ extern string value_to_str(const Value &value)
 	{
 		str.append("nonumallcore");
 	}
-	str.append("->");
+	str.append("~~~~");
 
 	return str;
 }
@@ -637,7 +649,7 @@ extern string value_to_str(const Value &value)
 extern Value str_to_value(const string &str)
 {
 	Value value;
-	vector<string> vec = tokenize(str, "->");
+	vector<string> vec = tokenize(str, "~~~~");
 
 	value.set_id(vec[0]);
 
@@ -648,7 +660,7 @@ extern Value str_to_value(const string &str)
 
 	if (vec[2].compare("noparents") != 0)
 	{
-		vector<string> parentVec = tokenize(vec[2], "<eop");
+		vector<string> parentVec = tokenize(vec[2], "???");
 		for (int i = 0; i < parentVec.size(); i++)
 		{
 			value.add_parents(parentVec.at(i));
@@ -657,7 +669,7 @@ extern Value str_to_value(const string &str)
 
 	if (vec[3].compare("nochildren") != 0)
 	{
-		vector<string> childVec = tokenize(vec[3], "<eoc");
+		vector<string> childVec = tokenize(vec[3], "???");
 		for (int i = 0; i < childVec.size(); i++)
 		{
 			value.add_children(childVec.at(i));
@@ -666,7 +678,7 @@ extern Value str_to_value(const string &str)
 
 	if (vec[4].compare("nodataname") != 0)
 	{
-		vector<string> dataNameVec = tokenize(vec[4], "<eodn");
+		vector<string> dataNameVec = tokenize(vec[4], "???");
 		for (int i = 0; i < dataNameVec.size(); i++)
 		{
 			value.add_datanamelist(dataNameVec.at(i));
@@ -675,7 +687,7 @@ extern Value str_to_value(const string &str)
 
 	if (vec[5].compare("nodatasize") != 0)
 	{
-		vector<string> dataSizeVec = tokenize(vec[5], "<eods");
+		vector<string> dataSizeVec = tokenize(vec[5], "???");
 		for (int i = 0; i < dataSizeVec.size(); i++)
 		{
 			value.add_datasize(str_to_num<long>(dataSizeVec.at(i)));
