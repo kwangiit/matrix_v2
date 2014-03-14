@@ -588,7 +588,6 @@ void MatrixScheduler::exec_a_task(TaskMsg &tm)
 	string result = exec(execmd);
 	string key = get_id() + tm.taskid();
 
-	cout << "The key is:" << key << ", and the value is:" << result << endl;
 
 #ifdef ZHT_STORAGE
 	zc.insert(key, result);
@@ -846,14 +845,13 @@ long MatrixScheduler::notify_children(const CmpQueueItem &cqItem)
 	long increment = 0;
 
 	zc.lookup(cqItem.taskId, taskDetail);
-	cout << "The task detail is:" << taskDetail << endl;
+
 	Value value = str_to_value(taskDetail);
 
 	increment++;
 	string childTaskId, childTaskDetail, childTaskDetailAttempt, query_value;
 	Value childVal;
 
-	cout << "task id is:" << value.id() << ",Children size is:" << value.children_size() << endl;
 
 	for (int i = 0; i < value.children_size(); i++)
 	{
@@ -905,9 +903,7 @@ void *checking_complete_task(void *args)
 			ms->cqMutex.lock();
 			if (ms->completeQueue.size() > 0)
 			{
-				cout << "The size is:" << ms->completeQueue.size() << endl;
 				cqItem = ms->completeQueue.front();
-				cout << cqItem.taskId << " " << cqItem.key << " " << cqItem.dataSize << endl;
 				ms->completeQueue.pop_front();
 				ms->cqMutex.unlock();
 			}

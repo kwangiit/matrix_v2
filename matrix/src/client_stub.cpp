@@ -275,7 +275,6 @@ void MatrixClient::submit_task()
 		string taskDetail;
 		zc.lookup(taskId, taskDetail);
 
-		cout << "The string of ZHT is:" << taskDetail << endl;
 		Value value = str_to_value(taskDetail);
 		value.set_submittime(get_time_usec());
 
@@ -445,7 +444,7 @@ void *monitoring(void* args)
 			instantThr = (double)(numTaskDone - preNumTaskDone) /
 						(currentTimeUs - prevTimeUs) * 1E6;
 
-			mc->systemLogOS << currentTimeUs << "\t" << numAllCore << "\t"
+			mc->systemLogOS <<fixed<<currentTimeUs << "\t" << numAllCore << "\t"
 					<< numIdleCore << "\t" << numTaskWait << "\t"
 					<< numTaskReady << "\t" << numTaskDone << "\t"
 					<< instantThr << endl;
@@ -506,7 +505,7 @@ void *monitoring(void* args)
 
 				Value value = str_to_value(taskDetail);
 
-				mc->taskLogOS << taskId << "\t" << value.nummove() << "\t" <<
+				mc->taskLogOS <<fixed<< taskId << "\t" << value.nummove() << "\t" <<
 						value.history() << "\t" << value.submittime() << "\t" <<
 						value.arrivetime() << "\t" << value.rqueuedtime() << "\t" <<
 						value.exetime() << "\t" << value.fintime() << endl;

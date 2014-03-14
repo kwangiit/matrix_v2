@@ -210,7 +210,7 @@ void gen_fanin_adjlist(adjList &dagAdjList, long dagArg, long numTask)
 		long reverseId = numTask - 1 - i;
 
 		vector<long> newList;
-		newList.push_back(numTask - 1 - i);
+		newList.push_back(reverseId);
 
 		vector<long> tmpList = tmpAdjList.find(i)->second;
 
@@ -220,6 +220,9 @@ void gen_fanin_adjlist(adjList &dagAdjList, long dagArg, long numTask)
 					tmpList.at(tmpList.size() - 1 - j), newList));
 		}
 	}
+
+	vector<long> lastVec;
+	dagAdjList.insert(make_pair(numTask - 1, lastVec));
 }
 
 void gen_pipeline_adjlist(adjList &dagAdjList, long dagArg, long numTask)
@@ -341,8 +344,7 @@ double get_time_usec()
 	struct timeval currentTime;
 
 	gettimeofday(&currentTime, NULL);
-	return static_cast<double>(currentTime.tv_sec) * 1000000
-				+ static_cast<double>(currentTime.tv_usec);
+	return (double)currentTime.tv_sec * 1000000 + (double)currentTime.tv_usec;
 }
 
 double get_time_msec()
@@ -637,11 +639,6 @@ extern Value str_to_value(const string &str)
 	Value value;
 	vector<string> vec = tokenize(str, "->");
 
-	for (int i = 0; i < vec.size(); i++)
-	{
-		cout << vec.at(i) << " ";
-	}
-	cout << endl;
 	value.set_id(vec[0]);
 
 	if (vec[1].compare("noindegree") != 0)
@@ -661,10 +658,8 @@ extern Value str_to_value(const string &str)
 	if (vec[3].compare("nochildren") != 0)
 	{
 		vector<string> childVec = tokenize(vec[3], "<eoc");
-		cout << "number of children is:" << childVec.size() << endl;
 		for (int i = 0; i < childVec.size(); i++)
 		{
-			cout << childVec.at(i) << endl;
 			value.add_children(childVec.at(i));
 		}
 	}

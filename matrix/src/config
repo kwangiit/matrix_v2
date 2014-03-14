@@ -1,5 +1,5 @@
-NumTaskPerClient	10
-NumAllTask	10
+NumTaskPerClient	100
+NumAllTask	100
 NumCorePerExecutor	4
 MaxTaskPerPkg	10
 
@@ -13,13 +13,14 @@ WorkStealPollIntervalUpperBound	1000000
 DataSizeThreshold	1000
 SchedulerMemlistFile	./memlist
 NetworkProtocol	TCP
-DagType	Pipeline
-DagArgument	6
+DagType	FanIn
+DagArgument	10
 HostIdentityType	ip
 
 SubmissionMode	bestcase
 WorkloadFile	./workload
 ClientLog	1
+TaskLog	1
 SystemLog	1
 SchedulerLog	1
 
