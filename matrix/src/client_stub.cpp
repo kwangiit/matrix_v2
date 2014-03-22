@@ -114,7 +114,6 @@ void MatrixClient::insert_taskinfo_to_zht(
 
 		string seriValue;
 		seriValue = value_to_str(value);
-		cout << taskId << "\t" << seriValue << endl;
 		zc.insert(taskId, seriValue);
 	}
 
@@ -270,7 +269,6 @@ void MatrixClient::submit_task()
 	 * */
 	long increment = 0;
 
-	cout << "Now, update the submit time!" << endl;
 	for (long i = 0; i < config->numTaskPerClient; i++)
 	{
 		string taskId = tasks.at(i).taskid();
@@ -281,7 +279,6 @@ void MatrixClient::submit_task()
 		value.set_submittime(get_time_usec());
 
 		taskDetail = value_to_str(value);
-		cout << taskId << "\t" << taskDetail << endl;
 		zc.insert(taskId, taskDetail);
 
 		increment += 2;
@@ -509,7 +506,6 @@ void *monitoring(void* args)
 				string taskDetail;
 				mc->zc.lookup(taskId, taskDetail);
 
-				cout << taskId << "\t" << taskDetail << endl;
 				Value value = str_to_value(taskDetail);
 
 				mc->taskLogOS <<fixed<< taskId << "\t" << value.nummove() << "\t" <<

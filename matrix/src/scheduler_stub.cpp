@@ -194,7 +194,6 @@ void MatrixScheduler::recv_task_from_client(
 	long increment = 0;
 
 	wqMutex.lock();
-	cout << "Now, I received task from client" << endl;
 	for (int i = 0; i < mm.count(); i++)
 	{
 		TaskMsg tm = str_to_taskmsg(mm.tasks(i));
@@ -202,13 +201,11 @@ void MatrixScheduler::recv_task_from_client(
 		/* update the task metadata in ZHT */
 		string taskDetail;
 		zc.lookup(tm.taskid(), taskDetail);
-		cout << tm.taskid() << "\t" << taskDetail << endl;
 		Value value = str_to_value(taskDetail);
 		value.set_arrivetime(get_time_usec());
 		value.set_nummove(value.nummove() + 1);
 		value.set_history(value.history() + "|" + get_id());
 		taskDetail = value_to_str(value);
-		cout << tm.taskid() << "\t" << taskDetail << endl;
 
 		zc.insert(tm.taskid(), taskDetail);
 		waitQueue.push_back(tm);
@@ -235,7 +232,7 @@ void MatrixScheduler::recv_pushing_task(MatrixMsg &mm, int sockfd, sockaddr from
 	long increment = 0;
 	TaskMsg tm = str_to_taskmsg(mm.tasks(0));
 
-	lqMutex.lock();
+
 
 	string taskDetail;
 	zc.lookup(tm.taskid(), taskDetail);
@@ -247,8 +244,12 @@ void MatrixScheduler::recv_pushing_task(MatrixMsg &mm, int sockfd, sockaddr from
 	taskDetail = value_to_str(value);
 
 	zc.insert(tm.taskid(), taskDetail);
+	lqMutex.lock();
 	localQueue.push(tm);
+	lqMutex.unlock();
 	increment += 2;
+
+	cout << "I received a task, task id is:" << tm.taskid() << ", and detail is:" << taskDetail << endl;
 
 	MatrixMsg mmSuc;
 	mmSuc.set_msgtype("success receiving pushing task");
@@ -544,11 +545,9 @@ void MatrixScheduler::fork_ws_thread()
  * */
 void MatrixScheduler::exec_a_task(TaskMsg &tm)
 {
-	cout << "Now, I am executing a task" << endl;
 	string taskDetail;
 	zc.lookup(tm.taskid(), taskDetail);
-	cout << tm.taskid() << "\t" << taskDetail << endl;
-	Value value  = str_to_value(taskDetail);
+	Value value = str_to_value(taskDetail);
 	value.set_exetime(get_time_usec());
 
 	string data("");
@@ -602,7 +601,6 @@ void MatrixScheduler::exec_a_task(TaskMsg &tm)
 
 	value.set_fintime(get_time_usec());
 	taskDetail = value_to_str(value);
-	cout << tm.taskid() << "\t" << taskDetail << endl;
 	zc.insert(tm.taskid(), taskDetail);
 
 	numTaskFinMutex.lock();
@@ -637,6 +635,7 @@ void *executing_task(void *args)
 				if (ms->localQueue.size() > 0)
 				{
 					tm = ms->localQueue.top();
+					cout << "The task id is:" << tm.taskid() << endl;
 					ms->localQueue.pop();
 					ms->lqMutex.unlock();
 				}
@@ -729,6 +728,7 @@ int MatrixScheduler::task_ready_process(
 		}
 		else
 		{
+			cout << "I am pushing a task!, task id is:" << tm.taskid() << ", and destination is: " << maxDataScheduler << endl;
 			MatrixMsg mm;
 			mm.set_msgtype("scheduler push task");
 			mm.set_count(1);
@@ -737,6 +737,7 @@ int MatrixScheduler::task_ready_process(
 			int sockfd = send_first(maxDataScheduler, config->schedulerPortNo, mmStr);
 			string ack;
 			recv_bf(sockfd, ack);
+			cout << "I received acknowledgement, the acknowledgement is:" << ack << endl;
 			flag = 2;
 		}
 	}
@@ -752,9 +753,7 @@ long MatrixScheduler::check_a_ready_task(TaskMsg &tm)
 {
 	string taskDetail;
 	long incre = 0;
-	cout << "checking a ready task" << endl;
 	zc.lookup(tm.taskid(), taskDetail);
-	cout << tm.taskid() << "\t" << taskDetail << endl;
 	incre++;
 
 	Value valuePkg = str_to_value(taskDetail);
@@ -766,7 +765,6 @@ long MatrixScheduler::check_a_ready_task(TaskMsg &tm)
 		{
 			valuePkg.set_rqueuedtime(get_time_usec());
 			taskDetail = value_to_str(valuePkg);
-			cout << tm.taskid() << "\t" << taskDetail << endl;
 			zc.insert(tm.taskid(), taskDetail);
 			incre++;
 		}
@@ -779,6 +777,7 @@ long MatrixScheduler::check_a_ready_task(TaskMsg &tm)
 		else if (flag == 1)
 		{
 			lqMutex.lock();
+			cout << "I am pushing a local task, the task id is:" << tm.taskid() << ", and the detail is:" << taskDetail << endl;
 			localQueue.push(tm);
 			lqMutex.unlock();
 		}
@@ -864,9 +863,7 @@ long MatrixScheduler::notify_children(const CmpQueueItem &cqItem)
 {
 	string taskDetail;
 	long increment = 0;
-	cout << "Now, I am notifying children" << endl;
 	zc.lookup(cqItem.taskId, taskDetail);
-	cout << cqItem.taskId << "\t" << taskDetail << endl;
 	Value value = str_to_value(taskDetail);
 
 	increment++;
