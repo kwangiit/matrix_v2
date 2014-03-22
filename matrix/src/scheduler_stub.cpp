@@ -199,17 +199,26 @@ void MatrixScheduler::recv_task_from_client(
 		TaskMsg tm = str_to_taskmsg(mm.tasks(i));
 
 		/* update the task metadata in ZHT */
-		string taskDetail;
+		string taskDetail, taskDetailAttempt, queryValue;
 		zc.lookup(tm.taskid(), taskDetail);
 		Value value = str_to_value(taskDetail);
 		value.set_arrivetime(get_time_usec());
 		value.set_nummove(value.nummove() + 1);
 		value.set_history(value.history() + "|" + get_id());
-		taskDetail = value_to_str(value);
+		taskDetailAttempt = value_to_str(value);
 
-		zc.insert(tm.taskid(), taskDetail);
-		waitQueue.push_back(tm);
 		increment += 2;
+		while (zc.compare_swap(tm.taskid(), taskDetail, taskDetailAttempt, queryValue) != 0)
+		{
+			taskDetail = queryValue;
+			value = str_to_value(taskDetail);
+			value.set_arrivetime(get_time_usec());
+			value.set_nummove(value.nummove() + 1);
+			value.set_history(value.history() + "|" + get_id());
+			taskDetailAttempt = value_to_str(value);
+			increment++;
+		}
+		waitQueue.push_back(tm);
 	}
 	wqMutex.unlock();
 
@@ -232,24 +241,20 @@ void MatrixScheduler::recv_pushing_task(MatrixMsg &mm, int sockfd, sockaddr from
 	long increment = 0;
 	TaskMsg tm = str_to_taskmsg(mm.tasks(0));
 
-
-
 	string taskDetail;
 	zc.lookup(tm.taskid(), taskDetail);
-
 	Value value = str_to_value(taskDetail);
 	value.set_rqueuedtime(get_time_usec());
 	value.set_nummove(value.nummove() + 1);
 	value.set_history(value.history() + "|" + get_id());
 	taskDetail = value_to_str(value);
-
 	zc.insert(tm.taskid(), taskDetail);
+
 	lqMutex.lock();
 	localQueue.push(tm);
 	lqMutex.unlock();
 	increment += 2;
 
-	cout << "I received a task, task id is:" << tm.taskid() << ", and detail is:" << taskDetail << endl;
 
 	MatrixMsg mmSuc;
 	mmSuc.set_msgtype("success receiving pushing task");
@@ -603,13 +608,13 @@ void MatrixScheduler::exec_a_task(TaskMsg &tm)
 	taskDetail = value_to_str(value);
 	zc.insert(tm.taskid(), taskDetail);
 
-	numTaskFinMutex.lock();
-	numTaskFin++;
-	numTaskFinMutex.unlock();
-
 	cqMutex.lock();
 	completeQueue.push_back(CmpQueueItem(tm.taskid(), key, result.length()));
 	cqMutex.unlock();
+
+	numTaskFinMutex.lock();
+	numTaskFin++;
+	numTaskFinMutex.unlock();
 
 	ZHTMsgCountMutex.lock();
 	incre_ZHT_msg_count(2);
@@ -635,7 +640,6 @@ void *executing_task(void *args)
 				if (ms->localQueue.size() > 0)
 				{
 					tm = ms->localQueue.top();
-					cout << "The task id is:" << tm.taskid() << endl;
 					ms->localQueue.pop();
 					ms->lqMutex.unlock();
 				}
@@ -648,7 +652,6 @@ void *executing_task(void *args)
 			else if (ms->wsQueue.size() > 0)
 			{
 				ms->wsqMutex.lock();
-
 				if (ms->wsQueue.size() > 0)
 				{
 					tm = ms->wsQueue.top();
@@ -728,7 +731,6 @@ int MatrixScheduler::task_ready_process(
 		}
 		else
 		{
-			cout << "I am pushing a task!, task id is:" << tm.taskid() << ", and destination is: " << maxDataScheduler << endl;
 			MatrixMsg mm;
 			mm.set_msgtype("scheduler push task");
 			mm.set_count(1);
@@ -737,7 +739,6 @@ int MatrixScheduler::task_ready_process(
 			int sockfd = send_first(maxDataScheduler, config->schedulerPortNo, mmStr);
 			string ack;
 			recv_bf(sockfd, ack);
-			cout << "I received acknowledgement, the acknowledgement is:" << ack << endl;
 			flag = 2;
 		}
 	}
@@ -777,7 +778,6 @@ long MatrixScheduler::check_a_ready_task(TaskMsg &tm)
 		else if (flag == 1)
 		{
 			lqMutex.lock();
-			cout << "I am pushing a local task, the task id is:" << tm.taskid() << ", and the detail is:" << taskDetail << endl;
 			localQueue.push(tm);
 			lqMutex.unlock();
 		}
@@ -869,7 +869,6 @@ long MatrixScheduler::notify_children(const CmpQueueItem &cqItem)
 	increment++;
 	string childTaskId, childTaskDetail, childTaskDetailAttempt, query_value;
 	Value childVal;
-
 
 	for (int i = 0; i < value.children_size(); i++)
 	{
@@ -986,7 +985,7 @@ void *recording_stat(void *args)
 
 		if (ms->schedulerLogOS.is_open())
 		{
-			ms->schedulerLogOS << get_time_usec() << "\t" << ms->numTaskFin << "\t" <<
+			ms->schedulerLogOS <<fixed<< get_time_usec() << "\t" << ms->numTaskFin << "\t" <<
 					ms->waitQueue.size() << "\t" << ms->localQueue.size() + ms->wsQueue.size() <<
 					"\t" << ms->numIdleCore << "\t" << ms->config->numCorePerExecutor << "\t" <<
 					ms->numWS << "\t" << ms->numWSFail << endl;
@@ -1005,16 +1004,16 @@ void *recording_stat(void *args)
 		long numTaskDone = str_to_num<long>(numTaskDoneStr);
 		if (numTaskDone == ms->config->numAllTask)
 		{
-			ms->running = false;
 			if (ms->schedulerLogOS.is_open())
 			{
-				ms->schedulerLogOS << get_time_usec() << "\t" << ms->numTaskFin << "\t" <<
+				ms->schedulerLogOS <<fixed<< get_time_usec() << "\t" << ms->numTaskFin << "\t" <<
 						ms->waitQueue.size() << "\t" << ms->localQueue.size() + ms->wsQueue.size()
 						<< "\t" << ms->numIdleCore << "\t" << ms->config->numCorePerExecutor <<
 						"\t" << ms->numWS << "\t" << ms->numWSFail << endl;
 				ms->schedulerLogOS << "The number of ZHT message is:" << ms->numZHTMsg << endl;
 				ms->schedulerLogOS.flush(); ms->schedulerLogOS.close();
 			}
+			ms->running = false;
 			break;
 		}
 
