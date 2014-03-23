@@ -380,6 +380,7 @@ void MatrixClient::submit_task_wc(vector<TaskMsg> tmVec, int toScheIdx)
 		}
 
 		string taskPkgStr = mm.SerializeAsString();
+		//cout<< "The length is:" << taskPkgStr.length() << endl;
 
 		int sockfd = send_first(schedulerVec.at(toScheIdx), config->schedulerPortNo, taskPkgStr);
 		string recvBuf;

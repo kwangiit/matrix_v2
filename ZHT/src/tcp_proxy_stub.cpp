@@ -39,11 +39,14 @@
 #include <stdio.h>
 #include <unistd.h>
 
+#include "lock_guard.h"
+//#include <thread>
+//#include <mutex>
+
 #include "Env.h"
 #include "Util.h"
 #include "ZHTUtil.h"
 #include "bigdata_transfer.h"
-#include "lock_guard.h"
 
 using namespace std;
 using namespace iit::datasys::zht::dm;
@@ -74,7 +77,7 @@ bool TCPProxy::sendrecv(const void *sendbuf, const size_t sendcount,
 
 	/*get mutex to protected shared socket*/
 	pthread_mutex_t *sock_mutex = getSockMutex(he.host, he.port);
-	lock_guard lock(sock_mutex);
+	LockGuard lock(sock_mutex);
 
 	/*send message to server over client sock fd*/
 	int sentSize = sendTo(sock, sendbuf, sendcount);
@@ -112,13 +115,13 @@ int TCPProxy::getSockCached(const string& host, const uint& port) {
 	int sock = 0;
 
 #ifdef SOCKET_CACHE
+	LockGuard lock(&CC_MUTEX);
+
 	string hashKey = HashUtil::genBase(host, port);
 
 	MIT it = CONN_CACHE.find(hashKey);
 
 	if (it == CONN_CACHE.end()) {
-
-		lock_guard lock(&CC_MUTEX);
 
 		sock = makeClientSocket(host, port);
 

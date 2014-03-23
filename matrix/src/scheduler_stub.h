@@ -103,6 +103,7 @@ class MatrixScheduler: public Peer
 		int maxLoadedIdx;	// the neighbor index with the maximum load
 		long maxLoad;	// the maximum load of all the neighbors
 		long pollInterval;	// the work stealing polling interval
+		bool startWS;
 
 		Mutex wqMutex;	// Mutex of waiting queue
 		Mutex rqMutex;	// Mutex of ready queue

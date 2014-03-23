@@ -7,7 +7,7 @@
 
 #include "util.h"
 
-uint _BUF_SIZE = 1000;
+uint _BUF_SIZE = 8192;
 Mutex tokenMutex = Mutex();
 
 vector<string> tokenize(const std::string &source, const char *delimiter = " ")

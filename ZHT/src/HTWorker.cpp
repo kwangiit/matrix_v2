@@ -32,7 +32,6 @@
 
 #include "Const-impl.h"
 #include "Env.h"
-#include "lock_guard.h"
 #include "ConfHandler.h"
 
 #include <unistd.h>
@@ -59,23 +58,20 @@ NoVoHT* HTWorker::PMAP = NULL;
 
 HTWorker::QUEUE* HTWorker::PQUEUE = new QUEUE();
 
-bool HTWorker::INIT_SCCB_MUTEX = false;
-pthread_mutex_t HTWorker::SCCB_MUTEX;
+bool HTWorker::FIRST_ASYNC = false;
+
+int HTWorker::SCCB_POLL_INTERVAL = Env::get_sccb_poll_interval();
 
 HTWorker::HTWorker() :
 		_stub(NULL), _instant_swap(get_instant_swap()) {
 
-	init_store();
-
-	init_sscb_mutex();
+	init_me();
 }
 
 HTWorker::HTWorker(const ProtoAddr& addr, const ProtoStub* const stub) :
 		_addr(addr), _stub(stub), _instant_swap(get_instant_swap()) {
 
-	init_store();
-
-	init_sscb_mutex();
+	init_me();
 }
 
 HTWorker::~HTWorker() {
@@ -135,8 +131,7 @@ string HTWorker::insert_shared(const ZPack &zpack) {
 	} else {
 
 		if (_instant_swap) {
-			PMAP->writeFile();
-			//PMAP->flushDbfile();
+			PMAP->writeFileFG();
 		}
 
 		result = Const::ZSC_REC_SUCC; //0, succeed.
@@ -215,8 +210,7 @@ string HTWorker::append_shared(const ZPack &zpack) {
 	} else {
 
 		if (_instant_swap) {
-			PMAP->writeFile();
-			//PMAP->flushDbfile();
+			PMAP->writeFileFG();
 		}
 
 		result = Const::ZSC_REC_SUCC; //0, succeed.
@@ -239,51 +233,50 @@ string HTWorker::append(const ZPack &zpack) {
 
 string HTWorker::state_change_callback(const ZPack &zpack) {
 
-	lock_guard lock(&SCCB_MUTEX);
 	WorkerThreadArg *wta = new WorkerThreadArg(zpack, _addr, _stub);
 	PQUEUE->push(wta); //queue the WorkerThreadArg to be used in thread function
 
-	pthread_t tid;
-	pthread_create(&tid, NULL, threaded_state_change_callback, NULL);
+	if (!FIRST_ASYNC) {
+		pthread_t tid;
+		pthread_create(&tid, NULL, threaded_state_change_callback, NULL);
+		FIRST_ASYNC = true;
+	}
 
 	return "";
 }
 
 void *HTWorker::threaded_state_change_callback(void *arg) {
 
-	lock_guard lock(&SCCB_MUTEX);
+	WorkerThreadArg* pwta = NULL;
+	while (true) {
+		while (PQUEUE->pop(pwta)) { //dequeue the WorkerThreadArg
 
-	if (!PQUEUE->empty()) { //dequeue the WorkerThreadArg
+			string result = state_change_callback_internal(pwta->_zpack);
 
-		WorkerThreadArg* pwta = PQUEUE->front();
-		PQUEUE->pop();
+			int mslapsed = 0;
+			int lease = atoi(pwta->_zpack.lease().c_str());
 
-		lock.unlock();
+			//printf("poll_interval: %d\n", poll_interval);
 
-		string result = state_change_callback_internal(pwta->_zpack);
+			while (result != Const::ZSC_REC_SUCC) {
 
-		int mslapsed = 0;
-		int lease = atoi(pwta->_zpack.lease().c_str());
-		int poll_interval = Env::get_sccb_poll_interval();
-		//printf("poll_interval: %d\n", poll_interval);
+				mslapsed += SCCB_POLL_INTERVAL;
+				usleep(SCCB_POLL_INTERVAL * 1000);
 
-		while (result != Const::ZSC_REC_SUCC) {
+				if (mslapsed >= lease)
+					break;
 
-			mslapsed += poll_interval;
-			usleep(poll_interval * 1000);
+				result = state_change_callback_internal(pwta->_zpack);
+			}
 
-			if (mslapsed >= lease)
-				break;
+			pwta->_stub->sendBack(pwta->_addr, result.data(), result.size());
 
-			result = state_change_callback_internal(pwta->_zpack);
+			/*pwta->_htw->_stub->sendBack(pwta->_htw->_addr, result.data(),
+			 result.size());*/
+
+			delete pwta;
+			pwta = NULL;
 		}
-
-		pwta->_stub->sendBack(pwta->_addr, result.data(), result.size());
-
-		/*pwta->_htw->_stub->sendBack(pwta->_htw->_addr, result.data(),
-		 result.size());*/
-
-		delete pwta;
 	}
 }
 
@@ -391,8 +384,7 @@ string HTWorker::remove_shared(const ZPack &zpack) {
 	} else {
 
 		if (_instant_swap) {
-			PMAP->writeFile();
-			//PMAP->flushDbfile();
+			PMAP->writeFileFG();
 		}
 
 		result = Const::ZSC_REC_SUCC; //0, succeed.
@@ -418,21 +410,12 @@ string HTWorker::erase_status_code(string & val) {
 	return val.substr(3);
 }
 
-void HTWorker::init_sscb_mutex() {
-
-	if (!INIT_SCCB_MUTEX) {
-
-		pthread_mutex_init(&SCCB_MUTEX, NULL);
-		INIT_SCCB_MUTEX = true;
-	}
-}
-
 string HTWorker::get_novoht_file() {
 
 	return ConfHandler::NOVOHT_FILE;
 }
 
-void HTWorker::init_store() {
+void HTWorker::init_me() {
 
 	if (PMAP == NULL)
 		PMAP = new NoVoHT(get_novoht_file(), 100000, 10000, 0.7);

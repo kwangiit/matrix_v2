@@ -32,6 +32,7 @@ MatrixScheduler::MatrixScheduler(const string
 	pollInterval = config->wsPollIntervalStart;
 	chooseBitMap = new bool[schedulerVec.size()];
 	reset_choosebm();
+	startWS = false;
 
 	ZHTMsgCountMutex = Mutex();
 	numIdleCoreMutex = Mutex();
@@ -117,7 +118,15 @@ void MatrixScheduler::regist()
 
 		while (zc.compare_swap(regKey, value, newVal, queryVal) != 0)
 		{
-			value = queryVal;
+			if (queryVal.empty())
+			{
+				zc.lookup(regKey, value);
+				increment++;
+			}
+			else
+			{
+				value = queryVal;
+			}
 			newValNum = str_to_num<int>(value) + 1;
 			newVal = num_to_str<int>(newValNum);
 			increment++;
@@ -138,6 +147,7 @@ void MatrixScheduler::pack_send_task(
 		int numTask, int sockfd, sockaddr fromAddr)
 {
 	MatrixMsg mmTasks;
+	mmTasks.set_msgtype("scheduler send task");
 	mmTasks.set_count(numTask);
 
 	for (int j = 0; j < numTask; j++)
@@ -162,7 +172,9 @@ void MatrixScheduler::send_task(int sockfd, sockaddr fromAddr)
 	 * minus number of idle cores */
 	numTaskToSend = wsQueue.size() / 2;
 
+	//cout << "Number of task being stolen is:" << numTaskToSend << endl;
 	MatrixMsg mmNumTask;
+	mmNumTask.set_msgtype("scheduler send task number");
 	mmNumTask.set_count(numTaskToSend);
 	string strNumTask = mmNumTask.SerializeAsString();
 	send_bf(sockfd, strNumTask);
@@ -210,7 +222,15 @@ void MatrixScheduler::recv_task_from_client(
 		increment += 2;
 		while (zc.compare_swap(tm.taskid(), taskDetail, taskDetailAttempt, queryValue) != 0)
 		{
-			taskDetail = queryValue;
+			if (queryValue.empty())
+			{
+				zc.lookup(tm.taskid(), taskDetail);
+				increment++;
+			}
+			else
+			{
+				taskDetail = queryValue;
+			}
 			value = str_to_value(taskDetail);
 			value.set_arrivetime(get_time_usec());
 			value.set_nummove(value.nummove() + 1);
@@ -219,8 +239,21 @@ void MatrixScheduler::recv_task_from_client(
 			increment++;
 		}
 		waitQueue.push_back(tm);
+		//cout << "task " << tm.taskid() << " has been received!" << endl;
 	}
 	wqMutex.unlock();
+
+	if (!startWS && config->workStealingOn)
+	{
+		string yesTask;
+		zc.lookup("have task", yesTask);
+		increment++;
+		if (yesTask.empty())
+		{
+			increment++;
+			zc.insert("have task", "yes");
+		}
+	}
 
 	MatrixMsg mmNumTask;
 	mmNumTask.set_msgtype("return to client");
@@ -423,7 +456,7 @@ void MatrixScheduler::recv_task_from_scheduler(int sockfd, long numTask)
 		wsqMutex.lock();
 		for (long j = 0; j < mm.count(); j++)
 		{
-			TaskMsg tm = str_to_taskmsg(mm.tasks(i));
+			TaskMsg tm = str_to_taskmsg(mm.tasks(j));
 			/* update task metadata */
 			string taskDetailStr;
 			zc.lookup(tm.taskid(), taskDetailStr);
@@ -435,6 +468,7 @@ void MatrixScheduler::recv_task_from_scheduler(int sockfd, long numTask)
 			zc.insert(tm.taskid(), taskDetailStr);
 			wsQueue.push(tm);
 			increment += 2;
+			//cout << "taskid is:" << tm.taskid() << ", description is:" << taskDetailStr << endl;
 		}
 		wsqMutex.unlock();
 	}
@@ -473,6 +507,7 @@ bool MatrixScheduler::steal_task()
 
 	int numTask = mmNumTask.count();
 
+	//cout << "Number of task stolen is:" << numTask << endl;
 	/* if the victim doesn't have tasks to migrate*/
 	if (numTask == 0)
 	{
@@ -492,8 +527,23 @@ bool MatrixScheduler::steal_task()
 void *workstealing(void* args)
 {
 	MatrixScheduler *ms = (MatrixScheduler*)args;
-	while (ms->running && ms->config->workStealingOn)
+	long incre = 0;
+
+	while (ms->running)
 	{
+		while (!ms->startWS)
+		{
+			incre++;
+			while (ms->zc.state_change_callback("have task", "yes",
+					ms->config->sleepLength) != 0)
+			{
+				incre++;
+				usleep(1);
+			}
+			ms->startWS = true;
+		}
+
+		//cout << "Now, start to do work stealing!" << endl;
 		while (ms->localQueue.size() + ms->wsQueue.size() == 0 &&
 				ms->pollInterval < ms->config->wsPollIntervalUb)
 		{
@@ -526,6 +576,11 @@ void *workstealing(void* args)
 			break;
 		}
 	}
+
+	ms->ZHTMsgCountMutex.lock();
+	ms->incre_ZHT_msg_count(incre);
+	ms->ZHTMsgCountMutex.unlock();
+
 	pthread_exit(NULL);
 	return NULL;
 }
@@ -614,6 +669,7 @@ void MatrixScheduler::exec_a_task(TaskMsg &tm)
 
 	numTaskFinMutex.lock();
 	numTaskFin++;
+	//cout << "Number of task fin is:" << numTaskFin << endl;
 	numTaskFinMutex.unlock();
 
 	ZHTMsgCountMutex.lock();
@@ -758,7 +814,7 @@ long MatrixScheduler::check_a_ready_task(TaskMsg &tm)
 	incre++;
 
 	Value valuePkg = str_to_value(taskDetail);
-
+	//cout << "task indegree:" << tm.taskid() << "\t" << valuePkg.indegree() << endl;
 	if (valuePkg.indegree() == 0)
 	{
 		int flag = task_ready_process(valuePkg, tm);
@@ -812,8 +868,10 @@ void *checking_ready_task(void *args)
 			ms->wqMutex.lock();
 			if (ms->waitQueue.size() > 0)
 			{
+				//cout << "number of task waiting is:" << ms->waitQueue.size() << endl;
 				tm = ms->waitQueue.front();
 				ms->waitQueue.pop_front();
+				//cout << "next one to process is:" << tm.taskid() << endl;
 				ms->wqMutex.unlock();
 			}
 			else
@@ -870,6 +928,7 @@ long MatrixScheduler::notify_children(const CmpQueueItem &cqItem)
 	string childTaskId, childTaskDetail, childTaskDetailAttempt, query_value;
 	Value childVal;
 
+	//cout << "task finished, notify children:" << cqItem.taskId << "\t" << taskDetail << endl;
 	for (int i = 0; i < value.children_size(); i++)
 	{
 		childTaskId = value.children(i);
@@ -886,7 +945,15 @@ long MatrixScheduler::notify_children(const CmpQueueItem &cqItem)
 		increment++;
 		while (zc.compare_swap(childTaskId, childTaskDetail, childTaskDetailAttempt, query_value) != 0)
 		{
-			childTaskDetail = query_value;
+			if (query_value.empty())
+			{
+				zc.lookup(childTaskId, childTaskDetail);
+				increment++;
+			}
+			else
+			{
+				childTaskDetail = query_value;
+			}
 			childVal = str_to_value(childTaskDetail);
 			childVal.set_indegree(childVal.indegree() - 1);
 			childVal.add_parents(get_id());
@@ -909,7 +976,7 @@ long MatrixScheduler::notify_children(const CmpQueueItem &cqItem)
 void *checking_complete_task(void *args)
 {
 	MatrixScheduler *ms = (MatrixScheduler*)args;
-	CmpQueueItem cqItem;
+	CmpQueueItem cqItem = CmpQueueItem();
 
 	long increment = 0;
 
@@ -1021,12 +1088,20 @@ void *recording_stat(void *args)
 
 		numTaskDone += (ms->numTaskFin - ms->prevNumTaskFin);
 		string numTaskDoneStrNew = num_to_str<long>(numTaskDone);
-		string query_value;
+		string queryValue;
 		increment++;
 		while (ms->zc.compare_swap(key, numTaskDoneStr,
-				numTaskDoneStrNew, query_value) != 0)
+				numTaskDoneStrNew, queryValue) != 0)
 		{
-			numTaskDoneStr = query_value;
+			if (queryValue.empty())
+			{
+				ms->zc.lookup(key, numTaskDoneStr);
+				increment++;
+			}
+			else
+			{
+				numTaskDoneStr = queryValue;
+			}
 			numTaskDone = str_to_num<long>(numTaskDoneStr);
 			if (numTaskDone == ms->config->numAllTask)
 			{

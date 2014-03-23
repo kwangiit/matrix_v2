@@ -30,18 +30,18 @@
 
 #include "lock_guard.h"
 
-lock_guard::lock_guard(pthread_mutex_t *mutex) :
+LockGuard::LockGuard(pthread_mutex_t *mutex) :
 		_mutex(mutex) {
 
 	lock();
 }
 
-lock_guard::~lock_guard() {
+LockGuard::~LockGuard() {
 
 	unlock();
 }
 
-bool lock_guard::lock() {
+bool LockGuard::lock() {
 
 	if (_mutex != NULL)
 		pthread_mutex_lock(_mutex);
@@ -49,7 +49,7 @@ bool lock_guard::lock() {
 	return true;
 }
 
-bool lock_guard::unlock() {
+bool LockGuard::unlock() {
 
 	if (_mutex != NULL)
 		pthread_mutex_unlock(_mutex);

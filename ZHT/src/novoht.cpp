@@ -84,7 +84,7 @@ int NoVoHT::put(string k, string v) {
 		}
 	}
 	int slot;
-	slot = hash(k) % size;
+	slot = fnv_hash(k) % size;
 	kvpair *cur = kvpairs[slot];
 	kvpair *add = new kvpair;
 	add->key = k;
@@ -142,7 +142,7 @@ string* NoVoHT::get(string k) {
 	//while (map_lock) { /* Wait till done */
 	sem_wait(&map_lock);
 	sem_post(&map_lock);
-	int loc = hash(k) % size;
+	int loc = fnv_hash(k) % size;
 	kvpair *cur = kvpairs[loc];
 	while (cur != NULL && !k.empty()) {
 		if (k.compare(cur->key) == 0)
@@ -157,7 +157,7 @@ int NoVoHT::remove(string k) {
 	//while(map_lock){ /* Wait till done */}
 	sem_wait(&map_lock);
 	int ret = 0;
-	int loc = hash(k) % size;
+	int loc = fnv_hash(k) % size;
 	kvpair *cur = kvpairs[loc];
 	if (cur == NULL) {
 		sem_post(&map_lock);
@@ -207,7 +207,7 @@ int NoVoHT::append(string k, string aval) {
 	//while(map_lock) { /* Wait for it... */ }
 	sem_wait(&map_lock);
 	int ret = 0;
-	int loc = hash(k) % size;
+	int loc = fnv_hash(k) % size;
 	kvpair* cur = kvpairs[loc];
 	while (cur != NULL) {
 		if (k.compare(cur->key) == 0) {
@@ -227,6 +227,13 @@ int NoVoHT::append(string k, string aval) {
 	//map_lock = false;
 	sem_post(&map_lock);
 	return write(add);
+}
+
+int NoVoHT::writeFileFG() {
+
+	int ret = writeFile();
+	pthread_join(writeThread, NULL);
+	return ret;
 }
 
 //return 0 if success -2 if failed
@@ -311,7 +318,7 @@ void NoVoHT::merge() {
 			//sem_wait(&map_lock);
 			fseek(swapFile, 0, SEEK_END);
 			string s(buf);
-			kvpair* p = kvpairs[hash(s) % size];
+			kvpair* p = kvpairs[fnv_hash(s) % size];
 			while (p != NULL) {
 				if (p->key.compare(s) == 0) {
 					destroyFposList(p->positions);
@@ -351,7 +358,7 @@ void NoVoHT::resize(int ns) {
 	for (int i = 0; i < olds; i++) {
 		kvpair *cur = oldpairs[i];
 		while (cur != NULL) {
-			int pos = hash(cur->key) % size;
+			int pos = fnv_hash(cur->key) % size;
 			kvpair * tmp = kvpairs[pos];
 			kvpairs[pos] = cur;
 			cur = cur->next;
@@ -476,7 +483,7 @@ void NoVoHT::readFile() {
 	writeFile();
 }
 
-unsigned long long hash(string k) { //FNV hash
+unsigned long long fnv_hash(string k) { //FNV hash
 #if SIZE_OF_LONG_LONG_INT==8
 #define FNV_PRIME 14695981039346656037
 #define FNV_OFFSET 1099511628211

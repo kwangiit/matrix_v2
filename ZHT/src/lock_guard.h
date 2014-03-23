@@ -37,10 +37,10 @@
 /*
  *
  */
-class lock_guard {
+class LockGuard {
 public:
-	lock_guard(pthread_mutex_t *mutex);
-	virtual ~lock_guard();
+	LockGuard(pthread_mutex_t *mutex);
+	virtual ~LockGuard();
 
 private:
 	bool lock();

@@ -232,6 +232,7 @@ public:
 	//NoVoHT(char *, NoVoHT*);
 	~NoVoHT();
 	int writeFile();
+	int writeFileFG();
 	int put(string, string);
    int append(string,string);
 	string* get(string);
@@ -257,7 +258,7 @@ public:
 			  return NULL;}
 };
 
-unsigned long long hash(string k);
+unsigned long long fnv_hash(string k);
 
 void fsu(kvpair *);
 
