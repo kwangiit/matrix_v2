@@ -34,6 +34,7 @@ vector<string> tokenize(const std::string &source, const char *delimiter = " ")
 	{
 		results.push_back(source.substr(prev));
 	}
+	//cout << "The size is:" << results.size() << endl;
 	tokenMutex.unlock();
 	return results;
 }
@@ -411,13 +412,45 @@ extern TaskMsg str_to_taskmsg(const string &str)
 {
 	vector<string> vecStr = tokenize(str, "**");
 
+	if (vecStr.size() == 0)
+	{
+		cout << "have some problem" << endl;
+		exit(1);
+	}
 	TaskMsg tm;
 	tm.set_taskid(vecStr.at(0));
-	tm.set_user(vecStr.at(1));
-	tm.set_dir(vecStr.at(2));
-	tm.set_cmd(vecStr.at(3));
-	tm.set_datalength(str_to_num<long>(vecStr.at(4)));
-
+	if (vecStr.size() > 1)
+	{
+		tm.set_user(vecStr.at(1));
+	}
+	else
+	{
+		tm.set_user("kwang");
+	}
+	if (vecStr.size() > 2)
+	{
+		tm.set_dir(vecStr.at(2));
+	}
+	else
+	{
+		tm.set_dir("/home/kwang/Documents");
+	}
+	if (vecStr.size() > 3)
+	{
+		tm.set_cmd(vecStr.at(3));
+	}
+	else
+	{
+		tm.set_cmd("hostname");
+	}
+	if (vecStr.size() > 4)
+	{
+		tm.set_datalength(str_to_num<long>(vecStr.at(4)));
+	}
+	else
+	{
+		tm.set_datalength(0);
+	}
 	return tm;
 }
 
@@ -855,6 +888,17 @@ void Peer::wait_all_scheduler()
 	while (zc.state_change_callback(key, expValue, config->sleepLength) != 0)
 	{
 		usleep(1);
+	}
+}
+
+void Peer::wait_all_task_recv()
+{
+	string key("num tasks recv");
+	string expValue = num_to_str<long>(config->numAllTask);
+
+	while (zc.state_change_callback(key, expValue, config->sleepLength) != 0)
+	{
+		usleep(100000);
 	}
 }
 

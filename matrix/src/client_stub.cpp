@@ -316,6 +316,9 @@ void MatrixClient::submit_task()
 		clientLogOS << "--------------------------------"
 				"----------------------------" << endl;
 	}
+
+	wait_all_task_recv();
+
 	clock_gettime(0, &start);
 }
 
@@ -383,7 +386,7 @@ void MatrixClient::submit_task_wc(vector<TaskMsg> tmVec, int toScheIdx)
 
 		string taskPkgStr = mm.SerializeAsString();
 		//cout<< "The length is:" << taskPkgStr.length() << endl;
-
+		//cout << "The message to send is:" << taskPkgStr << endl;
 		//timespec before, after;
 		//clock_gettime(0, &before);
 		//if (sockfd == -1)
@@ -449,7 +452,10 @@ void *monitoring(void* args)
 			{
 				string schedulerStat;
 				mc->zc.lookup(mc->schedulerVec.at(i), schedulerStat);
-
+				if (schedulerStat.empty())
+				{
+					continue;
+				}
 				Value value = str_to_value(schedulerStat);
 
 				numIdleCore += value.numcoreavilable();

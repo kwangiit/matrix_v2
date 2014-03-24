@@ -93,6 +93,8 @@ void MatrixScheduler::regist()
 {
 	string regKey("number of scheduler registered");
 	string taskFinKey("num tasks done");
+	string recvKey("num tasks recv");
+
 	long increment = 0;
 
 	/* the first scheduler (index = 0) intializes the records
@@ -103,6 +105,7 @@ void MatrixScheduler::regist()
 	{
 		zc.insert(regKey, "1");
 		zc.insert(taskFinKey, "0");
+		zc.insert(recvKey, "0");
 		increment += 2;
 	}
 	else
@@ -144,6 +147,7 @@ void MatrixScheduler::regist()
 	incre_ZHT_msg_count(increment);
 	ZHTMsgCountMutex.unlock();
 }
+
 
 /* pack several tasks (numTask) together, and send them
  * with one package to another thief scheduler. The tasks
@@ -216,14 +220,12 @@ void MatrixScheduler::recv_task_from_client(
 	string numTaskStr = mmNumTask.SerializeAsString();
 	send_bf(sockfd, numTaskStr);
 
-	vector<TaskMsg> vec;
 	//cout << "Number of task received is:" << mm.count() << endl;
 
 	for (int i = 0; i < mm.count(); i++)
 	{
 		//cout << "The task is:" << mm.tasks(i) << endl;
 		TaskMsg tm = str_to_taskmsg(mm.tasks(i));
-		vec.push_back(tm);
 		/* update the task metadata in ZHT */
 		string taskDetail, taskDetailAttempt, queryValue;
 		zc.lookup(tm.taskid(), taskDetail);
@@ -252,26 +254,34 @@ void MatrixScheduler::recv_task_from_client(
 			taskDetailAttempt = value_to_str(value);
 			increment++;
 		}
+		wqMutex.lock();
+		waitQueue.push_back(tm);
+		wqMutex.unlock();
 		//cout << "task " << tm.taskid() << " has been received!" << endl;
 	}
 
-	wqMutex.lock();
-	for (int i = 0; i < vec.size(); i++)
+	string numTaskRecvStr, numTaskRecvMoreStr, queryValue;
+	zc.lookup("num tasks recv", numTaskRecvStr);
+	long numTaskRecv = str_to_num<long>(numTaskRecvStr);
+	numTaskRecv += mm.count();
+	numTaskRecvMoreStr = num_to_str<long>(numTaskRecv);
+	increment += 2;
+	//cout << "number of task more recv is:" << numTaskRecv << endl;
+	while (zc.compare_swap("num tasks recv", numTaskRecvStr, numTaskRecvMoreStr, queryValue) != 0)
 	{
-		waitQueue.push_back(vec[i]);
-	}
-	wqMutex.unlock();
-
-	if (!startWS && config->workStealingOn)
-	{
-		string yesTask;
-		zc.lookup("have task", yesTask);
-		increment++;
-		if (yesTask.empty())
+		if (queryValue.empty())
 		{
+			zc.lookup("num tasks recv", numTaskRecvStr);
 			increment++;
-			zc.insert("have task", "yes");
 		}
+		else
+		{
+			numTaskRecvStr = queryValue;
+		}
+		//cout << "OK, conflict, current value is:" << numTaskRecvStr << endl;
+		numTaskRecv = str_to_num<long>(numTaskRecvStr);
+		numTaskRecv += mm.count();
+		numTaskRecvMoreStr = num_to_str<long>(numTaskRecv);
 	}
 
 	if (increment > 0)
@@ -560,18 +570,6 @@ void *workstealing(void* args)
 
 	while (ms->running)
 	{
-		while (!ms->startWS)
-		{
-			incre++;
-			while (ms->zc.state_change_callback("have task", "yes",
-					ms->config->sleepLength) != 0)
-			{
-				incre++;
-				usleep(1);
-			}
-			ms->startWS = true;
-		}
-
 		//cout << "Now, start to do work stealing!" << endl;
 		while (ms->localQueue.size() + ms->wsQueue.size() == 0 &&
 				ms->pollInterval < ms->config->wsPollIntervalUb)
@@ -604,6 +602,8 @@ void *workstealing(void* args)
 		{
 			break;
 		}
+
+		ms->pollInterval = ms->config->wsPollIntervalStart;
 	}
 
 	ms->ZHTMsgCountMutex.lock();
@@ -891,6 +891,7 @@ long MatrixScheduler::check_a_ready_task(TaskMsg &tm)
 	string taskDetail;
 	long incre = 0;
 	zc.lookup(tm.taskid(), taskDetail);
+	//cout << "task detail is:" << taskDetail << endl;
 	incre++;
 
 	Value valuePkg = str_to_value(taskDetail);

@@ -268,6 +268,7 @@ void* MatrixEpollServer::threaded_serve(void *arg)
 			MatrixEventData eventData = mes->_eventQueue.front();
 			/*pes->_ZProcessor->process(eventData.fd(), eventData.buf(),
 					eventData.fromaddr()); replace this part with matrix logic */
+			//cout << "The data received is:" << eventData.buf() << endl;
 			mes->_ms->proc_req(eventData.fd(), eventData.buf(), eventData.fromaddr());
 			mes->_eventQueue.pop();
 		}

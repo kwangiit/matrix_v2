@@ -29,6 +29,8 @@ int main(int argc, char *argv[])
 
 	ms->wait_all_scheduler();	// waits all the other schedulers are running
 
+	ms->wait_all_task_recv();
+
 	ms->fork_crt_thread();	// forks checking ready task thread
 
 	ms->fork_exec_task_thread();	// forks executing task threads

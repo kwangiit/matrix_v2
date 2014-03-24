@@ -131,6 +131,7 @@ class Peer
 		bool init_zht_client(const string&, const string&);
 
 		void wait_all_scheduler();
+		void wait_all_task_recv();
 
 		void set_id(const string&);
 
