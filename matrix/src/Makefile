@@ -4,7 +4,7 @@ INCS=-I. \
 	-I../../ \
 	-I../../ZHT \
 	-I../../ZHT/src
-CCFLAGS = -g -I${USER_INCLUDE} -L${USER_LIB} -DPRINT_OUT
+CCFLAGS = -g -I${USER_INCLUDE} -L${USER_LIB} -DPRINT_OUT -DDATA_CACHE
 #CCFLAGS = -g -I${USER_INCLUDE} -L${USER_LIB} -DPF_INET -DBIG_MSG -DTHREADED_SERVE -DSOCKET_CACHE -DSCCB
 
 LIBFLAGS = -lstdc++ -lrt -lpthread -lm -lc -lprotobuf -lprotobuf-c -L../../ZHT/src -lzht

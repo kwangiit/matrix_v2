@@ -121,6 +121,7 @@ class MatrixScheduler: public Peer
 		deque<CmpQueueItem> completeQueue;	// complete queue
 
 		map<string, string> localData;
+		bool cache;
 		ofstream schedulerLogOS;	// scheduler log output stream
 };
 

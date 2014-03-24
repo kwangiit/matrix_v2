@@ -247,22 +247,6 @@ void MatrixClient::init_task()
  * */
 void MatrixClient::submit_task()
 {
-#ifdef PRINT_OUT
-	cout << "--------------------------------"
-			"----------------------------" << endl;
-	cout << "Now, I am going to submit tasks to the schedulers" << endl;
-#endif
-
-	if (clientLogOS.is_open())
-	{
-		clientLogOS << "--------------------------------"
-				"----------------------------" << endl;
-		clientLogOS << "Now, I am going to submit "
-				"tasks to the schedulers" << endl;
-	}
-
-	clock_gettime(0, &start);
-
 	/* current time to be set as the submission
 	 * time of all the tasks. This might be not
 	 * accurate with tasks sent batch by batch
@@ -286,6 +270,21 @@ void MatrixClient::submit_task()
 
 	incre_ZHT_msg_count(increment);
 
+#ifdef PRINT_OUT
+	cout << "--------------------------------"
+			"----------------------------" << endl;
+	cout << "Now, I am going to submit tasks to the schedulers" << endl;
+#endif
+
+	if (clientLogOS.is_open())
+	{
+		clientLogOS << "--------------------------------"
+				"----------------------------" << endl;
+		clientLogOS << "Now, I am going to submit "
+				"tasks to the schedulers" << endl;
+	}
+
+	clock_gettime(0, &start);
 	/* if the submission mode is best case */
 	if (config->submitMode.compare("bestcase") == 0)
 	{
@@ -317,6 +316,7 @@ void MatrixClient::submit_task()
 		clientLogOS << "--------------------------------"
 				"----------------------------" << endl;
 	}
+	clock_gettime(0, &start);
 }
 
 /* submit tasks with the best case scenario, in which,
@@ -359,6 +359,8 @@ void MatrixClient::submit_task_wc(vector<TaskMsg> tmVec, int toScheIdx)
 	long numTaskBeenSent = 0;
 	long numTaskSendPerPkg = config->maxTaskPerPkg;
 
+	int sockfd = -1;
+
 	while (numTaskLeft > 0)
 	{
 		if (numTaskLeft < config->maxTaskPerPkg)
@@ -382,10 +384,25 @@ void MatrixClient::submit_task_wc(vector<TaskMsg> tmVec, int toScheIdx)
 		string taskPkgStr = mm.SerializeAsString();
 		//cout<< "The length is:" << taskPkgStr.length() << endl;
 
-		int sockfd = send_first(schedulerVec.at(toScheIdx), config->schedulerPortNo, taskPkgStr);
+		//timespec before, after;
+		//clock_gettime(0, &before);
+		//if (sockfd == -1)
+		{
+			sockfd = send_first(schedulerVec.at(toScheIdx), config->schedulerPortNo, taskPkgStr);
+		}
+		//else
+		//{
+			//send_bf(sockfd, taskPkgStr);
+		//}
+		//clock_gettime(0, &after);
+		//timespec diff = time_diff(before, after);
+		//cout << "it takes " << diff.tv_sec << "s, and " << diff.tv_nsec << " ns for one send!" << endl;
+		//int sockfd = send_first(schedulerVec.at(toScheIdx), config->schedulerPortNo, taskPkgStr);
 		string recvBuf;
 		recv_bf(sockfd, recvBuf);
-
+		//clock_gettime(0, &after);
+		//diff = time_diff(before, after);
+		//cout << "it takes " << diff.tv_sec << "s, and " << diff.tv_nsec << " ns for one send and recv!" << endl;
 		numTaskLeft -= numTaskSendPerPkg;
 	}
 }

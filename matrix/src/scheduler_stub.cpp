@@ -72,6 +72,12 @@ MatrixScheduler::MatrixScheduler(const string
 	localQueue = priority_queue<TaskMsg, vector<TaskMsg>, HighPriorityByDataSize>();
 	wsQueue = priority_queue<TaskMsg, vector<TaskMsg>, HighPriorityByDataSize>();
 	completeQueue = deque<CmpQueueItem>();
+
+	localData = map<string, string>();
+	cache = false;
+#ifdef DATA_CACHE
+	cache = true;
+#endif
 }
 
 MatrixScheduler::~MatrixScheduler(void)
@@ -204,12 +210,20 @@ void MatrixScheduler::recv_task_from_client(
 		MatrixMsg &mm, int sockfd, sockaddr fromAddr)
 {
 	long increment = 0;
+	MatrixMsg mmNumTask;
+	mmNumTask.set_msgtype("return to client");
+	mmNumTask.set_count(mm.count());
+	string numTaskStr = mmNumTask.SerializeAsString();
+	send_bf(sockfd, numTaskStr);
 
-	wqMutex.lock();
+	vector<TaskMsg> vec;
+	//cout << "Number of task received is:" << mm.count() << endl;
+
 	for (int i = 0; i < mm.count(); i++)
 	{
+		//cout << "The task is:" << mm.tasks(i) << endl;
 		TaskMsg tm = str_to_taskmsg(mm.tasks(i));
-
+		vec.push_back(tm);
 		/* update the task metadata in ZHT */
 		string taskDetail, taskDetailAttempt, queryValue;
 		zc.lookup(tm.taskid(), taskDetail);
@@ -238,8 +252,13 @@ void MatrixScheduler::recv_task_from_client(
 			taskDetailAttempt = value_to_str(value);
 			increment++;
 		}
-		waitQueue.push_back(tm);
 		//cout << "task " << tm.taskid() << " has been received!" << endl;
+	}
+
+	wqMutex.lock();
+	for (int i = 0; i < vec.size(); i++)
+	{
+		waitQueue.push_back(vec[i]);
 	}
 	wqMutex.unlock();
 
@@ -255,18 +274,14 @@ void MatrixScheduler::recv_task_from_client(
 		}
 	}
 
-	MatrixMsg mmNumTask;
-	mmNumTask.set_msgtype("return to client");
-	mmNumTask.set_count(mm.count());
-	string numTaskStr = mmNumTask.SerializeAsString();
-	send_bf(sockfd, numTaskStr);
-
 	if (increment > 0)
 	{
 		ZHTMsgCountMutex.lock();
 		incre_ZHT_msg_count(increment);
 		ZHTMsgCountMutex.unlock();
 	}
+
+	//cout << "I am done with receiving tasks!" << endl;
 }
 
 void MatrixScheduler::recv_pushing_task(MatrixMsg &mm, int sockfd, sockaddr fromAddr)
@@ -339,7 +354,21 @@ int MatrixScheduler::proc_req(int sockfd, char *buf, sockaddr fromAddr)
 	}
 	else if (msg.compare("scheduler require data") == 0)
 	{
-		string dataPiece = localData.find(mm.extrainfo())->second;
+		//cout << "The required information is" << mm.extrainfo() << endl;
+		string dataPiece;
+		ldMutex.lock();
+
+		if (localData.find(mm.extrainfo()) == localData.end())
+		{
+			//cout << "What is the hell!" << endl;
+			dataPiece = "shit, that is wrong!";
+		}
+		else
+		{
+			dataPiece = localData.find(mm.extrainfo())->second;
+		}
+		ldMutex.unlock();
+
 		MatrixMsg mmDataPiece;
 		mmDataPiece.set_msgtype("scheduler send data");
 		mmDataPiece.set_extrainfo(dataPiece);
@@ -622,31 +651,61 @@ void MatrixScheduler::exec_a_task(TaskMsg &tm)
 #else
 	for (int i = 0; i < value.parents_size(); i++)
 	{
-		if (value.datasize_size() > 0)
+		if (value.datasize(i) > 0)
 		{
 			if (value.parents(i).compare(get_id()) == 0)
 			{
+				ldMutex.lock();
 				data += localData.find(value.datanamelist(i))->second;
+				ldMutex.unlock();
 			}
 			else
 			{
-				MatrixMsg mm;
-				mm.set_msgtype("scheduler require data");
-				mm.set_extrainfo(value.datanamelist(i));
-				string mmStr;
-				mmStr = mm.SerializeAsString();
-				int sockfd = send_first(value.parents(i), config->schedulerPortNo, mmStr);
-				string dataPiece;
-				recv_bf(sockfd, dataPiece);
-				MatrixMsg mmData;
-				mmData.ParseFromString(dataPiece);
-				data += mmData.extrainfo();
+				bool dataReq = true;
+				if (cache)
+				{
+					ldMutex.lock();
+					if (localData.find(value.datanamelist(i)) != localData.end())
+					{
+						data += localData.find(value.datanamelist(i))->second;
+						dataReq = false;
+					}
+					else
+					{
+						dataReq = true;
+					}
+					ldMutex.unlock();
+				}
+				if (dataReq)
+				{
+					MatrixMsg mm;
+					mm.set_msgtype("scheduler require data");
+					//cout << "The require data is:" << value.datanamelist(i) << endl;
+					mm.set_extrainfo(value.datanamelist(i));
+					string mmStr;
+					mmStr = mm.SerializeAsString();
+					int sockfd = send_first(value.parents(i), config->schedulerPortNo, mmStr);
+					string dataPiece;
+					recv_bf(sockfd, dataPiece);
+					MatrixMsg mmData;
+					//cout << "The data piece is:" << dataPiece << ", task id is:" << tm.taskid() << ", before pasre!" << endl;
+					mmData.ParseFromString(dataPiece);
+					//cout << "After parse, extra info is:" << mmData.extrainfo() << endl;
+					data += mmData.extrainfo();
+					if (cache)
+					{
+						ldMutex.lock();
+						localData.insert(make_pair(value.datanamelist(i), mmData.extrainfo()));
+						ldMutex.unlock();
+					}
+				}
 			}
 		}
 	}
 #endif
 
 	const char *execmd = tm.cmd().c_str();
+	//cout << "The cmd is:" << execmd << endl;
 	string result = exec(execmd);
 	string key = get_id() + tm.taskid();
 
@@ -656,6 +715,7 @@ void MatrixScheduler::exec_a_task(TaskMsg &tm)
 #else
 	ldMutex.lock();
 	localData.insert(make_pair(key, result));
+	//cout << "key is:" << key << ", and value is:" << result << endl;
 	ldMutex.unlock();
 #endif
 
@@ -725,6 +785,7 @@ void *executing_task(void *args)
 			ms->numIdleCore--;
 			ms->numIdleCoreMutex.unlock();
 
+			//cout << "The task to execute is:" << tm.taskid();
 			ms->exec_a_task(tm);
 
 			ms->numIdleCoreMutex.lock();
@@ -771,13 +832,14 @@ int MatrixScheduler::task_ready_process(
 	else
 	{
 		long maxDataSize = -1000000;
-		string maxDataScheduler;
+		string maxDataScheduler, key;
 		for (int i = 0; i < valuePkg.datasize_size(); i++)
 		{
 			if (valuePkg.datasize(i) > maxDataSize)
 			{
 				maxDataSize = valuePkg.datasize(i);
 				maxDataScheduler = valuePkg.parents(i);
+				key = valuePkg.datanamelist(i);
 			}
 		}
 		tm.set_datalength(maxDataSize);
@@ -787,15 +849,33 @@ int MatrixScheduler::task_ready_process(
 		}
 		else
 		{
-			MatrixMsg mm;
-			mm.set_msgtype("scheduler push task");
-			mm.set_count(1);
-			mm.add_tasks(taskmsg_to_str(tm));
-			string mmStr = mm.SerializeAsString();
-			int sockfd = send_first(maxDataScheduler, config->schedulerPortNo, mmStr);
-			string ack;
-			recv_bf(sockfd, ack);
-			flag = 2;
+			bool taskPush = true;
+			if (cache)
+			{
+				ldMutex.lock();
+				if (localData.find(key) != localData.end())
+				{
+					flag = 1;
+					taskPush = false;
+				}
+				else
+				{
+					taskPush = true;
+				}
+				ldMutex.unlock();
+			}
+			if (taskPush)
+			{
+				MatrixMsg mm;
+				mm.set_msgtype("scheduler push task");
+				mm.set_count(1);
+				mm.add_tasks(taskmsg_to_str(tm));
+				string mmStr = mm.SerializeAsString();
+				int sockfd = send_first(maxDataScheduler, config->schedulerPortNo, mmStr);
+				string ack;
+				recv_bf(sockfd, ack);
+				flag = 2;
+			}
 		}
 	}
 #endif
