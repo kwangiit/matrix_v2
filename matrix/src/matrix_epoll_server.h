@@ -74,6 +74,7 @@ class MatrixEpollServer
 	private:
 		MatrixScheduler *_ms;
 		long _port;
+		Mutex eqMutex;
 		queue<MatrixEventData> _eventQueue;
 
 	private:

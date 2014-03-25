@@ -85,7 +85,7 @@ const int MatrixEpollServer::MAX_EVENTS = 4096;
 MatrixEpollServer::MatrixEpollServer(long port,
 		MatrixScheduler *ms) : _port(port), _ms(ms), _eventQueue()
 {
-
+	eqMutex = Mutex();
 }
 
 MatrixEpollServer::~MatrixEpollServer()
@@ -265,12 +265,11 @@ void* MatrixEpollServer::threaded_serve(void *arg)
 	{
 		while (!mes->_eventQueue.empty())
 		{
+			mes->eqMutex.lock();
 			MatrixEventData eventData = mes->_eventQueue.front();
-			/*pes->_ZProcessor->process(eventData.fd(), eventData.buf(),
-					eventData.fromaddr()); replace this part with matrix logic */
-			//cout << "The data received is:" << eventData.buf() << endl;
-			mes->_ms->proc_req(eventData.fd(), eventData.buf(), eventData.fromaddr());
 			mes->_eventQueue.pop();
+			mes->eqMutex.unlock();
+			mes->_ms->proc_req(eventData.fd(), eventData.buf(), eventData.fromaddr());
 		}
 	}
 
@@ -328,7 +327,6 @@ void MatrixEpollServer::serve()
 	while (1)
 	{
 		int n, i;
-
 		n = epoll_wait(efd, events, MAX_EVENTS, -1);
 
 		for (i = 0; i < n; i++)
@@ -427,36 +425,11 @@ void MatrixEpollServer::serve()
 						}
 						else
 						{
-//#ifdef BIG_MSG
-//							bool ready = false;
-//							string bd = pbrb->getBdStr(sfd, buf, count, ready);
-//
-//							if (ready) {
-//
-//#ifdef THREADED_SERVE
-//								EventData eventData(edata->fd(), bd.c_str(), bd.size(),
-//										fromaddr);
-//								_eventQueue.push(eventData);
-//
-//#else
-//								_ZProcessor->process(edata->fd(), bd.c_str(),
-//										fromaddr);
-//#endif
-//							}
-//#endif
-//
-//#ifdef SML_MSG
-//#ifdef THREADED_SERVE
 							MatrixEventData eventData(edata->fd(), buf, sizeof(buf),
 									fromaddr);
+							eqMutex.lock();
 							_eventQueue.push(eventData);
-
-//#else
-//							string bufstr(buf);
-//							_ZProcessor->process(edata->fd(), bufstr.c_str(),
-//									fromaddr);
-//#endif
-//#endif
+							eqMutex.unlock();
 						}
 					}
 				}
@@ -500,34 +473,11 @@ void MatrixEpollServer::serve()
 						}
 						else
 						{
-//#ifdef BIG_MSG
-//							bool ready = false;
-//							string bd = pbrb->getBdStr(sfd, buf, count, ready);
-//
-//							if (ready) {
-//
-//#ifdef THREADED_SERVE
-//								EventData eventData(edata->fd(), bd.c_str(), bd.size(),
-//										*edata->sender());
-//								_eventQueue.push(eventData);
-//#else
-//								_ZProcessor->process(edata->fd(), bd.c_str(),
-//										*edata->sender());
-//#endif
-//							}
-//#endif
-//
-//#ifdef SML_MSG
-//#ifdef THREADED_SERVE
 							MatrixEventData eventData(edata->fd(), buf, sizeof(buf),
 									*edata->sender());
+							eqMutex.lock();
 							_eventQueue.push(eventData);
-//#else
-//							string bufstr(buf);
-//							_ZProcessor->process(edata->fd(), bufstr.c_str(),
-//									*edata->sender());
-//#endif
-//#endif
+							eqMutex.unlock();
 						}
 					}
 

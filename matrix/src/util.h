@@ -143,6 +143,12 @@ class Peer
 
 		void incre_ZHT_msg_count(long);
 
+		void insert_wrap(const string &key, const string &val);
+		void insert_wrap(const char *key, const char *val);
+
+		void lookup_wrap(const string &key, string &result);
+		void lookup_wrap(const char *key, char *result);
+
 		ZHTClient zc;
 		Configuration *config;
 		vector<string> schedulerVec;

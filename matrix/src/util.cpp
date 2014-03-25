@@ -425,6 +425,7 @@ extern TaskMsg str_to_taskmsg(const string &str)
 	}
 	else
 	{
+		cout << "has problem, the vector size is:1" << endl;
 		tm.set_user("kwang");
 	}
 	if (vecStr.size() > 2)
@@ -433,6 +434,7 @@ extern TaskMsg str_to_taskmsg(const string &str)
 	}
 	else
 	{
+		cout << "has problem, the vector size is:2" << endl;
 		tm.set_dir("/home/kwang/Documents");
 	}
 	if (vecStr.size() > 3)
@@ -441,6 +443,7 @@ extern TaskMsg str_to_taskmsg(const string &str)
 	}
 	else
 	{
+		cout << "has problem, the vector size is:3" << endl;
 		tm.set_cmd("hostname");
 	}
 	if (vecStr.size() > 4)
@@ -449,6 +452,7 @@ extern TaskMsg str_to_taskmsg(const string &str)
 	}
 	else
 	{
+		cout << "has problem, the vector size is:4" << endl;
 		tm.set_datalength(0);
 	}
 	return tm;
@@ -683,123 +687,128 @@ extern Value str_to_value(const string &str)
 {
 	Value value;
 	vector<string> vec = tokenize(str, "~~");
+	if (vec.size() != 21)
+	{
+		cout << "have some problem, the value to be converted is:" << str << endl;
+		exit(1);
+	}
 
 	value.set_id(vec[0]);
 
-	if (vec[1].compare("noindegree") != 0)
+	if (vec.at(1).compare("noindegree") != 0)
 	{
-		value.set_indegree(str_to_num<long>(vec[1]));
+		value.set_indegree(str_to_num<long>(vec.at(1)));
 	}
 
-	if (vec[2].compare("noparents") != 0)
+	if (vec.at(2).compare("noparents") != 0)
 	{
-		vector<string> parentVec = tokenize(vec[2], "??");
+		vector<string> parentVec = tokenize(vec.at(2), "??");
 		for (int i = 0; i < parentVec.size(); i++)
 		{
 			value.add_parents(parentVec.at(i));
 		}
 	}
 
-	if (vec[3].compare("nochildren") != 0)
+	if (vec.at(3).compare("nochildren") != 0)
 	{
-		vector<string> childVec = tokenize(vec[3], "??");
+		vector<string> childVec = tokenize(vec.at(3), "??");
 		for (int i = 0; i < childVec.size(); i++)
 		{
 			value.add_children(childVec.at(i));
 		}
 	}
 
-	if (vec[4].compare("nodataname") != 0)
+	if (vec.at(4).compare("nodataname") != 0)
 	{
-		vector<string> dataNameVec = tokenize(vec[4], "??");
+		vector<string> dataNameVec = tokenize(vec.at(4), "??");
 		for (int i = 0; i < dataNameVec.size(); i++)
 		{
 			value.add_datanamelist(dataNameVec.at(i));
 		}
 	}
 
-	if (vec[5].compare("nodatasize") != 0)
+	if (vec.at(5).compare("nodatasize") != 0)
 	{
-		vector<string> dataSizeVec = tokenize(vec[5], "??");
+		vector<string> dataSizeVec = tokenize(vec.at(5), "??");
 		for (int i = 0; i < dataSizeVec.size(); i++)
 		{
 			value.add_datasize(str_to_num<long>(dataSizeVec.at(i)));
 		}
 	}
 
-	if (vec[6].compare("noalldatasize") != 0)
+	if (vec.at(6).compare("noalldatasize") != 0)
 	{
-		value.set_alldatasize(str_to_num<long>(vec[6]));
+		value.set_alldatasize(str_to_num<long>(vec.at(6)));
 	}
 
-	if (vec[7].compare("nohistory") != 0)
+	if (vec.at(7).compare("nohistory") != 0)
 	{
-		value.set_history(vec[7]);
+		value.set_history(vec.at(7));
 	}
 
-	if (vec[8].compare("nomove") != 0)
+	if (vec.at(8).compare("nomove") != 0)
 	{
-		value.set_nummove(str_to_num<int>(vec[8]));
+		value.set_nummove(str_to_num<int>(vec.at(8)));
 	}
 
-	if (vec[9].compare("nost") != 0)
+	if (vec.at(9).compare("nost") != 0)
 	{
-		value.set_submittime(str_to_num<double>(vec[9]));
+		value.set_submittime(str_to_num<double>(vec.at(9)));
 	}
 
-	if (vec[10].compare("noat") != 0)
+	if (vec.at(10).compare("noat") != 0)
 	{
-		value.set_arrivetime(str_to_num<double>(vec[10]));
+		value.set_arrivetime(str_to_num<double>(vec.at(10)));
 	}
 
-	if (vec[11].compare("noqt") != 0)
+	if (vec.at(11).compare("noqt") != 0)
 	{
-		value.set_rqueuedtime(str_to_num<double>(vec[11]));
+		value.set_rqueuedtime(str_to_num<double>(vec.at(11)));
 	}
 
-	if (vec[12].compare("noet") != 0)
+	if (vec.at(12).compare("noet") != 0)
 	{
-		value.set_exetime(str_to_num<double>(vec[12]));
+		value.set_exetime(str_to_num<double>(vec.at(12)));
 	}
 
-	if (vec[13].compare("noft") != 0)
+	if (vec.at(13).compare("noft") != 0)
 	{
-		value.set_fintime(str_to_num<double>(vec[13]));
+		value.set_fintime(str_to_num<double>(vec.at(13)));
 	}
 
-	if (vec[14].compare("nonumtaskfin") != 0)
+	if (vec.at(14).compare("nonumtaskfin") != 0)
 	{
-		value.set_numtaskfin(str_to_num<long>(vec[14]));
+		value.set_numtaskfin(str_to_num<long>(vec.at(14)));
 	}
 
-	if (vec[15].compare("nonumworksteal") != 0)
+	if (vec.at(15).compare("nonumworksteal") != 0)
 	{
-		value.set_numworksteal(str_to_num<long>(vec[15]));
+		value.set_numworksteal(str_to_num<long>(vec.at(15)));
 	}
 
-	if (vec[16].compare("nonumworkstealfail") != 0)
+	if (vec.at(16).compare("nonumworkstealfail") != 0)
 	{
-		value.set_numworkstealfail(str_to_num<long>(vec[16]));
+		value.set_numworkstealfail(str_to_num<long>(vec.at(16)));
 	}
 
-	if (vec[17].compare("nonumtaskwait") != 0)
+	if (vec.at(17).compare("nonumtaskwait") != 0)
 	{
-		value.set_numtaskwait(str_to_num<int>(vec[17]));
+		value.set_numtaskwait(str_to_num<int>(vec.at(17)));
 	}
 
-	if (vec[18].compare("nonumtaskready") != 0)
+	if (vec.at(18).compare("nonumtaskready") != 0)
 	{
-		value.set_numtaskready(str_to_num<int>(vec[18]));
+		value.set_numtaskready(str_to_num<int>(vec.at(18)));
 	}
 
-	if (vec[19].compare("nonumcoreavail") != 0)
+	if (vec.at(19).compare("nonumcoreavail") != 0)
 	{
-		value.set_numcoreavilable(str_to_num<int>(vec[19]));
+		value.set_numcoreavilable(str_to_num<int>(vec.at(19)));
 	}
 
-	if (vec[20].compare("nonumallcore") != 0)
+	if (vec.at(20).compare("nonumallcore") != 0)
 	{
-		value.set_numallcore(str_to_num<int>(vec[20]));
+		value.set_numallcore(str_to_num<int>(vec.at(20)));
 	}
 
 	return value;
@@ -857,6 +866,58 @@ bool Peer::init_zht_client(const string &zhtcfgFile, const string &neighFile)
 		{
 			return true;
 		}
+	}
+}
+
+void Peer::insert_wrap(const string &key, const string &val)
+{
+	if (key.empty())
+	{
+		cout << "There is empty key!" << endl;
+		return;
+	}
+	while (zc.insert(key, val) != 0)
+	{
+		usleep(1);
+	}
+}
+
+void Peer::insert_wrap(const char *key, const char *val)
+{
+	if (key == NULL)
+	{
+		cout << "There is empty key!" << endl;
+		return;
+	}
+	while (zc.insert(key, val) != 0)
+	{
+		usleep(1);
+	}
+}
+
+void Peer::lookup_wrap(const string &key, string &result)
+{
+	if (key.empty())
+	{
+		cout << "There is empty key!" << endl;
+		return;
+	}
+	while (zc.lookup(key, result) != 0 && result.empty())
+	{
+		usleep(1);
+	}
+}
+
+void Peer::lookup_wrap(const char *key, char *result)
+{
+	if (key == NULL)
+	{
+		cout << "There is empty key!" << endl;
+		return;
+	}
+	while (zc.lookup(key, result) != 0 && result == NULL)
+	{
+		usleep(1);
 	}
 }
 
