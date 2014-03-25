@@ -222,56 +222,46 @@ void MatrixScheduler::recv_task_from_client(
 	send_bf(sockfd, numTaskStr);
 
 	long sec = 0, nsec = 0;
-	timespec before, after, diff;
 	//cout << "Number of task received is:" << mm.count() << endl;
 	for (int i = 0; i < mm.count(); i++)
 	{
 		//cout << "The task is:" << mm.tasks(i) << endl;
-		cout << mm.tasks(i) << endl;
 		TaskMsg tm = str_to_taskmsg(mm.tasks(i));
+		//cout << "The id is:" << tm.taskid() << endl;
 		/* update the task metadata in ZHT */
-		string taskDetail, taskDetailAttempt, queryValue;
-		lookup_wrap(tm.taskid(), taskDetail);
-		clock_gettime(0, &after);
-		diff = time_diff(before, after);
-		sec+=diff.tv_sec;
-		nsec+=diff.tv_nsec;
-
-		if (taskDetail.empty())
-		{
-			cout << "I am receiving from client, that is insane:" << tm.taskid() << endl;
-		}
-		Value value = str_to_value(taskDetail);
-		value.set_arrivetime(get_time_usec());
-		value.set_nummove(value.nummove() + 1);
-		value.set_history(value.history() + "|" + get_id());
-		taskDetailAttempt = value_to_str(value);
-
-		increment += 2;
-
-		clock_gettime(0, &before);
-		while (zc.compare_swap(tm.taskid(), taskDetail, taskDetailAttempt, queryValue) != 0)
-		{
-			if (queryValue.empty())
-			{
-				lookup_wrap(tm.taskid(), taskDetail);
-				increment++;
-			}
-			else
-			{
-				taskDetail = queryValue;
-			}
-			value = str_to_value(taskDetail);
-			value.set_arrivetime(get_time_usec());
-			value.set_nummove(value.nummove() + 1);
-			value.set_history(value.history() + "|" + get_id());
-			taskDetailAttempt = value_to_str(value);
-			increment++;
-		}
-		clock_gettime(0, &after);
-		diff = time_diff(before, after);
-		sec+=diff.tv_sec;
-		nsec+=diff.tv_nsec;
+//		string taskDetail, taskDetailAttempt, queryValue;
+//		lookup_wrap(tm.taskid(), taskDetail);
+//
+//		if (taskDetail.empty())
+//		{
+//			cout << "I am receiving from client, that is insane:" << tm.taskid() << endl;
+//		}
+//		Value value = str_to_value(taskDetail);
+//		value.set_arrivetime(get_time_usec());
+//		value.set_nummove(value.nummove() + 1);
+//		value.set_history(value.history() + "|" + get_id());
+//		taskDetailAttempt = value_to_str(value);
+//
+//		increment += 2;
+//
+//		while (zc.compare_swap(tm.taskid(), taskDetail, taskDetailAttempt, queryValue) != 0)
+//		{
+//			if (queryValue.empty())
+//			{
+//				lookup_wrap(tm.taskid(), taskDetail);
+//				increment++;
+//			}
+//			else
+//			{
+//				taskDetail = queryValue;
+//			}
+//			value = str_to_value(taskDetail);
+//			value.set_arrivetime(get_time_usec());
+//			value.set_nummove(value.nummove() + 1);
+//			value.set_history(value.history() + "|" + get_id());
+//			taskDetailAttempt = value_to_str(value);
+//			increment++;
+//		}
 		//wqMutex.lock();
 		waitQueue.push_back(tm);
 
@@ -280,18 +270,12 @@ void MatrixScheduler::recv_task_from_client(
 	}
 
 	string numTaskRecvStr, numTaskRecvMoreStr, queryValue;
-	clock_gettime(0, &before);
 	lookup_wrap("num tasks recv", numTaskRecvStr);
-	clock_gettime(0, &after);
-	diff = time_diff(before, after);
-	sec+=diff.tv_sec;
-	nsec+=diff.tv_nsec;
 	long numTaskRecv = str_to_num<long>(numTaskRecvStr);
 	numTaskRecv += mm.count();
 	numTaskRecvMoreStr = num_to_str<long>(numTaskRecv);
 	increment += 2;
 	//cout << "number of task more recv is:" << numTaskRecv << endl;
-	clock_gettime(0, &before);
 	while (zc.compare_swap("num tasks recv", numTaskRecvStr, numTaskRecvMoreStr, queryValue) != 0)
 	{
 		if (queryValue.empty())
@@ -308,10 +292,6 @@ void MatrixScheduler::recv_task_from_client(
 		numTaskRecv += mm.count();
 		numTaskRecvMoreStr = num_to_str<long>(numTaskRecv);
 	}
-	clock_gettime(0, &after);
-	diff = time_diff(before, after);
-	sec+=diff.tv_sec;
-	nsec+=diff.tv_nsec;
 
 	if (increment > 0)
 	{
@@ -802,6 +782,7 @@ void *executing_task(void *args)
 				ms->wsqMutex.lock();
 				if (ms->wsQueue.size() > 0)
 				{
+					//cout << "The ready queue length is:" << ms->wsQueue.size() << endl;
 					tm = ms->wsQueue.top();
 					ms->wsQueue.pop();
 					ms->wsqMutex.unlock();
@@ -812,14 +793,16 @@ void *executing_task(void *args)
 					continue;
 				}
 			}
-
+			else
+			{
+				continue;
+			}
 			ms->numIdleCoreMutex.lock();
 			ms->numIdleCore--;
 			ms->numIdleCoreMutex.unlock();
 
-			//cout << "The task to execute is:" << tm.taskid();
+			//cout << "The task to execute is:" << tm.taskid() << endl;
 			ms->exec_a_task(tm);
-
 			ms->numIdleCoreMutex.lock();
 			ms->numIdleCore++;
 			ms->numIdleCoreMutex.unlock();
@@ -945,12 +928,14 @@ long MatrixScheduler::check_a_ready_task(TaskMsg &tm)
 		{
 			wsqMutex.lock();
 			wsQueue.push(tm);
+			//cout << "The task that is ready is:" << tm.taskid() << endl;
 			wsqMutex.unlock();
 		}
 		else if (flag == 1)
 		{
 			lqMutex.lock();
 			localQueue.push(tm);
+			//cout << "The task that is ready is:" << tm.taskid() << endl;
 			lqMutex.unlock();
 		}
 		return incre;
@@ -1006,6 +991,7 @@ void *checking_ready_task(void *args)
 				increment += 1;
 				ms->wqMutex.lock();
 				ms->waitQueue.push_back(tm);
+				//cout << "Ok, the task is still not ready!" << tm.taskid() << endl;
 				ms->wqMutex.unlock();
 			}
 		}
@@ -1023,7 +1009,8 @@ void *checking_ready_task(void *args)
 void MatrixScheduler::fork_crt_thread()
 {
 	pthread_t crtThread;
-
+	//cout << "The number of waiting task is:" << waitQueue.size() << endl;
+	//cout << "The first one is:" << waitQueue.front().taskid() << endl;
 	while (pthread_create(&crtThread, NULL, checking_ready_task, this))
 	{
 		sleep(1);
@@ -1176,7 +1163,7 @@ void *recording_stat(void *args)
 
 		if (ms->schedulerLogOS.is_open())
 		{
-			ms->schedulerLogOS <<fixed<< get_time_usec() << "\t" << ms->numTaskFin << "\t" <<
+			ms->schedulerLogOS << get_time_usec() << "\t" << ms->numTaskFin << "\t" <<
 					ms->waitQueue.size() << "\t" << ms->localQueue.size() + ms->wsQueue.size() <<
 					"\t" << ms->numIdleCore << "\t" << ms->config->numCorePerExecutor << "\t" <<
 					ms->numWS << "\t" << ms->numWSFail << endl;
@@ -1197,7 +1184,7 @@ void *recording_stat(void *args)
 		{
 			if (ms->schedulerLogOS.is_open())
 			{
-				ms->schedulerLogOS <<fixed<< get_time_usec() << "\t" << ms->numTaskFin << "\t" <<
+				ms->schedulerLogOS << get_time_usec() << "\t" << ms->numTaskFin << "\t" <<
 						ms->waitQueue.size() << "\t" << ms->localQueue.size() + ms->wsQueue.size()
 						<< "\t" << ms->numIdleCore << "\t" << ms->config->numCorePerExecutor <<
 						"\t" << ms->numWS << "\t" << ms->numWSFail << endl;

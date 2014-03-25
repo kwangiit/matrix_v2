@@ -448,10 +448,11 @@ void MatrixEpollServer::serve()
 
 					while (1)
 					{
-						char buf[_BUF_SIZE];
-						memset(buf, 0, sizeof(buf));
+						char *buf = (char*)calloc(_BUF_SIZE, sizeof(char));
+						memset(buf, '\0', _BUF_SIZE);
 
-						ssize_t count = recv(edata->fd(), buf, sizeof(buf), 0);
+						//ssize_t count = recv(edata->fd(), buf, sizeof(buf), 0);
+						ssize_t count = recv(edata->fd(), buf, _BUF_SIZE, 0);
 
 						if (count == -1)
 						{
@@ -479,6 +480,8 @@ void MatrixEpollServer::serve()
 							_eventQueue.push(eventData);
 							eqMutex.unlock();
 						}
+
+						free(buf);
 					}
 
 					if (done)

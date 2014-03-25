@@ -423,7 +423,8 @@ void *monitoring(void* args)
 	long numIdleCore = 0;
 	long numTaskWait = 0, numTaskReady = 0;
 	long preNumTaskDone = 0, numTaskDone = 0;
-	double prevTimeUs = 0.0, currentTimeUs = 0.0, instantThr = 0.0;
+	long prevTimeUs = 0L, currentTimeUs = 0L;
+	double instantThr = 0.0;
 
 	string numTaskFinStr;
 
@@ -470,7 +471,7 @@ void *monitoring(void* args)
 			instantThr = (double)(numTaskDone - preNumTaskDone) /
 						(currentTimeUs - prevTimeUs) * 1E6;
 
-			mc->systemLogOS <<fixed<<currentTimeUs << "\t" << numAllCore << "\t"
+			mc->systemLogOS << currentTimeUs << "\t" << numAllCore << "\t"
 					<< numIdleCore << "\t" << numTaskWait << "\t"
 					<< numTaskReady << "\t" << numTaskDone << "\t"
 					<< instantThr << endl;
@@ -534,7 +535,7 @@ void *monitoring(void* args)
 				mc->lookup_wrap(taskId, taskDetail);
 				Value value = str_to_value(taskDetail);
 
-				mc->taskLogOS <<fixed<< taskId << "\t" << value.nummove() << "\t" <<
+				mc->taskLogOS << taskId << "\t" << value.nummove() << "\t" <<
 						value.history() << "\t" << value.submittime() << "\t" <<
 						value.arrivetime() << "\t" << value.rqueuedtime() << "\t" <<
 						value.exetime() << "\t" << value.fintime() << endl;

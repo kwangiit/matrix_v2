@@ -348,15 +348,15 @@ void gen_dag_parents(adjList &dagAdjList, adjList &dagParentList)
 	}
 }
 
-double get_time_usec()
+long get_time_usec()
 {
-/*	struct timeval currentTime;
+	struct timeval currentTime;
 
 	gettimeofday(&currentTime, NULL);
-	return (double)currentTime.tv_sec * 1000000.0 + (double)currentTime.tv_usec;*/
-	timespec current;
-	clock_gettime(0, &current);
-	return current.tv_sec * 1000000000 + (uint64_t)current.tv_nsec;
+	long time = (currentTime.tv_sec) * 1000000L + currentTime.tv_usec;
+
+	cout << "the time is:" << time << endl;
+	return time;
 }
 
 double get_time_msec()
@@ -562,7 +562,7 @@ extern string value_to_str(const Value &value)
 
 	if (value.has_submittime())
 	{
-		str.append(num_to_str<double>(value.submittime()));
+		str.append(num_to_str<long>(value.submittime()));
 	}
 	else
 	{
@@ -572,7 +572,7 @@ extern string value_to_str(const Value &value)
 
 	if (value.has_arrivetime())
 	{
-		str.append(num_to_str<double>(value.arrivetime()));
+		str.append(num_to_str<long>(value.arrivetime()));
 	}
 	else
 	{
@@ -582,7 +582,7 @@ extern string value_to_str(const Value &value)
 
 	if (value.has_rqueuedtime())
 	{
-		str.append(num_to_str<double>(value.rqueuedtime()));
+		str.append(num_to_str<long>(value.rqueuedtime()));
 	}
 	else
 	{
@@ -592,7 +592,7 @@ extern string value_to_str(const Value &value)
 
 	if (value.has_exetime())
 	{
-		str.append(num_to_str<double>(value.exetime()));
+		str.append(num_to_str<long>(value.exetime()));
 	}
 	else
 	{
@@ -602,7 +602,7 @@ extern string value_to_str(const Value &value)
 
 	if (value.has_fintime())
 	{
-		str.append(num_to_str<double>(value.fintime()));
+		str.append(num_to_str<long>(value.fintime()));
 	}
 	else
 	{
@@ -753,27 +753,27 @@ extern Value str_to_value(const string &str)
 
 	if (vec.at(9).compare("nost") != 0)
 	{
-		value.set_submittime(str_to_num<double>(vec.at(9)));
+		value.set_submittime(str_to_num<long>(vec.at(9)));
 	}
 
 	if (vec.at(10).compare("noat") != 0)
 	{
-		value.set_arrivetime(str_to_num<double>(vec.at(10)));
+		value.set_arrivetime(str_to_num<long>(vec.at(10)));
 	}
 
 	if (vec.at(11).compare("noqt") != 0)
 	{
-		value.set_rqueuedtime(str_to_num<double>(vec.at(11)));
+		value.set_rqueuedtime(str_to_num<long>(vec.at(11)));
 	}
 
 	if (vec.at(12).compare("noet") != 0)
 	{
-		value.set_exetime(str_to_num<double>(vec.at(12)));
+		value.set_exetime(str_to_num<long>(vec.at(12)));
 	}
 
 	if (vec.at(13).compare("noft") != 0)
 	{
-		value.set_fintime(str_to_num<double>(vec.at(13)));
+		value.set_fintime(str_to_num<long>(vec.at(13)));
 	}
 
 	if (vec.at(14).compare("nonumtaskfin") != 0)

@@ -9,11 +9,11 @@ message Value
 	optional int64 allDataSize = 7;
 	optional string history = 8;
 	optional int32 numMove = 9;
-	optional double submitTime = 10;
-	optional double arriveTime = 11;
-	optional double rqueuedTime = 12;
-	optional double exeTime = 13;
-	optional double finTime = 14;
+	optional int64 submitTime = 10;
+	optional int64 arriveTime = 11;
+	optional int64 rqueuedTime = 12;
+	optional int64 exeTime = 13;
+	optional int64 finTime = 14;
 	optional int64 numTaskFin = 15;
 	optional int64 numWorkSteal = 16;
 	optional int64 numWorkStealFail = 17;
