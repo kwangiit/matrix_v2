@@ -389,14 +389,14 @@ void MatrixClient::submit_task_wc(vector<TaskMsg> tmVec, int toScheIdx)
 		//cout << "The message to send is:" << taskPkgStr << endl;
 		//timespec before, after;
 		//clock_gettime(0, &before);
-		//if (sockfd == -1)
+		if (sockfd == -1)
 		{
 			sockfd = send_first(schedulerVec.at(toScheIdx), config->schedulerPortNo, taskPkgStr);
 		}
-		//else
-		//{
-			//send_bf(sockfd, taskPkgStr);
-		//}
+		else
+		{
+			send_bf(sockfd, taskPkgStr);
+		}
 		//clock_gettime(0, &after);
 		//timespec diff = time_diff(before, after);
 		//cout << "it takes " << diff.tv_sec << "s, and " << diff.tv_nsec << " ns for one send!" << endl;
