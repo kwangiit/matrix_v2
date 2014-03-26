@@ -355,7 +355,7 @@ long get_time_usec()
 	gettimeofday(&currentTime, NULL);
 	long time = (currentTime.tv_sec) * 1000000L + currentTime.tv_usec;
 
-	cout << "the time is:" << time << endl;
+	//cout << "the time is:" << time << endl;
 	return time;
 }
 
