@@ -7,18 +7,12 @@ message Value
 	repeated string dataNameList = 5;
 	repeated int64 dataSize = 6;
 	optional int64 allDataSize = 7;
-	optional string history = 8;
-	optional int32 numMove = 9;
-	optional int64 submitTime = 10;
-	optional int64 arriveTime = 11;
-	optional int64 rqueuedTime = 12;
-	optional int64 exeTime = 13;
-	optional int64 finTime = 14;
-	optional int64 numTaskFin = 15;
-	optional int64 numWorkSteal = 16;
-	optional int64 numWorkStealFail = 17;
-	optional int32 numTaskWait = 18;
-	optional int32 numTaskReady = 19;
-	optional int32 numCoreAvilable = 20;
-	optional int32 numAllCore = 21;
+	
+	optional int64 numTaskFin = 8;
+	optional int64 numWorkSteal = 9;
+	optional int64 numWorkStealFail = 10;
+	optional int32 numTaskWait = 11;
+	optional int32 numTaskReady = 12;
+	optional int32 numCoreAvilable = 13;
+	optional int32 numAllCore = 14;
 }

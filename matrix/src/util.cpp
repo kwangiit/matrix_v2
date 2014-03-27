@@ -540,7 +540,7 @@ extern string value_to_str(const Value &value)
 	}
 	str.append("~~");
 
-	if (value.has_history())
+	/*if (value.has_history())
 	{
 		str.append(value.history());
 	}
@@ -608,7 +608,7 @@ extern string value_to_str(const Value &value)
 	{
 		str.append("noft");
 	}
-	str.append("~~");
+	str.append("~~");*/
 
 	if (value.has_numtaskfin())
 	{
@@ -687,13 +687,14 @@ extern Value str_to_value(const string &str)
 {
 	Value value;
 	vector<string> vec = tokenize(str, "~~");
-	if (vec.size() != 21)
+
+	if (vec.size() != 14)
 	{
 		cout << "have some problem, the value to be converted is:" << str << endl;
 		exit(1);
 	}
 
-	value.set_id(vec[0]);
+	value.set_id(vec.at(0));
 
 	if (vec.at(1).compare("noindegree") != 0)
 	{
@@ -741,7 +742,7 @@ extern Value str_to_value(const string &str)
 		value.set_alldatasize(str_to_num<long>(vec.at(6)));
 	}
 
-	if (vec.at(7).compare("nohistory") != 0)
+	/*if (vec.at(7).compare("nohistory") != 0)
 	{
 		value.set_history(vec.at(7));
 	}
@@ -774,41 +775,41 @@ extern Value str_to_value(const string &str)
 	if (vec.at(13).compare("noft") != 0)
 	{
 		value.set_fintime(str_to_num<long>(vec.at(13)));
+	}*/
+
+	if (vec.at(7).compare("nonumtaskfin") != 0)
+	{
+		value.set_numtaskfin(str_to_num<long>(vec.at(7)));
 	}
 
-	if (vec.at(14).compare("nonumtaskfin") != 0)
+	if (vec.at(8).compare("nonumworksteal") != 0)
 	{
-		value.set_numtaskfin(str_to_num<long>(vec.at(14)));
+		value.set_numworksteal(str_to_num<long>(vec.at(8)));
 	}
 
-	if (vec.at(15).compare("nonumworksteal") != 0)
+	if (vec.at(9).compare("nonumworkstealfail") != 0)
 	{
-		value.set_numworksteal(str_to_num<long>(vec.at(15)));
+		value.set_numworkstealfail(str_to_num<long>(vec.at(9)));
 	}
 
-	if (vec.at(16).compare("nonumworkstealfail") != 0)
+	if (vec.at(10).compare("nonumtaskwait") != 0)
 	{
-		value.set_numworkstealfail(str_to_num<long>(vec.at(16)));
+		value.set_numtaskwait(str_to_num<int>(vec.at(10)));
 	}
 
-	if (vec.at(17).compare("nonumtaskwait") != 0)
+	if (vec.at(11).compare("nonumtaskready") != 0)
 	{
-		value.set_numtaskwait(str_to_num<int>(vec.at(17)));
+		value.set_numtaskready(str_to_num<int>(vec.at(11)));
 	}
 
-	if (vec.at(18).compare("nonumtaskready") != 0)
+	if (vec.at(12).compare("nonumcoreavail") != 0)
 	{
-		value.set_numtaskready(str_to_num<int>(vec.at(18)));
+		value.set_numcoreavilable(str_to_num<int>(vec.at(12)));
 	}
 
-	if (vec.at(19).compare("nonumcoreavail") != 0)
+	if (vec.at(13).compare("nonumallcore") != 0)
 	{
-		value.set_numcoreavilable(str_to_num<int>(vec.at(19)));
-	}
-
-	if (vec.at(20).compare("nonumallcore") != 0)
-	{
-		value.set_numallcore(str_to_num<int>(vec.at(20)));
+		value.set_numallcore(str_to_num<int>(vec.at(13)));
 	}
 
 	return value;
@@ -899,7 +900,6 @@ void Peer::lookup_wrap(const string &key, string &result)
 {
 	if (key.empty())
 	{
-		cout << "There is empty key!" << endl;
 		return;
 	}
 	while (zc.lookup(key, result) != 0 && result.empty())

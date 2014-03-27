@@ -39,6 +39,7 @@ class Configuration
 		string hostIdType;	// the host identity type: localhost, hostname, ip address
 		string submitMode;	// the mode that clients submit tasks: best case, worst case
 		string workloadFile;	// the workload file
+		string schedulerWorkloadPath;	// the workload root directory for all the schedulers
 		int clientLog;	// indicate whether to logging (1) for client or not (0)
 		int taskLog;	// indicate whether to logging (1) for each individual task or not (0)
 		int systemLog;	// indicate whether to logging (1) for the system status or not (0)

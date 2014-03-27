@@ -27,11 +27,11 @@ MatrixClient::MatrixClient(const string &configFile) : Peer(configFile)
 		string clientLogFile("./client_" + suffix);
 		clientLogOS.open(clientLogFile.c_str());
 	}
-	if (config->taskLog == 1 && get_index() == 0)
+	/*if (config->taskLog == 1 && get_index() == 0)
 	{
 		string taskLogFile("./task_" + suffix);
 		taskLogOS.open(taskLogFile.c_str());
-	}
+	}*/
 	if (config->systemLog == 1 && get_index() == 0)
 	{
 		string systemLogFile("./system_" + suffix);
@@ -104,13 +104,13 @@ void MatrixClient::insert_taskinfo_to_zht(
 			value.add_children(sChild);
 		}
 
-		value.set_nummove(0);
+		/*value.set_nummove(0);
 		value.set_history("|" + get_id());
 		value.set_submittime(0.0);
 		value.set_arrivetime(0.0);
 		value.set_rqueuedtime(0.0);
 		value.set_exetime(0.0);
-		value.set_fintime(0.0);
+		value.set_fintime(0.0);*/
 
 		string seriValue;
 		seriValue = value_to_str(value);
@@ -138,88 +138,6 @@ void MatrixClient::insert_taskinfo_to_zht(
 	}
 }
 
-//void MatrixClient::insert_taskinfo_to_zht(
-//		adjList &dagAdjList, adjList &dagParentList)
-//{
-//#ifdef PRINT_OUT
-//	cout << "------------------------------"
-//			"------------------------------" << endl;
-//	cout << "Now, I am going to insert task information to ZHT" << endl;
-//#endif
-//
-//	if (clientLogOS.is_open())
-//	{
-//		clientLogOS << "-------------------------------"
-//				"-----------------------------" << endl;
-//		clientLogOS << "Now, I am going to insert "
-//				"task information to ZHT" << endl;
-//	}
-//
-//	clock_gettime(0, &start);
-//
-//	for (adjList::iterator it = dagAdjList.begin();
-//						it != dagAdjList.end(); ++it)
-//	{
-//		stringstream ss;
-//		ss << get_index() << it->first;
-//		string taskId(ss.str());
-//
-//		vector<long> existList = it->second;
-//		vector<long> parents = dagParentList[it->first];
-//
-//		Value value;
-//		value.set_id(taskId);
-//
-//		for (long i = 0; i < parents.size(); i++)
-//		{
-//			value.add_parents()
-//		}
-//
-//		value.set_indegree(parents.size());
-//
-//		for (long i = 0; i < existList.size(); i++)
-//		{
-//			stringstream ssChild;
-//			ssChild << get_index() << existList.at(i);
-//			string sChild(ssChild.str());
-//
-//			value.add_children(sChild);
-//		}
-//
-//		value.set_nummove(0);
-//		value.set_history("");
-//		value.set_submittime(0.0);
-//		value.set_arrivetime(0.0);
-//		value.set_rqueuedtime(0.0);
-//		value.set_exetime(0.0);
-//		value.set_fintime(0.0);
-//
-//		string seriValue = value_to_str(value);
-//
-//		insert_wrap(taskId, seriValue);
-//	}
-//
-//	incre_ZHT_msg_count(config->numTaskPerClient);
-//
-//	clock_gettime(0, &end);
-//	timespec diff = time_diff(start, end);
-//
-//#ifdef PRINT_OUT
-//	cout << "I am done, the time taken is:" << diff.tv_sec
-//			<< " s, and " << diff.tv_nsec + " ns" << endl;
-//	cout << "--------------------------------"
-//			"----------------------------" << endl;
-//#endif
-//
-//	if (clientLogOS.is_open())
-//	{
-//		clientLogOS << "I am done, the time taken is:" << diff.tv_sec
-//					<< " s, and " << diff.tv_nsec + " ns" << endl;
-//		clientLogOS << "--------------------------------"
-//				"----------------------------" << endl;
-//	}
-//}
-
 /* initialize all the tasks by assigning
  * taskId for each individual task
  * */
@@ -230,22 +148,22 @@ void MatrixClient::init_task()
 		stringstream ss;
 		ss << get_index() << i;
 		string taskId(ss.str());
-
-		vector<string> taskItemStr = tokenize(taskId + " " + taskVec.at(i), " ");
-		TaskMsg tm;
-		tm.set_taskid(taskItemStr.at(0));
-		tm.set_user(taskItemStr.at(1));
-		tm.set_dir(taskItemStr.at(2));
-		tm.set_cmd(taskItemStr.at(3));
-		tm.set_datalength(0);
-		tasks.push_back(tm);
+		taskVec.at(i) = taskId + " " + taskVec.at(i);
 	}
+//		vector<string> taskItemStr = tokenize(taskId + " " + taskVec.at(i), " ");
+//		TaskMsg tm;
+//		tm.set_taskid(taskItemStr.at(0));
+//		tm.set_user(taskItemStr.at(1));
+//		tm.set_dir(taskItemStr.at(2));
+//		tm.set_cmd(taskItemStr.at(3));
+//		tm.set_datalength(0);
+//		tasks.push_back(tm);
 }
 
 /* submit tasks to the schedulers, either with
  * the best case scenario or worst case scenario
  * */
-void MatrixClient::submit_task()
+void MatrixClient::split_task()
 {
 	/* current time to be set as the submission
 	 * time of all the tasks. This might be not
@@ -253,7 +171,7 @@ void MatrixClient::submit_task()
 	 * */
 	long increment = 0;
 
-	for (long i = 0; i < config->numTaskPerClient; i++)
+	/* for (long i = 0; i < config->numTaskPerClient; i++)
 	{
 		string taskId = tasks.at(i).taskid();
 		string taskDetail;
@@ -268,27 +186,27 @@ void MatrixClient::submit_task()
 		increment += 2;
 	}
 
-	incre_ZHT_msg_count(increment);
+	incre_ZHT_msg_count(increment); */
 
 #ifdef PRINT_OUT
 	cout << "--------------------------------"
 			"----------------------------" << endl;
-	cout << "Now, I am going to submit tasks to the schedulers" << endl;
+	cout << "Now, I am going to split tasks for the schedulers" << endl;
 #endif
 
 	if (clientLogOS.is_open())
 	{
 		clientLogOS << "--------------------------------"
 				"----------------------------" << endl;
-		clientLogOS << "Now, I am going to submit "
-				"tasks to the schedulers" << endl;
+		clientLogOS << "Now, I am going to split "
+				"tasks for the schedulers" << endl;
 	}
 
 	clock_gettime(0, &start);
 	/* if the submission mode is best case */
 	if (config->submitMode.compare("bestcase") == 0)
 	{
-		submit_task_bc();
+		split_task_bc();
 	}
 	else if (config->submitMode.compare("worstcase") == 0)
 	{
@@ -296,7 +214,7 @@ void MatrixClient::submit_task()
 		 * selecting a scheduler to submit all the tasks
 		 * */
 		int toScheIdx = rand() % schedulerVec.size();
-		submit_task_wc(tasks, toScheIdx);
+		split_task_wc(taskVec, toScheIdx);
 	}
 
 	clock_gettime(0, &end);
@@ -317,6 +235,8 @@ void MatrixClient::submit_task()
 				"----------------------------" << endl;
 	}
 
+	lookup_wrap("Split Workload", "done");
+
 	wait_all_task_recv();
 
 	clock_gettime(0, &start);
@@ -326,20 +246,20 @@ void MatrixClient::submit_task()
  * all the tasks are splited evenly to all the
  * schedulers in a interleaved way
  * */
-void MatrixClient::submit_task_bc()
+void MatrixClient::split_task_bc()
 {
 	int toScheIdx = -1, numSche = schedulerVec.size();
 
-	vector< vector<TaskMsg> > tasksVec;
+	vector< vector<string> > tasksVec;
 	for (int i = 0; i < numSche; i++)
 	{
-		tasksVec.push_back(vector<TaskMsg>());
+		tasksVec.push_back(vector<string>());
 	}
 
 	for (int i = 0; i < config->numTaskPerClient; i++)
 	{
 		toScheIdx = i % numSche;	// task index modular number of scheduler
-		tasksVec[toScheIdx].push_back(tasks.at(i));
+		tasksVec[toScheIdx].push_back(taskVec.at(i));
 	}
 
 	/* as long as all the tasks are distributed evenly,
@@ -348,7 +268,7 @@ void MatrixClient::submit_task_bc()
 	 * */
 	for (int i = 0; i < numSche; i++)
 	{
-		submit_task_wc(tasksVec[i], i);
+		split_task_wc(tasksVec[i], i);
 	}
 }
 
@@ -356,59 +276,76 @@ void MatrixClient::submit_task_bc()
  * all the tasks (listed in "taskVec") are submitted to
  * one scheduler (index is "toScheIdx")
  * */
-void MatrixClient::submit_task_wc(vector<TaskMsg> tmVec, int toScheIdx)
+
+void MatrixClient::split_task_wc(vector<string> taskStrVec, int toScheIdx)
 {
-	long numTaskLeft = tmVec.size();
-	long numTaskBeenSent = 0;
-	long numTaskSendPerPkg = config->maxTaskPerPkg;
+	string path = config->schedulerWorkloadPath +
+			"/workload." + num_to_str<int>(toScheIdx);
 
-	int sockfd = -1;
+	ofstream workloadFS;
+	workloadFS.open(path.c_str());
 
-	while (numTaskLeft > 0)
+	for (int i = 0; i < taskStrVec.size(); i++)
 	{
-		if (numTaskLeft < config->maxTaskPerPkg)
-		{
-			numTaskSendPerPkg = numTaskLeft;
-		}
-
-		numTaskBeenSent = tmVec.size() - numTaskLeft;
-
-		MatrixMsg mm;
-		mm.set_msgtype("client send task");
-		mm.set_count(numTaskSendPerPkg);
-
-		long pos = 0;
-		for (long i = 0; i < numTaskSendPerPkg; i++)
-		{
-			pos = i + numTaskBeenSent;
-			mm.add_tasks(taskmsg_to_str(tmVec.at(pos)));
-		}
-
-		string taskPkgStr = mm.SerializeAsString();
-		//cout<< "The length is:" << taskPkgStr.length() << endl;
-		//cout << "The message to send is:" << taskPkgStr << endl;
-		//timespec before, after;
-		//clock_gettime(0, &before);
-		if (sockfd == -1)
-		{
-			sockfd = send_first(schedulerVec.at(toScheIdx), config->schedulerPortNo, taskPkgStr);
-		}
-		else
-		{
-			send_bf(sockfd, taskPkgStr);
-		}
-		//clock_gettime(0, &after);
-		//timespec diff = time_diff(before, after);
-		//cout << "it takes " << diff.tv_sec << "s, and " << diff.tv_nsec << " ns for one send!" << endl;
-		//int sockfd = send_first(schedulerVec.at(toScheIdx), config->schedulerPortNo, taskPkgStr);
-		string recvBuf;
-		recv_bf(sockfd, recvBuf);
-		//clock_gettime(0, &after);
-		//diff = time_diff(before, after);
-		//cout << "it takes " << diff.tv_sec << "s, and " << diff.tv_nsec << " ns for one send and recv!" << endl;
-		numTaskLeft -= numTaskSendPerPkg;
+		workloadFS << taskStrVec.at(i) << endl;
 	}
+
+	workloadFS.flush(); workloadFS.close();
 }
+
+//void MatrixClient::split_task_wc(vector<string> tmVec, int toScheIdx)
+//{
+//	long numTaskLeft = tmVec.size();
+//	long numTaskBeenSent = 0;
+//	long numTaskSendPerPkg = config->maxTaskPerPkg;
+//
+//	int sockfd = -1;
+//
+//	while (numTaskLeft > 0)
+//	{
+//		if (numTaskLeft < config->maxTaskPerPkg)
+//		{
+//			numTaskSendPerPkg = numTaskLeft;
+//		}
+//
+//		numTaskBeenSent = tmVec.size() - numTaskLeft;
+//
+//		MatrixMsg mm;
+//		mm.set_msgtype("client send task");
+//		mm.set_count(numTaskSendPerPkg);
+//
+//		long pos = 0;
+//		for (long i = 0; i < numTaskSendPerPkg; i++)
+//		{
+//			pos = i + numTaskBeenSent;
+//			mm.add_tasks(taskmsg_to_str(tmVec.at(pos)));
+//		}
+//
+//		string taskPkgStr = mm.SerializeAsString();
+//		//cout<< "The length is:" << taskPkgStr.length() << endl;
+//		//cout << "The message to send is:" << taskPkgStr << endl;
+//		//timespec before, after;
+//		//clock_gettime(0, &before);
+//		if (sockfd == -1)
+//		{
+//			sockfd = send_first(schedulerVec.at(toScheIdx), config->schedulerPortNo, taskPkgStr);
+//		}
+//		else
+//		{
+//			send_bf(sockfd, taskPkgStr);
+//		}
+//		//clock_gettime(0, &after);
+//		//timespec diff = time_diff(before, after);
+//		//cout << "it takes " << diff.tv_sec << "s, and " << diff.tv_nsec << " ns for one send!" << endl;
+//		//int sockfd = send_first(schedulerVec.at(toScheIdx), config->schedulerPortNo, taskPkgStr);
+//		string recvBuf;
+//		recv_bf(sockfd, recvBuf);
+//		//clock_gettime(0, &after);
+//		//diff = time_diff(before, after);
+//		//cout << "it takes " << diff.tv_sec << "s, and " << diff.tv_nsec << " ns for one send and recv!" << endl;
+//		numTaskLeft -= numTaskSendPerPkg;
+//	}
+//}
 
 /* monitoring thread function, monitoring is conducted only by client 0.
  * It can monitor the execution progress of all the tasks, the system
@@ -517,7 +454,7 @@ void *monitoring(void* args)
 	}
 
 	/* now start to long the execution details of each individual task */
-	if (mc->taskLogOS.is_open())
+	/*if (mc->taskLogOS.is_open())
 	{
 		cout << "Now, log the task info!" << endl;
 		mc->taskLogOS << "TaskId\tNumMove\tHistory\tSubmitTime\tArriveTime\t"
@@ -545,7 +482,7 @@ void *monitoring(void* args)
 		increment += mc->config->numAllTask;
 
 		mc->taskLogOS.flush(); mc->taskLogOS.close();
-	}
+	}*/
 
 	mc->incre_ZHT_msg_count(increment);
 

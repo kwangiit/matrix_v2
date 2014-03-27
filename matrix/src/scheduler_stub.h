@@ -31,6 +31,7 @@ class MatrixScheduler: public Peer
 
 		void regist();	// regist to ZHT server
 
+		void get_task_from_file();
 		/* receive tasks from another scheduler as a
 		 * consequence of successful work stealing
 		 * */
@@ -111,6 +112,7 @@ class MatrixScheduler: public Peer
 		Mutex lqMutex;
 		Mutex wsqMutex;
 		Mutex ldMutex;
+		Mutex tteMutex;
 
 		priority_queue<TaskMsg, vector<TaskMsg>, HighPriorityByDataSize> localQueue;
 
@@ -122,7 +124,11 @@ class MatrixScheduler: public Peer
 
 		map<string, string> localData;
 		bool cache;
+
 		ofstream schedulerLogOS;	// scheduler log output stream
+
+		ofstream taskLogOS;
+		vector<string> taskTimeEntry;
 };
 
 #endif /* SCHEDULER_STUB_H_ */

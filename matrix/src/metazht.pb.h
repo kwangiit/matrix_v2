@@ -173,105 +173,52 @@ class Value : public ::google::protobuf::Message {
   inline ::google::protobuf::int64 alldatasize() const;
   inline void set_alldatasize(::google::protobuf::int64 value);
   
-  // optional string history = 8;
-  inline bool has_history() const;
-  inline void clear_history();
-  static const int kHistoryFieldNumber = 8;
-  inline const ::std::string& history() const;
-  inline void set_history(const ::std::string& value);
-  inline void set_history(const char* value);
-  inline void set_history(const char* value, size_t size);
-  inline ::std::string* mutable_history();
-  inline ::std::string* release_history();
-  
-  // optional int32 numMove = 9;
-  inline bool has_nummove() const;
-  inline void clear_nummove();
-  static const int kNumMoveFieldNumber = 9;
-  inline ::google::protobuf::int32 nummove() const;
-  inline void set_nummove(::google::protobuf::int32 value);
-  
-  // optional int64 submitTime = 10;
-  inline bool has_submittime() const;
-  inline void clear_submittime();
-  static const int kSubmitTimeFieldNumber = 10;
-  inline ::google::protobuf::int64 submittime() const;
-  inline void set_submittime(::google::protobuf::int64 value);
-  
-  // optional int64 arriveTime = 11;
-  inline bool has_arrivetime() const;
-  inline void clear_arrivetime();
-  static const int kArriveTimeFieldNumber = 11;
-  inline ::google::protobuf::int64 arrivetime() const;
-  inline void set_arrivetime(::google::protobuf::int64 value);
-  
-  // optional int64 rqueuedTime = 12;
-  inline bool has_rqueuedtime() const;
-  inline void clear_rqueuedtime();
-  static const int kRqueuedTimeFieldNumber = 12;
-  inline ::google::protobuf::int64 rqueuedtime() const;
-  inline void set_rqueuedtime(::google::protobuf::int64 value);
-  
-  // optional int64 exeTime = 13;
-  inline bool has_exetime() const;
-  inline void clear_exetime();
-  static const int kExeTimeFieldNumber = 13;
-  inline ::google::protobuf::int64 exetime() const;
-  inline void set_exetime(::google::protobuf::int64 value);
-  
-  // optional int64 finTime = 14;
-  inline bool has_fintime() const;
-  inline void clear_fintime();
-  static const int kFinTimeFieldNumber = 14;
-  inline ::google::protobuf::int64 fintime() const;
-  inline void set_fintime(::google::protobuf::int64 value);
-  
-  // optional int64 numTaskFin = 15;
+  // optional int64 numTaskFin = 8;
   inline bool has_numtaskfin() const;
   inline void clear_numtaskfin();
-  static const int kNumTaskFinFieldNumber = 15;
+  static const int kNumTaskFinFieldNumber = 8;
   inline ::google::protobuf::int64 numtaskfin() const;
   inline void set_numtaskfin(::google::protobuf::int64 value);
   
-  // optional int64 numWorkSteal = 16;
+  // optional int64 numWorkSteal = 9;
   inline bool has_numworksteal() const;
   inline void clear_numworksteal();
-  static const int kNumWorkStealFieldNumber = 16;
+  static const int kNumWorkStealFieldNumber = 9;
   inline ::google::protobuf::int64 numworksteal() const;
   inline void set_numworksteal(::google::protobuf::int64 value);
   
-  // optional int64 numWorkStealFail = 17;
+  // optional int64 numWorkStealFail = 10;
   inline bool has_numworkstealfail() const;
   inline void clear_numworkstealfail();
-  static const int kNumWorkStealFailFieldNumber = 17;
+  static const int kNumWorkStealFailFieldNumber = 10;
   inline ::google::protobuf::int64 numworkstealfail() const;
   inline void set_numworkstealfail(::google::protobuf::int64 value);
   
-  // optional int32 numTaskWait = 18;
+  // optional int32 numTaskWait = 11;
   inline bool has_numtaskwait() const;
   inline void clear_numtaskwait();
-  static const int kNumTaskWaitFieldNumber = 18;
+  static const int kNumTaskWaitFieldNumber = 11;
   inline ::google::protobuf::int32 numtaskwait() const;
   inline void set_numtaskwait(::google::protobuf::int32 value);
   
-  // optional int32 numTaskReady = 19;
+  // optional int32 numTaskReady = 12;
   inline bool has_numtaskready() const;
   inline void clear_numtaskready();
-  static const int kNumTaskReadyFieldNumber = 19;
+  static const int kNumTaskReadyFieldNumber = 12;
   inline ::google::protobuf::int32 numtaskready() const;
   inline void set_numtaskready(::google::protobuf::int32 value);
   
-  // optional int32 numCoreAvilable = 20;
+  // optional int32 numCoreAvilable = 13;
   inline bool has_numcoreavilable() const;
   inline void clear_numcoreavilable();
-  static const int kNumCoreAvilableFieldNumber = 20;
+  static const int kNumCoreAvilableFieldNumber = 13;
   inline ::google::protobuf::int32 numcoreavilable() const;
   inline void set_numcoreavilable(::google::protobuf::int32 value);
   
-  // optional int32 numAllCore = 21;
+  // optional int32 numAllCore = 14;
   inline bool has_numallcore() const;
   inline void clear_numallcore();
-  static const int kNumAllCoreFieldNumber = 21;
+  static const int kNumAllCoreFieldNumber = 14;
   inline ::google::protobuf::int32 numallcore() const;
   inline void set_numallcore(::google::protobuf::int32 value);
   
@@ -283,20 +230,6 @@ class Value : public ::google::protobuf::Message {
   inline void clear_has_indegree();
   inline void set_has_alldatasize();
   inline void clear_has_alldatasize();
-  inline void set_has_history();
-  inline void clear_has_history();
-  inline void set_has_nummove();
-  inline void clear_has_nummove();
-  inline void set_has_submittime();
-  inline void clear_has_submittime();
-  inline void set_has_arrivetime();
-  inline void clear_has_arrivetime();
-  inline void set_has_rqueuedtime();
-  inline void clear_has_rqueuedtime();
-  inline void set_has_exetime();
-  inline void clear_has_exetime();
-  inline void set_has_fintime();
-  inline void clear_has_fintime();
   inline void set_has_numtaskfin();
   inline void clear_has_numtaskfin();
   inline void set_has_numworksteal();
@@ -321,23 +254,16 @@ class Value : public ::google::protobuf::Message {
   ::google::protobuf::RepeatedPtrField< ::std::string> datanamelist_;
   ::google::protobuf::RepeatedField< ::google::protobuf::int64 > datasize_;
   ::google::protobuf::int64 alldatasize_;
-  ::std::string* history_;
-  ::google::protobuf::int64 submittime_;
-  ::google::protobuf::int64 arrivetime_;
-  ::google::protobuf::int64 rqueuedtime_;
-  ::google::protobuf::int64 exetime_;
-  ::google::protobuf::int32 nummove_;
-  ::google::protobuf::int32 numtaskwait_;
-  ::google::protobuf::int64 fintime_;
   ::google::protobuf::int64 numtaskfin_;
   ::google::protobuf::int64 numworksteal_;
   ::google::protobuf::int64 numworkstealfail_;
+  ::google::protobuf::int32 numtaskwait_;
   ::google::protobuf::int32 numtaskready_;
   ::google::protobuf::int32 numcoreavilable_;
   ::google::protobuf::int32 numallcore_;
   
   mutable int _cached_size_;
-  ::google::protobuf::uint32 _has_bits_[(21 + 31) / 32];
+  ::google::protobuf::uint32 _has_bits_[(14 + 31) / 32];
   
   friend void  protobuf_AddDesc_metazht_2eproto();
   friend void protobuf_AssignDesc_metazht_2eproto();
@@ -612,205 +538,15 @@ inline void Value::set_alldatasize(::google::protobuf::int64 value) {
   alldatasize_ = value;
 }
 
-// optional string history = 8;
-inline bool Value::has_history() const {
+// optional int64 numTaskFin = 8;
+inline bool Value::has_numtaskfin() const {
   return (_has_bits_[0] & 0x00000080u) != 0;
 }
-inline void Value::set_has_history() {
+inline void Value::set_has_numtaskfin() {
   _has_bits_[0] |= 0x00000080u;
 }
-inline void Value::clear_has_history() {
-  _has_bits_[0] &= ~0x00000080u;
-}
-inline void Value::clear_history() {
-  if (history_ != &::google::protobuf::internal::kEmptyString) {
-    history_->clear();
-  }
-  clear_has_history();
-}
-inline const ::std::string& Value::history() const {
-  return *history_;
-}
-inline void Value::set_history(const ::std::string& value) {
-  set_has_history();
-  if (history_ == &::google::protobuf::internal::kEmptyString) {
-    history_ = new ::std::string;
-  }
-  history_->assign(value);
-}
-inline void Value::set_history(const char* value) {
-  set_has_history();
-  if (history_ == &::google::protobuf::internal::kEmptyString) {
-    history_ = new ::std::string;
-  }
-  history_->assign(value);
-}
-inline void Value::set_history(const char* value, size_t size) {
-  set_has_history();
-  if (history_ == &::google::protobuf::internal::kEmptyString) {
-    history_ = new ::std::string;
-  }
-  history_->assign(reinterpret_cast<const char*>(value), size);
-}
-inline ::std::string* Value::mutable_history() {
-  set_has_history();
-  if (history_ == &::google::protobuf::internal::kEmptyString) {
-    history_ = new ::std::string;
-  }
-  return history_;
-}
-inline ::std::string* Value::release_history() {
-  clear_has_history();
-  if (history_ == &::google::protobuf::internal::kEmptyString) {
-    return NULL;
-  } else {
-    ::std::string* temp = history_;
-    history_ = const_cast< ::std::string*>(&::google::protobuf::internal::kEmptyString);
-    return temp;
-  }
-}
-
-// optional int32 numMove = 9;
-inline bool Value::has_nummove() const {
-  return (_has_bits_[0] & 0x00000100u) != 0;
-}
-inline void Value::set_has_nummove() {
-  _has_bits_[0] |= 0x00000100u;
-}
-inline void Value::clear_has_nummove() {
-  _has_bits_[0] &= ~0x00000100u;
-}
-inline void Value::clear_nummove() {
-  nummove_ = 0;
-  clear_has_nummove();
-}
-inline ::google::protobuf::int32 Value::nummove() const {
-  return nummove_;
-}
-inline void Value::set_nummove(::google::protobuf::int32 value) {
-  set_has_nummove();
-  nummove_ = value;
-}
-
-// optional int64 submitTime = 10;
-inline bool Value::has_submittime() const {
-  return (_has_bits_[0] & 0x00000200u) != 0;
-}
-inline void Value::set_has_submittime() {
-  _has_bits_[0] |= 0x00000200u;
-}
-inline void Value::clear_has_submittime() {
-  _has_bits_[0] &= ~0x00000200u;
-}
-inline void Value::clear_submittime() {
-  submittime_ = GOOGLE_LONGLONG(0);
-  clear_has_submittime();
-}
-inline ::google::protobuf::int64 Value::submittime() const {
-  return submittime_;
-}
-inline void Value::set_submittime(::google::protobuf::int64 value) {
-  set_has_submittime();
-  submittime_ = value;
-}
-
-// optional int64 arriveTime = 11;
-inline bool Value::has_arrivetime() const {
-  return (_has_bits_[0] & 0x00000400u) != 0;
-}
-inline void Value::set_has_arrivetime() {
-  _has_bits_[0] |= 0x00000400u;
-}
-inline void Value::clear_has_arrivetime() {
-  _has_bits_[0] &= ~0x00000400u;
-}
-inline void Value::clear_arrivetime() {
-  arrivetime_ = GOOGLE_LONGLONG(0);
-  clear_has_arrivetime();
-}
-inline ::google::protobuf::int64 Value::arrivetime() const {
-  return arrivetime_;
-}
-inline void Value::set_arrivetime(::google::protobuf::int64 value) {
-  set_has_arrivetime();
-  arrivetime_ = value;
-}
-
-// optional int64 rqueuedTime = 12;
-inline bool Value::has_rqueuedtime() const {
-  return (_has_bits_[0] & 0x00000800u) != 0;
-}
-inline void Value::set_has_rqueuedtime() {
-  _has_bits_[0] |= 0x00000800u;
-}
-inline void Value::clear_has_rqueuedtime() {
-  _has_bits_[0] &= ~0x00000800u;
-}
-inline void Value::clear_rqueuedtime() {
-  rqueuedtime_ = GOOGLE_LONGLONG(0);
-  clear_has_rqueuedtime();
-}
-inline ::google::protobuf::int64 Value::rqueuedtime() const {
-  return rqueuedtime_;
-}
-inline void Value::set_rqueuedtime(::google::protobuf::int64 value) {
-  set_has_rqueuedtime();
-  rqueuedtime_ = value;
-}
-
-// optional int64 exeTime = 13;
-inline bool Value::has_exetime() const {
-  return (_has_bits_[0] & 0x00001000u) != 0;
-}
-inline void Value::set_has_exetime() {
-  _has_bits_[0] |= 0x00001000u;
-}
-inline void Value::clear_has_exetime() {
-  _has_bits_[0] &= ~0x00001000u;
-}
-inline void Value::clear_exetime() {
-  exetime_ = GOOGLE_LONGLONG(0);
-  clear_has_exetime();
-}
-inline ::google::protobuf::int64 Value::exetime() const {
-  return exetime_;
-}
-inline void Value::set_exetime(::google::protobuf::int64 value) {
-  set_has_exetime();
-  exetime_ = value;
-}
-
-// optional int64 finTime = 14;
-inline bool Value::has_fintime() const {
-  return (_has_bits_[0] & 0x00002000u) != 0;
-}
-inline void Value::set_has_fintime() {
-  _has_bits_[0] |= 0x00002000u;
-}
-inline void Value::clear_has_fintime() {
-  _has_bits_[0] &= ~0x00002000u;
-}
-inline void Value::clear_fintime() {
-  fintime_ = GOOGLE_LONGLONG(0);
-  clear_has_fintime();
-}
-inline ::google::protobuf::int64 Value::fintime() const {
-  return fintime_;
-}
-inline void Value::set_fintime(::google::protobuf::int64 value) {
-  set_has_fintime();
-  fintime_ = value;
-}
-
-// optional int64 numTaskFin = 15;
-inline bool Value::has_numtaskfin() const {
-  return (_has_bits_[0] & 0x00004000u) != 0;
-}
-inline void Value::set_has_numtaskfin() {
-  _has_bits_[0] |= 0x00004000u;
-}
 inline void Value::clear_has_numtaskfin() {
-  _has_bits_[0] &= ~0x00004000u;
+  _has_bits_[0] &= ~0x00000080u;
 }
 inline void Value::clear_numtaskfin() {
   numtaskfin_ = GOOGLE_LONGLONG(0);
@@ -824,15 +560,15 @@ inline void Value::set_numtaskfin(::google::protobuf::int64 value) {
   numtaskfin_ = value;
 }
 
-// optional int64 numWorkSteal = 16;
+// optional int64 numWorkSteal = 9;
 inline bool Value::has_numworksteal() const {
-  return (_has_bits_[0] & 0x00008000u) != 0;
+  return (_has_bits_[0] & 0x00000100u) != 0;
 }
 inline void Value::set_has_numworksteal() {
-  _has_bits_[0] |= 0x00008000u;
+  _has_bits_[0] |= 0x00000100u;
 }
 inline void Value::clear_has_numworksteal() {
-  _has_bits_[0] &= ~0x00008000u;
+  _has_bits_[0] &= ~0x00000100u;
 }
 inline void Value::clear_numworksteal() {
   numworksteal_ = GOOGLE_LONGLONG(0);
@@ -846,15 +582,15 @@ inline void Value::set_numworksteal(::google::protobuf::int64 value) {
   numworksteal_ = value;
 }
 
-// optional int64 numWorkStealFail = 17;
+// optional int64 numWorkStealFail = 10;
 inline bool Value::has_numworkstealfail() const {
-  return (_has_bits_[0] & 0x00010000u) != 0;
+  return (_has_bits_[0] & 0x00000200u) != 0;
 }
 inline void Value::set_has_numworkstealfail() {
-  _has_bits_[0] |= 0x00010000u;
+  _has_bits_[0] |= 0x00000200u;
 }
 inline void Value::clear_has_numworkstealfail() {
-  _has_bits_[0] &= ~0x00010000u;
+  _has_bits_[0] &= ~0x00000200u;
 }
 inline void Value::clear_numworkstealfail() {
   numworkstealfail_ = GOOGLE_LONGLONG(0);
@@ -868,15 +604,15 @@ inline void Value::set_numworkstealfail(::google::protobuf::int64 value) {
   numworkstealfail_ = value;
 }
 
-// optional int32 numTaskWait = 18;
+// optional int32 numTaskWait = 11;
 inline bool Value::has_numtaskwait() const {
-  return (_has_bits_[0] & 0x00020000u) != 0;
+  return (_has_bits_[0] & 0x00000400u) != 0;
 }
 inline void Value::set_has_numtaskwait() {
-  _has_bits_[0] |= 0x00020000u;
+  _has_bits_[0] |= 0x00000400u;
 }
 inline void Value::clear_has_numtaskwait() {
-  _has_bits_[0] &= ~0x00020000u;
+  _has_bits_[0] &= ~0x00000400u;
 }
 inline void Value::clear_numtaskwait() {
   numtaskwait_ = 0;
@@ -890,15 +626,15 @@ inline void Value::set_numtaskwait(::google::protobuf::int32 value) {
   numtaskwait_ = value;
 }
 
-// optional int32 numTaskReady = 19;
+// optional int32 numTaskReady = 12;
 inline bool Value::has_numtaskready() const {
-  return (_has_bits_[0] & 0x00040000u) != 0;
+  return (_has_bits_[0] & 0x00000800u) != 0;
 }
 inline void Value::set_has_numtaskready() {
-  _has_bits_[0] |= 0x00040000u;
+  _has_bits_[0] |= 0x00000800u;
 }
 inline void Value::clear_has_numtaskready() {
-  _has_bits_[0] &= ~0x00040000u;
+  _has_bits_[0] &= ~0x00000800u;
 }
 inline void Value::clear_numtaskready() {
   numtaskready_ = 0;
@@ -912,15 +648,15 @@ inline void Value::set_numtaskready(::google::protobuf::int32 value) {
   numtaskready_ = value;
 }
 
-// optional int32 numCoreAvilable = 20;
+// optional int32 numCoreAvilable = 13;
 inline bool Value::has_numcoreavilable() const {
-  return (_has_bits_[0] & 0x00080000u) != 0;
+  return (_has_bits_[0] & 0x00001000u) != 0;
 }
 inline void Value::set_has_numcoreavilable() {
-  _has_bits_[0] |= 0x00080000u;
+  _has_bits_[0] |= 0x00001000u;
 }
 inline void Value::clear_has_numcoreavilable() {
-  _has_bits_[0] &= ~0x00080000u;
+  _has_bits_[0] &= ~0x00001000u;
 }
 inline void Value::clear_numcoreavilable() {
   numcoreavilable_ = 0;
@@ -934,15 +670,15 @@ inline void Value::set_numcoreavilable(::google::protobuf::int32 value) {
   numcoreavilable_ = value;
 }
 
-// optional int32 numAllCore = 21;
+// optional int32 numAllCore = 14;
 inline bool Value::has_numallcore() const {
-  return (_has_bits_[0] & 0x00100000u) != 0;
+  return (_has_bits_[0] & 0x00002000u) != 0;
 }
 inline void Value::set_has_numallcore() {
-  _has_bits_[0] |= 0x00100000u;
+  _has_bits_[0] |= 0x00002000u;
 }
 inline void Value::clear_has_numallcore() {
-  _has_bits_[0] &= ~0x00100000u;
+  _has_bits_[0] &= ~0x00002000u;
 }
 inline void Value::clear_numallcore() {
   numallcore_ = 0;

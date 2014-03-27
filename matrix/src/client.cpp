@@ -78,7 +78,7 @@ int main(int argc, char *argv[])
 	mc->init_task();
 
 	/* submit tasks to the schedulers */
-	mc->submit_task();
+	mc->split_task();
 
 	/* do the monitoring to watch th executing progress */
 	mc->do_monitoring();

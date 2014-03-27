@@ -94,6 +94,8 @@ void Configuration::parse_config(const string &configFile)
 
 	workloadFile = configMap.find("WorkloadFile")->second;
 
+	schedulerWorkloadPath = configMap.find("SchedulerWorkloadPath")->second;
+
 	clientLog = str_to_num<int>(
 			configMap.find("ClientLog")->second);
 
