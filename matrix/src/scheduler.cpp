@@ -29,6 +29,8 @@ int main(int argc, char *argv[])
 
 	ms->wait_all_scheduler();	// waits all the other schedulers are running
 
+	ms->get_task_from_file();
+
 	ms->wait_all_task_recv();
 
 	ms->fork_crt_thread();	// forks checking ready task thread
@@ -40,6 +42,8 @@ int main(int argc, char *argv[])
 	ms->fork_ws_thread();	// forks work stealing thread
 
 	ms->fork_record_stat_thread();	// forks recording status thread
+
+	//ms->fork_record_task_thread();
 
 	while (1)
 	{

@@ -235,7 +235,7 @@ void MatrixClient::split_task()
 				"----------------------------" << endl;
 	}
 
-	lookup_wrap("Split Workload", "done");
+	insert_wrap("Split Workload", "done");
 
 	wait_all_task_recv();
 

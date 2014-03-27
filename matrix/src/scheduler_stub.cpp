@@ -44,6 +44,7 @@ MatrixScheduler::MatrixScheduler(const string
 	lqMutex = Mutex();
 	wsqMutex = Mutex();
 	ldMutex = Mutex();
+	tteMutex = Mutex();
 
 	clock_gettime(0, &end);
 
@@ -164,7 +165,7 @@ void MatrixScheduler::get_task_from_file()
 		zc.lookup("Split Workload", done);
 	}
 
-	string filePath = config->schedulerWorkloadPath + "/workload." + get_index();
+	string filePath = config->schedulerWorkloadPath + "/workload." + num_to_str<int>(get_index());
 	string line;
 
 	ifstream fileStream(filePath.c_str());
@@ -186,6 +187,7 @@ void MatrixScheduler::get_task_from_file()
 			tm.set_cmd(taskItemStr.at(3));
 			tm.set_datalength(0);
 			long time = get_time_usec();
+			//taskLogOS << tm.taskid() << "\tWaitQueueTime\t" << time << endl;
 			taskTimeEntry.push_back(tm.taskid() +
 					"\tWaitQueueTime\t" + num_to_str<long>(time));
 			waitQueue.push_back(tm);
@@ -991,13 +993,14 @@ int MatrixScheduler::task_ready_process(
  * ready only if all of its parants are done (the indegree counter
  * equals to 0).
  * */
-long MatrixScheduler::check_a_ready_task(TaskMsg &tm)
+bool MatrixScheduler::check_a_ready_task(TaskMsg &tm)
 {
 	string taskDetail;
-	long incre = 0;
+
+	bool ready = false;
+
 	lookup_wrap(tm.taskid(), taskDetail);
 	//cout << "task detail is:" << taskDetail << endl;
-	incre++;
 	if (taskDetail.empty())
 	{
 		cout << "that is insane:" << tm.taskid() << endl;
@@ -1006,13 +1009,19 @@ long MatrixScheduler::check_a_ready_task(TaskMsg &tm)
 	//cout << "task indegree:" << tm.taskid() << "\t" << valuePkg.indegree() << endl;
 	if (valuePkg.indegree() == 0)
 	{
+		ready = true;
 		int flag = task_ready_process(valuePkg, tm);
 		if (flag != 2)
 		{
-			valuePkg.set_rqueuedtime(get_time_usec());
+			/*valuePkg.set_rqueuedtime(get_time_usec());
 			taskDetail = value_to_str(valuePkg);
 			insert_wrap(tm.taskid(), taskDetail);
-			incre++;
+			incre++;*/
+			tteMutex.lock();
+			taskTimeEntry.push_back(tm.taskid() + "\tReadyQueuedTime\t"
+					+ num_to_str<long>(get_time_usec()));
+			tteMutex.unlock();
+
 		}
 		if (flag == 0)
 		{
@@ -1028,16 +1037,10 @@ long MatrixScheduler::check_a_ready_task(TaskMsg &tm)
 			//cout << "The task that is ready is:" << tm.taskid() << endl;
 			lqMutex.unlock();
 		}
-		return incre;
 	}
 
-	return 0;
+	return ready;
 }
-
-/*bool check_empty(TaskMsg &tm)
-{
-	return tm.taskid().empty();
-}*/
 
 /* checking ready task thread function, under the condition
  * that the scheduler is still processing tasks, if the
@@ -1071,14 +1074,10 @@ void *checking_ready_task(void *args)
 				continue;
 			}
 
-			int ret = ms->check_a_ready_task(tm);
-			if (ret != 0)
+			bool ready = ms->check_a_ready_task(tm);
+			increment++;
+			if (!ready)
 			{
-				increment += ret;
-			}
-			else
-			{
-				increment += 1;
 				ms->wqMutex.lock();
 				ms->waitQueue.push_back(tm);
 				//cout << "Ok, the task is still not ready!" << tm.taskid() << endl;
@@ -1278,8 +1277,7 @@ void *recording_stat(void *args)
 						ms->waitQueue.size() << "\t" << ms->localQueue.size() + ms->wsQueue.size()
 						<< "\t" << ms->numIdleCore << "\t" << ms->config->numCorePerExecutor <<
 						"\t" << ms->numWS << "\t" << ms->numWSFail << endl;
-				ms->schedulerLogOS << "The number of ZHT message is:" << ms->numZHTMsg << endl;
-				ms->schedulerLogOS.flush(); ms->schedulerLogOS.close();
+
 			}
 			ms->running = false;
 			break;
@@ -1322,6 +1320,19 @@ void *recording_stat(void *args)
 	ms->incre_ZHT_msg_count(increment);
 	ms->ZHTMsgCountMutex.unlock();
 
+	ms->schedulerLogOS << "The number of ZHT message is:" << ms->numZHTMsg << endl;
+	ms->schedulerLogOS.flush(); ms->schedulerLogOS.close();
+
+	if (ms->taskTimeEntry.size() > 0)
+	{
+		//ms->tteMutex.lock();
+		for (int i = 0; i < ms->taskTimeEntry.size(); i++)
+		{
+			ms->taskLogOS << ms->taskTimeEntry.at(i) << endl;
+		}
+		//ms->tteMutex.unlock();
+	}
+
 	pthread_exit(NULL);
 	return NULL;
 }
@@ -1331,7 +1342,43 @@ void MatrixScheduler::fork_record_stat_thread()
 {
 	pthread_t rsThread;
 
-	while (pthread_create(&rsThread, NULL, recording_stat, this))
+	while (pthread_create(&rsThread, NULL, recording_stat, this) != 0)
+	{
+		sleep(1);
+	}
+}
+
+void *record_task_time(void *args)
+{
+	MatrixScheduler *ms = (MatrixScheduler*)args;
+
+	while (ms->running)
+	{
+		if (ms->taskTimeEntry.size() > 0)
+		{
+			ms->tteMutex.lock();
+			while (ms->taskTimeEntry.size() > 0)
+			{
+				ms->taskLogOS << ms->taskTimeEntry.back() << endl;
+				ms->taskTimeEntry.pop_back();
+			}
+			ms->tteMutex.unlock();
+		}
+
+		usleep(ms->config->sleepLength);
+	}
+
+	ms->taskLogOS.flush(); ms->taskLogOS.close();
+	pthread_exit(NULL);
+
+	return NULL;
+}
+
+void MatrixScheduler::fork_record_task_thread()
+{
+	pthread_t trThread;
+
+	while (pthread_create(&trThread, NULL, record_task_time, this) != 0)
 	{
 		sleep(1);
 	}

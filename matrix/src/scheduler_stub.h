@@ -69,7 +69,7 @@ class MatrixScheduler: public Peer
 
 		int task_ready_process(const Value&, TaskMsg&);
 		/* check if a given task is ready to run, and put it in the right queue */
-		long check_a_ready_task(TaskMsg&);
+		bool check_a_ready_task(TaskMsg&);
 
 		void fork_crt_thread();	// fork check ready task thread
 
@@ -85,6 +85,8 @@ class MatrixScheduler: public Peer
 
 		/* fork recording status thread */
 		void fork_record_stat_thread();
+
+		void fork_record_task_thread();
 
 		Mutex ZHTMsgCountMutex;	// Mutex of ZHT message count
 		Mutex numIdleCoreMutex;	// Mutex of number of idle cores
