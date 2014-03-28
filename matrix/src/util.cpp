@@ -7,7 +7,7 @@
 
 #include "util.h"
 
-uint _BUF_SIZE = 8192;
+uint _BUF_SIZE = 512;
 Mutex tokenMutex = Mutex();
 
 vector<string> tokenize(const std::string &source, const char *delimiter = " ")
@@ -904,7 +904,6 @@ void Peer::lookup_wrap(const string &key, string &result)
 	}
 	while (zc.lookup(key, result) != 0 && result.empty())
 	{
-		cout << key << "\tOH, no, what happend" << endl;
 		usleep(1);
 	}
 }
@@ -913,7 +912,6 @@ void Peer::lookup_wrap(const char *key, char *result)
 {
 	if (key == NULL)
 	{
-		cout << "There is empty key!" << endl;
 		return;
 	}
 	while (zc.lookup(key, result) != 0 && result == NULL)
@@ -960,7 +958,7 @@ void Peer::wait_all_task_recv()
 
 	while (zc.state_change_callback(key, expValue, config->sleepLength) != 0)
 	{
-		usleep(100000);
+		usleep(1);
 	}
 }
 

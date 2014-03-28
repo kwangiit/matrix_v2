@@ -16,6 +16,8 @@ int send_first(const string &ip, long port, const string &buf)
 	const char *ipChar = ip.c_str();
 	struct hostent * hinfo = gethostbyname(ipChar);
 
+	cout << "the ip address is:" << ip << endl;
+
 	if (hinfo == NULL)
 	{
 		printf("getbyname failed!\n");

@@ -101,8 +101,6 @@ void MatrixScheduler::regist()
 	string taskFinKey("num tasks done");
 	string recvKey("num tasks recv");
 
-	long increment = 0;
-
 	/* the first scheduler (index = 0) intializes the records
 	 * including both the number of registered schedulers and
 	 * the number of tasks done
@@ -112,31 +110,26 @@ void MatrixScheduler::regist()
 		insert_wrap(regKey, "1");
 		insert_wrap(taskFinKey, "0");
 		insert_wrap(recvKey, "0");
-		increment += 2;
 	}
 	else
 	{
 		string value;
 		lookup_wrap(regKey, value);
-		increment++;
 		while (value.empty())
 		{
 			usleep(config->sleepLength);
 			lookup_wrap(regKey, value);
-			increment++;
 		}
 
 		int newValNum = str_to_num<int>(value) + 1;
 		string newVal = num_to_str<int>(newValNum);
 		string queryVal;
-		increment++;
 
 		while (zc.compare_swap(regKey, value, newVal, queryVal) != 0)
 		{
 			if (queryVal.empty())
 			{
 				lookup_wrap(regKey, value);
-				increment++;
 			}
 			else
 			{
@@ -144,14 +137,9 @@ void MatrixScheduler::regist()
 			}
 			newValNum = str_to_num<int>(value) + 1;
 			newVal = num_to_str<int>(newValNum);
-			increment++;
 			usleep(config->sleepLength);
 		}
 	}
-
-	ZHTMsgCountMutex.lock();
-	incre_ZHT_msg_count(increment);
-	ZHTMsgCountMutex.unlock();
 }
 
 void MatrixScheduler::get_task_from_file()
@@ -187,7 +175,6 @@ void MatrixScheduler::get_task_from_file()
 			tm.set_cmd(taskItemStr.at(3));
 			tm.set_datalength(0);
 			long time = get_time_usec();
-			//taskLogOS << tm.taskid() << "\tWaitQueueTime\t" << time << endl;
 			taskTimeEntry.push_back(tm.taskid() +
 					"\tWaitQueueTime\t" + num_to_str<long>(time));
 			waitQueue.push_back(tm);
@@ -195,6 +182,7 @@ void MatrixScheduler::get_task_from_file()
 
 		string numTaskRecvStr, numTaskRecvMoreStr, queryValue;
 		lookup_wrap("num tasks recv", numTaskRecvStr);
+
 		long numTaskRecv = str_to_num<long>(numTaskRecvStr);
 		numTaskRecv += numTask;
 		numTaskRecvMoreStr = num_to_str<long>(numTaskRecv);
@@ -538,6 +526,7 @@ void MatrixScheduler::find_most_loaded_neigh()
 		int sockfd = send_first(schedulerVec.at(neighIdx[i]),
 				config->schedulerPortNo, strLoadQuery);
 		recv_bf(sockfd, result);
+		close(sockfd);
 		MatrixMsg mmLoad;
 		mmLoad.ParseFromString(result);
 
@@ -638,6 +627,7 @@ bool MatrixScheduler::steal_task()
 	string numTaskPkgStr;
 	int sockfd = send_first(schedulerVec.at(maxLoadedIdx), config->schedulerPortNo, strStealTask);
 	recv_bf(sockfd, numTaskPkgStr);
+	close(sockfd);
 	MatrixMsg mmNumTask;
 	mmNumTask.ParseFromString(numTaskPkgStr);
 
@@ -732,10 +722,6 @@ void MatrixScheduler::fork_ws_thread()
 void MatrixScheduler::exec_a_task(TaskMsg &tm)
 {
 	string taskDetail;
-	if (tm.taskid().empty())
-	{
-		cout << "That is weird" << endl;
-	}
 	lookup_wrap(tm.taskid(), taskDetail);
 	Value value = str_to_value(taskDetail);
 
@@ -787,9 +773,24 @@ void MatrixScheduler::exec_a_task(TaskMsg &tm)
 					mm.set_extrainfo(value.datanamelist(i));
 					string mmStr;
 					mmStr = mm.SerializeAsString();
+					cout << tm.taskid() << "\trequires " << i << "\tdata!" << endl;
+
+					timespec before, after, diff;
+					clock_gettime(0, &before);
 					int sockfd = send_first(value.parents(i), config->schedulerPortNo, mmStr);
+					clock_gettime(0, &after);
+					diff = time_diff(before, after);
+					cout << tm.taskid() << "\tit takes " << diff.tv_sec << "s, and " << diff.tv_nsec
+							<< "ns to send the " << i << "\tdata to scheduler " << value.parents(i) << endl;
+
 					string dataPiece;
+					clock_gettime(0, &before);
 					recv_bf(sockfd, dataPiece);
+					clock_gettime(0, &after);
+					close(sockfd);
+					diff = time_diff(before, after);
+					cout << tm.taskid() << "\tit takes " << diff.tv_sec << "s, and " << diff.tv_nsec
+							<< "ns to receive the " << i << "\tdata from scheduler " << value.parents(i) << endl;
 					MatrixMsg mmData;
 					//cout << "The data piece is:" << dataPiece << ", task id is:" << tm.taskid() << ", before pasre!" << endl;
 					mmData.ParseFromString(dataPiece);
@@ -807,6 +808,7 @@ void MatrixScheduler::exec_a_task(TaskMsg &tm)
 	}
 #endif
 
+	cout << tm.taskid() << "\tnow I received all the data" << endl;
 	const char *execmd = tm.cmd().c_str();
 	//cout << "The cmd is:" << execmd << endl;
 	string result = exec(execmd);
@@ -841,9 +843,9 @@ void MatrixScheduler::exec_a_task(TaskMsg &tm)
 	cout << tm.taskid() << "\tNumber of task fin is:" << numTaskFin << endl;
 	numTaskFinMutex.unlock();
 
-//	ZHTMsgCountMutex.lock();
-//	incre_ZHT_msg_count(2);
-//	ZHTMsgCountMutex.unlock();
+	ZHTMsgCountMutex.lock();
+	incre_ZHT_msg_count(1);
+	ZHTMsgCountMutex.unlock();
 }
 
 /* executing task thread function, under the conditin that the
@@ -894,12 +896,14 @@ void *executing_task(void *args)
 			{
 				continue;
 			}
+
 			ms->numIdleCoreMutex.lock();
 			ms->numIdleCore--;
 			ms->numIdleCoreMutex.unlock();
 
 			cout << "The task to execute is:" << tm.taskid() << endl;
 			ms->exec_a_task(tm);
+
 			ms->numIdleCoreMutex.lock();
 			ms->numIdleCore++;
 			ms->numIdleCoreMutex.unlock();
@@ -920,7 +924,7 @@ void MatrixScheduler::fork_exec_task_thread()
 
 	for (int i = 0; i < config->numCorePerExecutor; i++)
 	{
-		while (pthread_create(&execThread[i], NULL, executing_task, this))
+		while (pthread_create(&execThread[i], NULL, executing_task, this) != 0)
 		{
 			sleep(1);
 		}
@@ -930,6 +934,10 @@ void MatrixScheduler::fork_exec_task_thread()
 int MatrixScheduler::task_ready_process(
 		const Value &valuePkg, TaskMsg &tm)
 {
+	/* flag = 0, keep it in the work stealing queue
+	 * flag = 1, keep it in the local queue
+	 * flag = 2, push it to other scheduler's local queue
+	 * */
 	int flag = 2;
 
 #ifdef ZHT_STORAGE
@@ -986,6 +994,7 @@ int MatrixScheduler::task_ready_process(
 				int sockfd = send_first(maxDataScheduler, config->schedulerPortNo, mmStr);
 				string ack;
 				recv_bf(sockfd, ack);
+				close(sockfd);
 				flag = 2;
 			}
 		}
@@ -1056,7 +1065,6 @@ bool MatrixScheduler::check_a_ready_task(TaskMsg &tm)
 void *checking_ready_task(void *args)
 {
 	MatrixScheduler *ms = (MatrixScheduler*)args;
-	int size = 0;
 	TaskMsg tm;
 	long increment = 0;
 
