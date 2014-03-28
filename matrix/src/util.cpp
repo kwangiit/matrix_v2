@@ -904,6 +904,7 @@ void Peer::lookup_wrap(const string &key, string &result)
 	}
 	while (zc.lookup(key, result) != 0 && result.empty())
 	{
+		cout << key << "\tOH, no, what happend" << endl;
 		usleep(1);
 	}
 }
