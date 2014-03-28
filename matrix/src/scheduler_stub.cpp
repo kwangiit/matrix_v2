@@ -759,7 +759,7 @@ void MatrixScheduler::exec_a_task(TaskMsg &tm)
 			{
 				ldMutex.lock();
 				data += localData.find(value.datanamelist(i))->second;
-				cout << tm.taskid() << " find the data" << endl;
+				//cout << tm.taskid() << " find the data" << endl;
 				ldMutex.unlock();
 			}
 			else
@@ -791,7 +791,7 @@ void MatrixScheduler::exec_a_task(TaskMsg &tm)
 					string dataPiece;
 					recv_bf(sockfd, dataPiece);
 					MatrixMsg mmData;
-					cout << "The data piece is:" << dataPiece << ", task id is:" << tm.taskid() << ", before pasre!" << endl;
+					//cout << "The data piece is:" << dataPiece << ", task id is:" << tm.taskid() << ", before pasre!" << endl;
 					mmData.ParseFromString(dataPiece);
 					//cout << "After parse, extra info is:" << mmData.extrainfo() << endl;
 					data += mmData.extrainfo();
@@ -838,7 +838,7 @@ void MatrixScheduler::exec_a_task(TaskMsg &tm)
 
 	numTaskFinMutex.lock();
 	numTaskFin++;
-	cout << "Number of task fin is:" << numTaskFin << endl;
+	cout << tm.taskid() << "\tNumber of task fin is:" << numTaskFin << endl;
 	numTaskFinMutex.unlock();
 
 //	ZHTMsgCountMutex.lock();
@@ -879,7 +879,7 @@ void *executing_task(void *args)
 				ms->wsqMutex.lock();
 				if (ms->wsQueue.size() > 0)
 				{
-					cout << "The ready queue length is:" << ms->wsQueue.size() << endl;
+					//cout << "The ready queue length is:" << ms->wsQueue.size() << endl;
 					tm = ms->wsQueue.top();
 					ms->wsQueue.pop();
 					ms->wsqMutex.unlock();
@@ -1005,13 +1005,13 @@ bool MatrixScheduler::check_a_ready_task(TaskMsg &tm)
 	bool ready = false;
 
 	lookup_wrap(tm.taskid(), taskDetail);
-	cout << "task detail is:" << taskDetail << endl;
+	//cout << "task detail is:" << taskDetail << endl;
 	if (taskDetail.empty())
 	{
 		cout << "that is insane:" << tm.taskid() << endl;
 	}
 	Value valuePkg = str_to_value(taskDetail);
-	cout << "task indegree:" << tm.taskid() << "\t" << valuePkg.indegree() << endl;
+	//cout << "task indegree:" << tm.taskid() << "\t" << valuePkg.indegree() << endl;
 	if (valuePkg.indegree() == 0)
 	{
 		ready = true;
@@ -1067,10 +1067,10 @@ void *checking_ready_task(void *args)
 			ms->wqMutex.lock();
 			if (ms->waitQueue.size() > 0)
 			{
-				cout << "number of task waiting is:" << ms->waitQueue.size() << endl;
+				//cout << "number of task waiting is:" << ms->waitQueue.size() << endl;
 				tm = ms->waitQueue.front();
 				ms->waitQueue.pop_front();
-				cout << "next one to process is:" << tm.taskid() << endl;
+				//cout << "next one to process is:" << tm.taskid() << endl;
 				ms->wqMutex.unlock();
 			}
 			else
@@ -1085,7 +1085,7 @@ void *checking_ready_task(void *args)
 			{
 				ms->wqMutex.lock();
 				ms->waitQueue.push_back(tm);
-				cout << "Ok, the task is still not ready!" << tm.taskid() << endl;
+				//cout << "Ok, the task is still not ready!" << tm.taskid() << endl;
 				ms->wqMutex.unlock();
 			}
 		}
