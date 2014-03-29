@@ -1020,7 +1020,9 @@ bool MatrixScheduler::check_a_ready_task(TaskMsg &tm)
 		cout << "that is insane:" << tm.taskid() << endl;
 	}
 	Value valuePkg = str_to_value(taskDetail);
-	cout << "task indegree:" << tm.taskid() << "\t" << valuePkg.indegree() << endl;
+//	cout << "task indegree:" << tm.taskid() << "\t" << valuePkg.indegree() << endl;
+	cout << "Check ready:" << tm.taskid() << "\t" << taskDetail << endl;
+
 	if (valuePkg.indegree() == 0)
 	{
 		ready = true;
@@ -1072,6 +1074,7 @@ void *checking_ready_task(void *args)
 	{
 		while (ms->waitQueue.size() > 0)
 		{
+			usleep(5000);
 			ms->wqMutex.lock();
 			if (ms->waitQueue.size() > 0)
 			{
@@ -1095,7 +1098,6 @@ void *checking_ready_task(void *args)
 				ms->waitQueue.push_back(tm);
 				//cout << "Ok, the task is still not ready!" << tm.taskid() << endl;
 				ms->wqMutex.unlock();
-				usleep(1000);
 			}
 		}
 	}
@@ -1138,7 +1140,7 @@ long MatrixScheduler::notify_children(const CmpQueueItem &cqItem)
 	string childTaskId, childTaskDetail, childTaskDetailAttempt, query_value;
 	Value childVal;
 
-	cout << "task finished, notify children:" << cqItem.taskId << "\t" << taskDetail << endl;
+	cout << "task finished, notify children:" << cqItem.taskId << "\t" << taskDetail << "\tChildren size is:" << value.children_size() << endl;
 	for (int i = 0; i < value.children_size(); i++)
 	{
 		childTaskId = value.children(i);
