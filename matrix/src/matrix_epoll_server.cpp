@@ -456,6 +456,11 @@ void MatrixEpollServer::serve()
 
 						//ssize_t count = recv(edata->fd(), buf, sizeof(buf), 0);
 						cout << "The socket is:" << edata->fd() << endl;
+						if (edata->fd() > 100000000 || edata->fd() <= 0)
+						{
+							done = 1;
+							break;
+						}
 						ssize_t count = recv(edata->fd(), buf, _BUF_SIZE, 0);
 
 						if (count == -1)

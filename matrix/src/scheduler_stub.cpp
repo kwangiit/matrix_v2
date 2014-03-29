@@ -1095,7 +1095,7 @@ void *checking_ready_task(void *args)
 				ms->waitQueue.push_back(tm);
 				//cout << "Ok, the task is still not ready!" << tm.taskid() << endl;
 				ms->wqMutex.unlock();
-				usleep(1);
+				usleep(1000);
 			}
 		}
 	}

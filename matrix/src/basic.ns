@@ -3,11 +3,12 @@ set ns [new Simulator]
 source tb_compat.tcl
 
 # two nodes for now
-set maxnodes 2
+set maxnodes 20
 
 for {set i 1} {$i <= $maxnodes} {incr i} {
         set node($i) [$ns node]
         tb-set-node-os $node($i) UBUNTU12-64-PROBE
+	tb-set-node-failure-action $node($i) "nonfatal"
 }
 
 #tb-set-node-startcmd $node(1) "/users/kwangiit/server.bash >& /tmp/output"
