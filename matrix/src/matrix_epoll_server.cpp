@@ -433,6 +433,7 @@ void MatrixEpollServer::serve()
 							cout << "The event queue length of the epoll server is:" << _eventQueue.size() << endl;
 							eqMutex.unlock();
 						}
+						free(buf);
 					}
 				}
 
@@ -454,6 +455,7 @@ void MatrixEpollServer::serve()
 						memset(buf, '\0', _BUF_SIZE);
 
 						//ssize_t count = recv(edata->fd(), buf, sizeof(buf), 0);
+						cout << "The socket is:" << edata->fd() << endl;
 						ssize_t count = recv(edata->fd(), buf, _BUF_SIZE, 0);
 
 						if (count == -1)
@@ -483,8 +485,11 @@ void MatrixEpollServer::serve()
 							cout << "The event queue length of the epoll server is:" << _eventQueue.size() << endl;
 							eqMutex.unlock();
 						}
-
-						free(buf);
+						if (buf != NULL)
+						{
+							free(buf);
+							buf = NULL;
+						}
 					}
 
 					if (done)

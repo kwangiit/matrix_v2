@@ -7,7 +7,7 @@
 
 #include "util.h"
 
-uint _BUF_SIZE = 512;
+uint _BUF_SIZE = 1024;
 Mutex tokenMutex = Mutex();
 
 vector<string> tokenize(const std::string &source, const char *delimiter = " ")
@@ -395,22 +395,22 @@ extern string taskmsg_to_str(const TaskMsg &taskMsg)
 	string str("");
 
 	str.append(taskMsg.taskid());
-	str.append("**");
+	str.append("@@");
 	str.append(taskMsg.user());
-	str.append("**");
+	str.append("@@");
 	str.append(taskMsg.dir());
-	str.append("**");
+	str.append("@@");
 	str.append(taskMsg.cmd());
-	str.append("**");
+	str.append("@@");
 	str.append(num_to_str<long>(taskMsg.datalength()));
-	str.append("**");
+	str.append("@@");
 
 	return str;
 }
 
 extern TaskMsg str_to_taskmsg(const string &str)
 {
-	vector<string> vecStr = tokenize(str, "**");
+	vector<string> vecStr = tokenize(str, "@@");
 
 	if (vecStr.size() == 0)
 	{
@@ -904,6 +904,7 @@ void Peer::lookup_wrap(const string &key, string &result)
 	}
 	while (zc.lookup(key, result) != 0 && result.empty())
 	{
+		cout << "the key is:" << key << endl;
 		usleep(1);
 	}
 }

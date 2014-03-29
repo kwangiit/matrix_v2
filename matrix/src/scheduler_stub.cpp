@@ -881,7 +881,7 @@ void *executing_task(void *args)
 				ms->wsqMutex.lock();
 				if (ms->wsQueue.size() > 0)
 				{
-					//cout << "The ready queue length is:" << ms->wsQueue.size() << endl;
+					cout << "The ready queue length is:" << ms->wsQueue.size() << endl;
 					tm = ms->wsQueue.top();
 					ms->wsQueue.pop();
 					ms->wsqMutex.unlock();
@@ -1020,7 +1020,7 @@ bool MatrixScheduler::check_a_ready_task(TaskMsg &tm)
 		cout << "that is insane:" << tm.taskid() << endl;
 	}
 	Value valuePkg = str_to_value(taskDetail);
-	//cout << "task indegree:" << tm.taskid() << "\t" << valuePkg.indegree() << endl;
+	cout << "task indegree:" << tm.taskid() << "\t" << valuePkg.indegree() << endl;
 	if (valuePkg.indegree() == 0)
 	{
 		ready = true;
@@ -1075,7 +1075,7 @@ void *checking_ready_task(void *args)
 			ms->wqMutex.lock();
 			if (ms->waitQueue.size() > 0)
 			{
-				//cout << "number of task waiting is:" << ms->waitQueue.size() << endl;
+				cout << "number of task waiting is:" << ms->waitQueue.size() << endl;
 				tm = ms->waitQueue.front();
 				ms->waitQueue.pop_front();
 				//cout << "next one to process is:" << tm.taskid() << endl;
@@ -1095,6 +1095,7 @@ void *checking_ready_task(void *args)
 				ms->waitQueue.push_back(tm);
 				//cout << "Ok, the task is still not ready!" << tm.taskid() << endl;
 				ms->wqMutex.unlock();
+				usleep(1);
 			}
 		}
 	}
@@ -1155,6 +1156,7 @@ long MatrixScheduler::notify_children(const CmpQueueItem &cqItem)
 		childVal.set_alldatasize(childVal.alldatasize() + cqItem.dataSize);
 		childTaskDetailAttempt = value_to_str(childVal);
 
+		cout << cqItem.taskId << "\t" << childTaskId << "\t" << childTaskDetail << "\t" << childTaskDetailAttempt << endl;
 		increment++;
 		while (zc.compare_swap(childTaskId, childTaskDetail, childTaskDetailAttempt, query_value) != 0)
 		{
