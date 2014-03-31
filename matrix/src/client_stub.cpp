@@ -114,7 +114,7 @@ void MatrixClient::insert_taskinfo_to_zht(
 
 		string seriValue;
 		seriValue = value_to_str(value);
-		insert_wrap(taskId, seriValue);
+		zc.insert(taskId, seriValue);
 	}
 
 	incre_ZHT_msg_count(config->numTaskPerClient);
@@ -235,7 +235,7 @@ void MatrixClient::split_task()
 				"----------------------------" << endl;
 	}
 
-	insert_wrap("Split Workload", "done");
+	zc.insert(string("Split Workload"), string("done"));
 
 	wait_all_task_recv();
 
@@ -376,8 +376,8 @@ void *monitoring(void* args)
 
 	while (1)
 	{
-		//mc->zc.lookup(key, numTaskFinStr);	// lookup how many tasks are done
-		mc->lookup_wrap(key, numTaskFinStr);
+		mc->zc.lookup(key, numTaskFinStr);	// lookup how many tasks are done
+		//mc->lookup_wrap(key, numTaskFinStr);
 		numTaskDone = str_to_num<long>(numTaskFinStr);
 
 		increment++;
@@ -390,8 +390,8 @@ void *monitoring(void* args)
 			for (int i = 0; i < mc->schedulerVec.size(); i++)
 			{
 				string schedulerStat;
-				//mc->zc.lookup(mc->schedulerVec.at(i), schedulerStat);
-				mc->lookup_wrap(mc->schedulerVec.at(i), schedulerStat);
+				mc->zc.lookup(mc->schedulerVec.at(i), schedulerStat);
+				//mc->lookup_wrap(mc->schedulerVec.at(i), schedulerStat);
 				if (schedulerStat.empty())
 				{
 					continue;

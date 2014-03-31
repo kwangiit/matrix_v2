@@ -80,7 +80,7 @@ const sockaddr* const MatrixEpollData::sender() const
 }
 
 
-const int MatrixEpollServer::MAX_EVENTS = 4096;
+const int MatrixEpollServer::MAX_EVENTS = 64;
 
 MatrixEpollServer::MatrixEpollServer(long port,
 		MatrixScheduler *ms) : _port(port), _ms(ms), _eventQueue()
@@ -328,7 +328,7 @@ void MatrixEpollServer::serve()
 	{
 		int n, i;
 		n = epoll_wait(efd, events, MAX_EVENTS, -1);
-		cout << "Number of events received is:" << n << endl;
+		//cout << "Number of events received is:" << n << endl;
 
 		for (i = 0; i < n; i++)
 		{
@@ -402,8 +402,9 @@ void MatrixEpollServer::serve()
 
 					while (1)
 					{
-						char *buf = (char*)calloc(_BUF_SIZE, sizeof(char));
-						memset(buf, 0, _BUF_SIZE);
+						//char *buf = (char*)calloc(_BUF_SIZE, sizeof(char));
+						char buf[_BUF_SIZE];
+						memset(buf, 0, sizeof(buf));
 
 						sockaddr fromaddr;
 						socklen_t sender_len = sizeof(struct sockaddr);
@@ -430,10 +431,10 @@ void MatrixEpollServer::serve()
 									fromaddr);
 							eqMutex.lock();
 							_eventQueue.push(eventData);
-							cout << "The event queue length of the epoll server is:" << _eventQueue.size() << endl;
+							//cout << "The event queue length of the epoll server is:" << _eventQueue.size() << endl;
 							eqMutex.unlock();
 						}
-						free(buf);
+						//free(buf);
 					}
 				}
 
@@ -451,17 +452,14 @@ void MatrixEpollServer::serve()
 
 					while (1)
 					{
-						char *buf = (char*)calloc(_BUF_SIZE, sizeof(char));
-						memset(buf, '\0', _BUF_SIZE);
+						char buf[_BUF_SIZE];
+						memset(buf, 0, sizeof(buf));
+						//char *buf = (char*)calloc(_BUF_SIZE, sizeof(char));
+						//memset(buf, '\0', _BUF_SIZE);
 
 						//ssize_t count = recv(edata->fd(), buf, sizeof(buf), 0);
-						cout << "The socket is:" << edata->fd() << endl;
-						if (edata->fd() > 100000000 || edata->fd() <= 0)
-						{
-							done = 1;
-							break;
-						}
-						ssize_t count = recv(edata->fd(), buf, _BUF_SIZE, 0);
+						//cout << "The socket is:" << edata->fd() << endl;
+						ssize_t count = recv(edata->fd(), buf, sizeof(buf), 0);
 
 						if (count == -1)
 						{
@@ -469,7 +467,8 @@ void MatrixEpollServer::serve()
 							 data. So go back to the main loop. */
 							if (errno != EAGAIN)
 							{
-								perror("read");
+								cout << "The socket is:" << edata->fd() << ", and buf is:" << buf << endl;
+								//perror("read");
 								done = 1;
 							}
 							break;
@@ -487,14 +486,14 @@ void MatrixEpollServer::serve()
 									*edata->sender());
 							eqMutex.lock();
 							_eventQueue.push(eventData);
-							cout << "The event queue length of the epoll server is:" << _eventQueue.size() << endl;
+							//cout << "The event queue length of the epoll server is:" << _eventQueue.size() << endl;
 							eqMutex.unlock();
 						}
-						if (buf != NULL)
-						{
-							free(buf);
-							buf = NULL;
-						}
+//						if (buf != NULL)
+//						{
+//							free(buf);
+//							buf = NULL;
+//						}
 					}
 
 					if (done)

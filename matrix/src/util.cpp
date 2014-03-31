@@ -7,7 +7,7 @@
 
 #include "util.h"
 
-uint _BUF_SIZE = 8192;
+uint _BUF_SIZE = 3000;
 Mutex tokenMutex = Mutex();
 
 vector<string> tokenize(const std::string &source, const char *delimiter = " ")
@@ -688,7 +688,7 @@ extern Value str_to_value(const string &str)
 	Value value;
 	vector<string> vec = tokenize(str, "~~");
 
-	if (vec.size() != 14)
+	if (vec.size() < 14)
 	{
 		cout << "have some problem, the value to be converted is:" << str << endl;
 		exit(1);

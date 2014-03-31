@@ -28,16 +28,17 @@ int send_first(const string &ip, long port, const string &buf)
 	to_sock = socket(PF_INET, SOCK_STREAM, 0); //try change here.................................................
 	if (to_sock < 0)
 	{
+		cerr << "TCPProxy::makeClientSocket(): error on ::socket(...):" << to_sock << endl;
 		return -1;
 	}
 	int ret_con = connect(to_sock, (struct sockaddr *) &dest,
 			sizeof(sockaddr));
 	if (ret_con < 0)
 	{
+		cerr << "TCPProxy::makeClientSocket(): error on ::connect(...):" << ret_con << endl;
 		return -1;
 	}
 
-	cout << "The socket is:" << to_sock << ", and ip is:" << ip << ", and message is:" << buf << endl;
 	send_bf(to_sock, buf);
 
 	return to_sock;
@@ -51,9 +52,9 @@ int send_bf(int sock, const string &buf)
 int recv_bf(int sock, string &buf)
 {
 	char bufStr[_BUF_SIZE];
-	memset(bufStr, _BUF_SIZE, '\0');
+	memset(bufStr, '\0', sizeof(bufStr));
 
-	int ret = recv(sock, bufStr, _BUF_SIZE, 0);
+	int ret = recv(sock, bufStr, sizeof(bufStr), 0);
 	buf.assign(bufStr);
 
 	return ret;

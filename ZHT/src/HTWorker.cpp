@@ -119,6 +119,7 @@ string HTWorker::insert_shared(const ZPack &zpack) {
 		return Const::ZSC_REC_EMPTYKEY; //-1
 
 	string key = zpack.key();
+	cout << "insert:" << key << "\t" << zpack.SerializeAsString() << endl;
 	int ret = PMAP->put(key, zpack.SerializeAsString());
 
 	if (ret != 0) {
@@ -160,6 +161,9 @@ string HTWorker::lookup_shared(const ZPack &zpack) {
 		return Const::ZSC_REC_EMPTYKEY; //-1
 
 	string key = zpack.key();
+
+	cout << "The key for lookup is:" << key << endl;
+
 	string *ret = PMAP->get(key);
 
 	if (ret == NULL) {
@@ -351,6 +355,8 @@ string HTWorker::compare_swap_internal(const ZPack &zpack) {
 	/*	printf("{%s}:{%s,%s}\n", zpack.key().c_str(), zpack.val().c_str(),
 	 zpack.newval().c_str());*/
 
+	cout << "Compare_Swap:" << zpack.key().c_str() << "\t" <<
+			zpack.val().c_str() << "\t" << zpack.newval().c_str() << endl;
 	/*they are equivalent, compare and swap*/
 	if (!seen_value_passed_in.compare(seen_value_stored)) {
 
