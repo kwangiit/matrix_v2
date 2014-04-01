@@ -9,6 +9,7 @@
 
 uint _BUF_SIZE = 3000;
 Mutex tokenMutex = Mutex();
+Mutex sockMutex = Mutex();
 
 vector<string> tokenize(const std::string &source, const char *delimiter = " ")
 {

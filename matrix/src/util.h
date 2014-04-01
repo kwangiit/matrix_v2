@@ -170,4 +170,5 @@ struct HighPriorityByDataSize
 };
 
 extern Mutex tokenMutex;
+extern Mutex sockMutex;
 #endif /* UTIL_H_ */

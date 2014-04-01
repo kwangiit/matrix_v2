@@ -112,9 +112,11 @@ void MatrixScheduler::regist()
 	if (get_index() == 0)
 	{
 		cout << "I am the first" << endl;
+		sockMutex.lock();
 		zc.insert(regKey, string("1"));
 		zc.insert(taskFinKey, string("0"));
 		zc.insert(recvKey, string("0"));
+		sockMutex.unlock();
 	}
 	else
 	{
@@ -533,6 +535,7 @@ void MatrixScheduler::find_most_loaded_neigh()
 	{
 		string result;
 		cout << "I am sending load query to " << schedulerVec.at(neighIdx[i]) << endl;
+		sockMutex.lock();
 		int sockfd = send_first(schedulerVec.at(neighIdx[i]),
 				config->schedulerPortNo, strLoadQuery);
 		recv_bf(sockfd, result);
@@ -541,6 +544,7 @@ void MatrixScheduler::find_most_loaded_neigh()
 			cout << "Holy crap!" << endl;
 		}
 		close(sockfd);
+		sockMutex.unlock();
 		MatrixMsg mmLoad;
 		mmLoad.ParseFromString(result);
 
@@ -639,6 +643,7 @@ bool MatrixScheduler::steal_task()
 	string strStealTask = mm.SerializeAsString();
 
 	string numTaskPkgStr;
+	sockMutex.lock();
 	int sockfd = send_first(schedulerVec.at(maxLoadedIdx), config->schedulerPortNo, strStealTask);
 	recv_bf(sockfd, numTaskPkgStr);
 
@@ -652,12 +657,14 @@ bool MatrixScheduler::steal_task()
 	if (numTask == 0)
 	{
 		close(sockfd);
+		sockMutex.unlock();
 		return false;
 	}
 
 	/* otherwise, receive numTask tasks from the victim*/
 	recv_task_from_scheduler(sockfd, numTask);
 	close(sockfd);
+	sockMutex.unlock();
 	return true;
 }
 
@@ -743,7 +750,9 @@ void MatrixScheduler::exec_a_task(TaskMsg &tm)
 {
 	string taskDetail;
 	cout << "Now, I am executing a task" << tm.taskid() << endl;
+	sockMutex.lock();
 	zc.lookup(tm.taskid(), taskDetail);
+	sockMutex.unlock();
 	Value value = str_to_value(taskDetail);
 
 	long startTime = get_time_usec();
@@ -797,6 +806,7 @@ void MatrixScheduler::exec_a_task(TaskMsg &tm)
 					//cout << tm.taskid() << "\trequires " << i << "\tdata!" << endl;
 					timespec before, after, diff;
 					clock_gettime(0, &before);
+					sockMutex.lock();
 					int sockfd = send_first(value.parents(i), config->schedulerPortNo, mmStr);
 					clock_gettime(0, &after);
 					diff = time_diff(before, after);
@@ -808,6 +818,7 @@ void MatrixScheduler::exec_a_task(TaskMsg &tm)
 					recv_bf(sockfd, dataPiece);
 					clock_gettime(0, &after);
 					close(sockfd);
+					sockMutex.unlock();
 					diff = time_diff(before, after);
 					//cout << tm.taskid() << "\tit takes " << diff.tv_sec << "s, and " << diff.tv_nsec
 					//		<< "ns to receive the " << i << "\tdata from scheduler " << value.parents(i) << endl;
@@ -835,7 +846,9 @@ void MatrixScheduler::exec_a_task(TaskMsg &tm)
 	string key = get_id() + tm.taskid();
 
 #ifdef ZHT_STORAGE
+	sockMutex.lock();
 	zc.insert(key, result);
+	sockMutex.unlock();
 #else
 	ldMutex.lock();
 	localData.insert(make_pair(key, result));
@@ -1008,10 +1021,12 @@ int MatrixScheduler::task_ready_process(
 				mm.set_count(1);
 				mm.add_tasks(taskmsg_to_str(tm));
 				string mmStr = mm.SerializeAsString();
+				sockMutex.lock();
 				int sockfd = send_first(maxDataScheduler, config->schedulerPortNo, mmStr);
 				string ack;
 				recv_bf(sockfd, ack);
 				close(sockfd);
+				sockMutex.unlock();
 				flag = 2;
 			}
 		}
@@ -1028,8 +1043,9 @@ bool MatrixScheduler::check_a_ready_task(TaskMsg &tm)
 {
 	string taskDetail;
 	bool ready = false;
-
+	sockMutex.lock();
 	zc.lookup(tm.taskid(), taskDetail);
+	sockMutex.unlock();
 	Value value = str_to_value(taskDetail);
 	cout << "task indegree:" << tm.taskid() << "\t" << value.indegree() << endl;
 
@@ -1120,7 +1136,9 @@ long MatrixScheduler::notify_children(const CmpQueueItem &cqItem)
 {
 	string taskDetail;
 	long increment = 0;
+	sockMutex.lock();
 	lookup_wrap(cqItem.taskId, taskDetail);
+	sockMutex.unlock();
 	if (taskDetail.empty())
 	{
 		cout << "I am notifying a children, that is insane:" << cqItem.taskId << endl;
@@ -1135,7 +1153,9 @@ long MatrixScheduler::notify_children(const CmpQueueItem &cqItem)
 	for (int i = 0; i < value.children_size(); i++)
 	{
 		childTaskId = value.children(i);
+		sockMutex.lock();
 		lookup_wrap(childTaskId, childTaskDetail);
+		sockMutex.unlock();
 		increment++;
 		if (taskDetail.empty())
 		{
@@ -1151,6 +1171,7 @@ long MatrixScheduler::notify_children(const CmpQueueItem &cqItem)
 
 		cout << cqItem.taskId << "\t" << childTaskId << "\t" << childTaskDetail << "\t" << childTaskDetailAttempt << endl;
 		increment++;
+		sockMutex.lock();
 		while (zc.compare_swap(childTaskId, childTaskDetail, childTaskDetailAttempt, query_value) != 0)
 		{
 			if (query_value.empty())
@@ -1171,6 +1192,7 @@ long MatrixScheduler::notify_children(const CmpQueueItem &cqItem)
 			childTaskDetailAttempt = value_to_str(childVal);
 			increment++;
 		}
+		sockMutex.unlock();
 	}
 
 	return increment;
@@ -1256,7 +1278,9 @@ void *recording_stat(void *args)
 		recordVal.set_numworksteal(ms->numWS);
 		recordVal.set_numworkstealfail(ms->numWSFail);
 		string recordValStr = value_to_str(recordVal);
+		sockMutex.lock();
 		ms->insert_wrap(ms->get_id(), recordValStr);
+		sockMutex.unlock();
 
 		if (ms->schedulerLogOS.is_open())
 		{
@@ -1272,7 +1296,9 @@ void *recording_stat(void *args)
 		 * */
 		string key("num tasks done");
 		string numTaskDoneStr;
+		sockMutex.lock();
 		ms->lookup_wrap(key, numTaskDoneStr);
+		sockMutex.unlock();
 
 		increment += 2;
 
@@ -1297,6 +1323,7 @@ void *recording_stat(void *args)
 		string numTaskDoneStrNew = num_to_str<long>(numTaskDone);
 		string queryValue;
 		increment++;
+		sockMutex.lock();
 		while (ms->zc.compare_swap(key, numTaskDoneStr,
 				numTaskDoneStrNew, queryValue) != 0)
 		{
@@ -1318,6 +1345,7 @@ void *recording_stat(void *args)
 			numTaskDoneStrNew = num_to_str<long>(numTaskDone);
 			increment++;
 		}
+		sockMutex.unlock();
 		ms->prevNumTaskFin = ms->numTaskFin;
 
 		ms->numTaskFinMutex.unlock();
