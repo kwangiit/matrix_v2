@@ -501,7 +501,6 @@ void MatrixScheduler::reset_choosebm()
  * */
 void MatrixScheduler::choose_neigh()
 {
-	//srand(time(NULL));
 	int idx = -1;
 	for (int i = 0; i < numNeigh; i++)
 	{
@@ -674,7 +673,6 @@ void *workstealing(void* args)
 
 	while (ms->running)
 	{
-		usleep(1000);
 		cout << "Now, start to do work stealing!" << endl;
 		while (ms->localQueue.size() + ms->wsQueue.size() == 0 &&
 				ms->pollInterval < ms->config->wsPollIntervalUb)

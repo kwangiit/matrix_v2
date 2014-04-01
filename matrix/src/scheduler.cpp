@@ -39,7 +39,6 @@ int main(int argc, char *argv[])
 
 	ms->fork_cct_thread();	// forks checking complete task thread
 
-	sleep(10);
 	ms->fork_ws_thread();	// forks work stealing thread
 
 	ms->fork_record_stat_thread();	// forks recording status thread
