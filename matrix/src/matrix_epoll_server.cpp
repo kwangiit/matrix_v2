@@ -467,8 +467,7 @@ void MatrixEpollServer::serve()
 							 data. So go back to the main loop. */
 							if (errno != EAGAIN)
 							{
-								cout << "The socket is:" << edata->fd() << ", and buf is:" << buf << endl;
-								//perror("read");
+								perror("read");
 								done = 1;
 							}
 							break;

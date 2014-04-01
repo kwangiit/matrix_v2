@@ -51,6 +51,8 @@ MatrixClient::MatrixClient(const string &configFile) : Peer(configFile)
 		clientLogOS << "I am a Matrix Client, it takes me " << diff.tv_sec << "s, "
 				"and " << diff.tv_nsec << " ns for initialization!" << endl;
 	}
+
+	srand(time(NULL));
 }
 
 MatrixClient::~MatrixClient()
@@ -213,6 +215,7 @@ void MatrixClient::split_task()
 		/* otherwise, do the worst case scenario by randomly
 		 * selecting a scheduler to submit all the tasks
 		 * */
+
 		int toScheIdx = rand() % schedulerVec.size();
 		split_task_wc(taskVec, toScheIdx);
 	}

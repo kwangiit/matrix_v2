@@ -56,10 +56,7 @@ HostEntity ZHTUtil::getHostEntityByKey(const string& msg) {
 	size_t node_size = ConfHandler::NeighborVector.size();
 	int index = hascode % node_size;
 
-
 	ConfEntry ce = ConfHandler::NeighborVector.at(index);
-
-	cout << "HashCode:" << zpack.key() << "\t" << hascode << "\t" << node_size << "\t" << index << "\t" << ce.name() << "\t" << ce.value() << endl;
 
 	return buildHostEntity(ce.name(), atoi(ce.value().c_str()));
 

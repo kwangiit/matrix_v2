@@ -480,7 +480,6 @@ void EpollServer::serve() {
 								_eventQueue.push(eventData);
 
 #else
-								cout << "receive request:" << edata->fd() << ":" << bd << endl;
 								_ZProcessor->process(edata->fd(), bd.c_str(),
 										fromaddr);
 #endif
@@ -568,7 +567,6 @@ void EpollServer::serve() {
 										*edata->sender());
 								_eventQueue.push(eventData);
 #else
-								cout << "receive request:" << edata->fd() << ":" << bd << endl;
 								_ZProcessor->process(edata->fd(), bd.c_str(),
 										*edata->sender());
 #endif

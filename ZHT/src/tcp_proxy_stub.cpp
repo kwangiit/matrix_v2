@@ -75,22 +75,17 @@ bool TCPProxy::sendrecv(const void *sendbuf, const size_t sendcount,
 
 	reuseSock(sock);
 
-	cout << "The socket is:" << sock << ", and the host is:" << he.host << "\t" << he.port << endl;
 
 	/*get mutex to protected shared socket*/
 	pthread_mutex_t *sock_mutex = getSockMutex(he.host, he.port);
 	LockGuard lock(sock_mutex);
 
 	/*send message to server over client sock fd*/
-	cout << "Before sent, the socket is:" << sock << endl;
 	int sentSize = sendTo(sock, sendbuf, sendcount);
-	cout << "After sent, the socket is:" << sock << endl;
 	int sent_bool = sentSize == sendcount;
 
 	/*receive response from server over client sock fd*/
-	cout << "Before receive, the socket is:" << sock << endl;
 	recvcount = recvFrom(sock, recvbuf);
-	cout << "After receive, the socket is:" << sock << endl;
 	int recv_bool = recvcount >= 0;
 
 	/*combine flags as value to be returned*/

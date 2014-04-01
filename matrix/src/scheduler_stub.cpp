@@ -25,9 +25,6 @@ MatrixScheduler::MatrixScheduler(const string
 	}
 
 	numNeigh = (int)(sqrt(schedulerVec.size()));
-
-	cout << "The number of neighbor is:" << numNeigh << endl;
-
 	neighIdx = new int[numNeigh];
 	maxLoadedIdx = -1;
 	maxLoad = -1000000;
@@ -224,6 +221,7 @@ void MatrixScheduler::pack_send_task(
 	MatrixMsg mmTasks;
 	mmTasks.set_msgtype("scheduler send task");
 	mmTasks.set_count(numTask);
+	cout << "The task count that is going to send is:" << numTask << endl;
 
 	for (int j = 0; j < numTask; j++)
 	{
@@ -258,6 +256,7 @@ void MatrixScheduler::send_task(int sockfd, sockaddr fromAddr)
 	if (numTaskToSend > 0)
 	{
 		int numSend = numTaskToSend / config->maxTaskPerPkg;
+		cout << "The number of send is:" << numSend << endl;
 
 		for (int i = 0; i < numSend; i++)
 		{
@@ -268,6 +267,7 @@ void MatrixScheduler::send_task(int sockfd, sockaddr fromAddr)
 
 		if (numTaskLeft > 0)
 		{
+			cout << "One more send is:" << numTaskLeft << endl;
 			pack_send_task(numTaskLeft, sockfd, fromAddr);
 		}
 	}
@@ -570,21 +570,24 @@ void MatrixScheduler::recv_task_from_scheduler(int sockfd, long numTask)
 		numRecv++;
 	}
 
+	cout << "Number of task stolen is:" << numTask << ", and number of receive is:" << numRecv << endl;
 	//long increment = 0;
 
 	for (long i = 0; i < numRecv; i++)
 	{
 		string taskPkgStr;
 		recv_bf(sockfd, taskPkgStr);
+		cout << "The message length received is:" << taskPkgStr.length() << endl;
 		MatrixMsg mm;
 		mm.ParseFromString(taskPkgStr);
-
 
 		vector<TaskMsg> tmVec;
 		string time = num_to_str<long>(get_time_usec());
 
+		cout << "Number of tasks received is:" << mm.count() << endl;
 		for (long j = 0; j < mm.count(); j++)
 		{
+			cout << "The " << j << "th task is:" << mm.tasks(j) << endl;
 			tmVec.push_back(str_to_taskmsg(mm.tasks(j)));
 		}
 

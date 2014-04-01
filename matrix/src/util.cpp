@@ -35,7 +35,6 @@ vector<string> tokenize(const std::string &source, const char *delimiter = " ")
 	{
 		results.push_back(source.substr(prev));
 	}
-	//cout << "The size is:" << results.size() << endl;
 	tokenMutex.unlock();
 	return results;
 }
@@ -541,76 +540,6 @@ extern string value_to_str(const Value &value)
 	}
 	str.append("~~");
 
-	/*if (value.has_history())
-	{
-		str.append(value.history());
-	}
-	else
-	{
-		str.append("nohistory");
-	}
-	str.append("~~");
-
-	if (value.has_nummove())
-	{
-		str.append(num_to_str<int>(value.nummove()));
-	}
-	else
-	{
-		str.append("nomove");
-	}
-	str.append("~~");
-
-	if (value.has_submittime())
-	{
-		str.append(num_to_str<long>(value.submittime()));
-	}
-	else
-	{
-		str.append("nost");
-	}
-	str.append("~~");
-
-	if (value.has_arrivetime())
-	{
-		str.append(num_to_str<long>(value.arrivetime()));
-	}
-	else
-	{
-		str.append("noat");
-	}
-	str.append("~~");
-
-	if (value.has_rqueuedtime())
-	{
-		str.append(num_to_str<long>(value.rqueuedtime()));
-	}
-	else
-	{
-		str.append("noqt");
-	}
-	str.append("~~");
-
-	if (value.has_exetime())
-	{
-		str.append(num_to_str<long>(value.exetime()));
-	}
-	else
-	{
-		str.append("noet");
-	}
-	str.append("~~");
-
-	if (value.has_fintime())
-	{
-		str.append(num_to_str<long>(value.fintime()));
-	}
-	else
-	{
-		str.append("noft");
-	}
-	str.append("~~");*/
-
 	if (value.has_numtaskfin())
 	{
 		str.append(num_to_str<long>(value.numtaskfin()));
@@ -742,41 +671,6 @@ extern Value str_to_value(const string &str)
 	{
 		value.set_alldatasize(str_to_num<long>(vec.at(6)));
 	}
-
-	/*if (vec.at(7).compare("nohistory") != 0)
-	{
-		value.set_history(vec.at(7));
-	}
-
-	if (vec.at(8).compare("nomove") != 0)
-	{
-		value.set_nummove(str_to_num<int>(vec.at(8)));
-	}
-
-	if (vec.at(9).compare("nost") != 0)
-	{
-		value.set_submittime(str_to_num<long>(vec.at(9)));
-	}
-
-	if (vec.at(10).compare("noat") != 0)
-	{
-		value.set_arrivetime(str_to_num<long>(vec.at(10)));
-	}
-
-	if (vec.at(11).compare("noqt") != 0)
-	{
-		value.set_rqueuedtime(str_to_num<long>(vec.at(11)));
-	}
-
-	if (vec.at(12).compare("noet") != 0)
-	{
-		value.set_exetime(str_to_num<long>(vec.at(12)));
-	}
-
-	if (vec.at(13).compare("noft") != 0)
-	{
-		value.set_fintime(str_to_num<long>(vec.at(13)));
-	}*/
 
 	if (vec.at(7).compare("nonumtaskfin") != 0)
 	{
