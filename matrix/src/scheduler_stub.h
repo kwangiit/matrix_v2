@@ -35,7 +35,7 @@ class MatrixScheduler: public Peer
 		/* receive tasks from another scheduler as a
 		 * consequence of successful work stealing
 		 * */
-		void recv_task_from_scheduler(int, long);
+		bool recv_task_from_scheduler(int);
 
 		void recv_pushing_task(MatrixMsg&, int, sockaddr);
 
@@ -43,7 +43,7 @@ class MatrixScheduler: public Peer
 		void recv_task_from_client(MatrixMsg&, int, sockaddr);
 
 		/* pack and send tasks to another thief scheduler */
-		void pack_send_task(int, int, sockaddr);
+		void pack_send_task(int, int, sockaddr, bool);
 
 		/* send tasks to another thief scheduler */
 		void send_task(int, sockaddr);

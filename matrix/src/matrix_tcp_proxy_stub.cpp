@@ -60,6 +60,135 @@ int recv_bf(int sock, string &buf)
 	return ret;
 }
 
+int send_mul(int sock, const string &buf, bool end)
+{
+	string bufUp;
+	bufUp.append(buf);
+	bufUp.append("##");
+
+	if (end)
+	{
+		bufUp.append("$");
+	}
+
+	cout << "The send is:" << bufUp << endl;
+	return send_bf(sock, bufUp);
+}
+
+int recv_mul(int sock, string &buf)
+{
+	string tmpBuf;
+	int count = recv_bf(sock, tmpBuf);
+	int sum = 0;
+
+	while (cout > 0)
+	{
+		sum += count;
+		buf.append(tmpBuf);
+		cout << "The receive is:" << tmpBuf << endl;
+		if (tmpBuf[tmpBuf.length() - 1] == '$')
+		{
+			break;
+		}
+		count = recv_bf(sock, tmpBuf);
+	}
+
+	cout << "The data received is:" << buf << endl;
+	return count;
+}
+
+//int send_mul(int sock, const string &buf)
+//{
+//	char *cStr;
+//	cStr = (char*)calloc((buf.length() + 5 + 1), sizeof(char));
+//
+//	int i = 0;
+//
+//	for(i = 0; i < 5; i++)
+//	{
+//		cStr[i] = '#';
+//	}
+//
+//	string lenStr = num_to_str<int>(buf.length());
+//
+//	for(i = 0; i < lenStr.length(); i++)
+//	{
+//		cStr[i] = lenStr[i];
+//	}
+//
+//	cout << "The size is:" << lenStr.length() << ", and " << cStr << endl;
+//
+//	i = 5;
+//	memcpy(&cStr[i], buf.c_str(), buf.length() + 1);
+//
+//	int len = i + buf.length();
+//
+//	int sendLength = send(sock, cStr, len, 0);
+//
+//	cout << "The string after is:" << cStr << endl;
+//
+//	if (cStr != NULL)
+//	{
+//		free(cStr);
+//		cStr = NULL;
+//	}
+//	return sendLength;
+//}
+//
+//int recv_mul(int sock, string &bufStr)
+//{
+//	char buf[_BUF_SIZE];
+//	char tempbuf[_BUF_SIZE];
+//	memset(buf, '\0', _BUF_SIZE);
+//	memset(tempbuf, '\0', _BUF_SIZE);
+//
+//	int numByte = recv(sock, tempbuf, sizeof(tempbuf), 0);
+//	cout << "The stuff received is:" << tempbuf << ", and the number of bytes is:" << numByte << endl;
+//
+//	if (numByte > 0)
+//	{
+//		int string_size, all_size;
+//
+//		const int header_size = 5;
+//		char header[header_size];
+//		memcpy(header, tempbuf, header_size);
+//		stringstream size_stream;
+//		size_stream << header;
+//		string str;
+//		size_stream >> str;
+//		vector<string> vec = tokenize(str, "#");
+//		string_size = str_to_num<int>(vec[0]);
+//		//size_stream >> string_size;
+//
+//		all_size = string_size + header_size;
+//
+//		int pos = 0;
+//		int bytes_recd = numByte;
+//		memcpy(&buf[pos], tempbuf, numByte);
+//		pos = pos + numByte;
+//
+//		while (bytes_recd < all_size)
+//		{
+//			memset(tempbuf, '\0', _BUF_SIZE);
+//			numByte = recv(sock, tempbuf, sizeof(tempbuf), 0); //cout << "Received size = " << count << endl;
+//			cout << "OK, The stuff received is:" << tempbuf << endl;
+//
+//			if (numByte > 0)
+//			{
+//				memcpy(&buf[pos], tempbuf, numByte);
+//				pos = pos + numByte;
+//				bytes_recd = bytes_recd + numByte;
+//			}
+//		}
+//
+//		bufStr.assign(&buf[header_size], string_size);
+//		cout << "The buffer string is:" << bufStr << endl;
+//		return all_size;
+//	}
+//
+//	return -1;
+//}
+
 //void* es_proc(void *arg)
 //{
 //	MatrixEpollServer *ms = (MatrixEpollServer*)arg;

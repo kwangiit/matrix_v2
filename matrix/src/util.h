@@ -108,6 +108,9 @@ extern TaskMsg str_to_taskmsg(const string &str);
 extern string value_to_str(const Value &value);
 extern Value str_to_value(const string &str);
 
+extern string mm_to_str(const MatrixMsg &mm);
+extern MatrixMsg str_to_mm(const string &str);
+
 /* a mutex class for locking and uncloking */
 class Mutex
 {

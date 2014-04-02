@@ -710,6 +710,78 @@ extern Value str_to_value(const string &str)
 	return value;
 }
 
+/*required string msgType = 1;
+optional string extraInfo = 2;
+optional int64 count = 3;
+repeated string tasks = 4;*/
+extern string mm_to_str(const MatrixMsg &mm)
+{
+	string str("");
+	str.append(mm.msgtype()); str.append("&&");
+
+	if (mm.has_extrainfo())
+	{
+		str.append(mm.extrainfo());
+	}
+	else
+	{
+		str.append("noextrainfo");
+	}
+	str.append("&&");
+
+	if (mm.has_count())
+	{
+		str.append(num_to_str<int>(mm.count()));
+	}
+	else
+	{
+		str.append("nocount");
+	}
+	str.append("&&");
+
+	if (mm.tasks_size() > 0)
+	{
+		for (int i = 0; i < mm.tasks_size(); i++)
+		{
+			str.append(mm.tasks(i));
+			str.append("!!");
+		}
+	}
+	else
+	{
+		str.append("notask");
+	}
+	str.append("&&");
+
+	return str;
+}
+
+extern MatrixMsg str_to_mm(const string &str)
+{
+	vector<string> vec = tokenize(str, "&&");
+	MatrixMsg mm;
+	mm.set_msgtype(vec.at(0));
+
+	if (vec.at(1).compare("noextrainfo") != 0)
+	{
+		mm.set_extrainfo(vec.at(1));
+	}
+	if (vec.at(2).compare("nocount") != 0)
+	{
+		mm.set_count(str_to_num<int>(vec.at(2)));
+	}
+	if (vec.at(3).compare("notask") != 0)
+	{
+		vector<string> taskVec = tokenize(vec.at(3), "!!");
+		for (int i = 0; i < taskVec.size(); i++)
+		{
+			mm.add_tasks(taskVec.at(i));
+		}
+	}
+
+	return mm;
+}
+
 Mutex::Mutex()
 {
 	int ret = pthread_mutex_init (&mutex, NULL);

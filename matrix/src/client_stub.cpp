@@ -383,6 +383,7 @@ void *monitoring(void* args)
 		//mc->lookup_wrap(key, numTaskFinStr);
 		numTaskDone = str_to_num<long>(numTaskFinStr);
 
+		cout << "number of task done is:" << numTaskDone << endl;
 		increment++;
 
 		/* log the instant system status */
