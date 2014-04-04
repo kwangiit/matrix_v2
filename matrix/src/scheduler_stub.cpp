@@ -587,11 +587,12 @@ void MatrixScheduler::find_most_loaded_neigh()
 		//cout << "OK, I get the lock!" << endl;
 		int sockfd = send_first(schedulerVec.at(neighIdx[i]),
 				config->schedulerPortNo, strLoadQuery);
+		sockMutex.unlock();
 		//cout << "OK, I sent, the socket number is:" << sockfd << endl;
 		recv_bf(sockfd, result);
 		//cout << "OH, I received the result" << endl;
 		close(sockfd);
-		sockMutex.unlock();
+		//sockMutex.unlock();
 		if (result.empty())
 		{
 			continue;
@@ -777,9 +778,10 @@ bool MatrixScheduler::steal_task()
 
 	/* otherwise, receive numTask tasks from the victim*/
 	//recv_task_from_scheduler(sockfd, numTask);
+	sockMutex.unlock();
 	bool ret = recv_task_from_scheduler(sockfd);
 	close(sockfd);
-	sockMutex.unlock();
+	//sockMutex.unlock();
 	return ret;
 }
 
@@ -796,8 +798,8 @@ void *workstealing(void* args)
 	while (ms->running)
 	{
 		//cout << "Now, start to do work stealing!" << endl;
-		while (ms->localQueue.size() + ms->wsQueue.size() == 0 &&
-				ms->pollInterval < ms->config->wsPollIntervalUb)
+		while (ms->localQueue.size() + ms->wsQueue.size() == 0)// &&
+				//ms->pollInterval < ms->config->wsPollIntervalUb)
 		{
 			ms->choose_neigh();
 			ms->find_most_loaded_neigh();
@@ -814,25 +816,26 @@ void *workstealing(void* args)
 			 * */
 			if (success)
 			{
-				ms->pollInterval = ms->config->wsPollIntervalStart;
+				//ms->pollInterval = ms->config->wsPollIntervalStart;
 			}
 			else
 			{
 				ms->numWSFail++;
 				//cout << "Failed to do work stealing!" << endl;
-				usleep(ms->pollInterval);
-				ms->pollInterval *= 2;
+				//usleep(ms->pollInterval);
+				//ms->pollInterval *= 2;
 			}
+			usleep(ms->config->sleepLength);
 		}
 
 		usleep(ms->config->sleepLength);
 
-		if (ms->pollInterval >= ms->config->wsPollIntervalUb)
+		/*if (ms->pollInterval >= ms->config->wsPollIntervalUb)
 		{
 			break;
 		}
 
-		ms->pollInterval = ms->config->wsPollIntervalStart;
+		ms->pollInterval = ms->config->wsPollIntervalStart;*/
 	}
 
 	//cout << "I am out" << endl;
@@ -866,9 +869,9 @@ void MatrixScheduler::exec_a_task(TaskMsg &tm)
 {
 	string taskDetail;
 	//cout << "Now, I am executing a task" << tm.taskid() << endl;
-	sockMutex.lock();
+	//sockMutex.lock();
 	zc.lookup(tm.taskid(), taskDetail);
-	sockMutex.unlock();
+	//sockMutex.unlock();
 	Value value = str_to_value(taskDetail);
 
 	long startTime = get_time_usec();
@@ -920,22 +923,19 @@ void MatrixScheduler::exec_a_task(TaskMsg &tm)
 					string mmStr = mm_to_str(mm);
 					//mmStr = mm.SerializeAsString();
 					//cout << tm.taskid() << "\trequires " << i << "\tdata!" << endl;
-					timespec before, after, diff;
-					clock_gettime(0, &before);
+
 					sockMutex.lock();
 					int sockfd = send_first(value.parents(i), config->schedulerPortNo, mmStr);
-					clock_gettime(0, &after);
-					diff = time_diff(before, after);
+					sockMutex.unlock();
+
 					//cout << tm.taskid() << "\tit takes " << diff.tv_sec << "s, and " << diff.tv_nsec
 					//		<< "ns to send the " << i << "\tdata to scheduler " << value.parents(i) << endl;
 
 					string dataPiece;
-					clock_gettime(0, &before);
 					recv_bf(sockfd, dataPiece);
-					clock_gettime(0, &after);
+
 					close(sockfd);
-					sockMutex.unlock();
-					diff = time_diff(before, after);
+					//sockMutex.unlock();
 					//cout << tm.taskid() << "\tit takes " << diff.tv_sec << "s, and " << diff.tv_nsec
 					//		<< "ns to receive the " << i << "\tdata from scheduler " << value.parents(i) << endl;
 					MatrixMsg mmData = str_to_mm(dataPiece);
@@ -1140,10 +1140,11 @@ int MatrixScheduler::task_ready_process(
 				string mmStr = mm_to_str(mm);
 				sockMutex.lock();
 				int sockfd = send_first(maxDataScheduler, config->schedulerPortNo, mmStr);
+				sockMutex.unlock();
 				string ack;
 				recv_bf(sockfd, ack);
 				close(sockfd);
-				sockMutex.unlock();
+				//sockMutex.unlock();
 				flag = 2;
 			}
 		}
