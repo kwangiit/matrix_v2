@@ -71,7 +71,7 @@ int send_mul(int sock, const string &buf, bool end)
 		bufUp.append("$");
 	}
 
-	cout << "The send is:" << bufUp << endl;
+	//cout << "The send is:" << bufUp << endl;
 	return send_bf(sock, bufUp);
 }
 
@@ -81,11 +81,11 @@ int recv_mul(int sock, string &buf)
 	int count = recv_bf(sock, tmpBuf);
 	int sum = 0;
 
-	while (cout > 0)
+	while (count > 0)
 	{
 		sum += count;
 		buf.append(tmpBuf);
-		cout << "The receive is:" << tmpBuf << endl;
+		//cout << "The receive is:" << tmpBuf << endl;
 		if (tmpBuf[tmpBuf.length() - 1] == '$')
 		{
 			break;
@@ -93,8 +93,8 @@ int recv_mul(int sock, string &buf)
 		count = recv_bf(sock, tmpBuf);
 	}
 
-	cout << "The data received is:" << buf << endl;
-	return count;
+	//cout << "The data received is:" << buf << endl;
+	return sum;
 }
 
 //int send_mul(int sock, const string &buf)

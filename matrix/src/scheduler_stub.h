@@ -43,7 +43,7 @@ class MatrixScheduler: public Peer
 		void recv_task_from_client(MatrixMsg&, int, sockaddr);
 
 		/* pack and send tasks to another thief scheduler */
-		void pack_send_task(int, int, sockaddr, bool);
+		void pack_send_task(int, int, sockaddr, bool, deque<TaskMsg>&);
 
 		/* send tasks to another thief scheduler */
 		void send_task(int, sockaddr);

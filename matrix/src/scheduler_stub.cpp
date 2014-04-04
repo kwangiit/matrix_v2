@@ -215,23 +215,23 @@ void MatrixScheduler::get_task_from_file()
  * with one package to another thief scheduler. The tasks
  * are delimited with "eot"
  * */
-void MatrixScheduler::pack_send_task(
-		int numTask, int sockfd, sockaddr fromAddr, bool end)
+void MatrixScheduler::pack_send_task(int numTask, int sockfd,
+		sockaddr fromAddr, bool end, deque<TaskMsg> &migrateQueue)
 {
 	MatrixMsg mmTasks;
 	mmTasks.set_msgtype("scheduler send task");
 	mmTasks.set_count(numTask);
-	cout << "The task count that is going to send is:" << numTask << endl;
+	//cout << "The task count that is going to send is:" << numTask << endl;
 
 	for (int j = 0; j < numTask; j++)
 	{
-		mmTasks.add_tasks(taskmsg_to_str(wsQueue.top()));
-		wsQueue.pop();
+		mmTasks.add_tasks(taskmsg_to_str(migrateQueue.front()));
+		migrateQueue.pop_front();
 	}
 
 	//string strTasks = mmTasks.SerializeAsString();
 	string strTasks = mm_to_str(mmTasks);
-	cout << "The length of the message is:" << strTasks.length() << endl;
+	//cout << "The length of the message is:" << strTasks.length() << endl;
 	//send_bf(sockfd, strTasks);
 	send_mul(sockfd, strTasks, end);
 }
@@ -248,7 +248,7 @@ void MatrixScheduler::send_task(int sockfd, sockaddr fromAddr)
 	 * minus number of idle cores */
 	numTaskToSend = wsQueue.size() / 2;
 
-	cout << "Number of task being stolen is:" << numTaskToSend << endl;
+	//cout << "Number of task being stolen is:" << numTaskToSend << endl;
 	MatrixMsg mmNumTask;
 	mmNumTask.set_msgtype("scheduler send task number");
 	mmNumTask.set_count(numTaskToSend);
@@ -258,9 +258,16 @@ void MatrixScheduler::send_task(int sockfd, sockaddr fromAddr)
 
 	if (numTaskToSend > 0)
 	{
+		deque<TaskMsg> migrateQueue = deque<TaskMsg>();
+		for (int i = 0; i < numTaskToSend; i++)
+		{
+			migrateQueue.push_back(wsQueue.top());
+			wsQueue.pop();
+		}
+		wsqMutex.unlock();
 		send_mul(sockfd, strNumTask, false);
 		int numSend = numTaskToSend / config->maxTaskPerPkg;
-		cout << "The number of send is:" << numSend << endl;
+		//cout << "The number of send is:" << numSend << endl;
 		bool more = false;
 		long numTaskLeft = numTaskToSend - numSend * config->maxTaskPerPkg;
 		if (numTaskLeft > 0)
@@ -272,18 +279,18 @@ void MatrixScheduler::send_task(int sockfd, sockaddr fromAddr)
 		{
 			if (!more && i == numSend - 1)
 			{
-				pack_send_task(config->maxTaskPerPkg, sockfd, fromAddr, true);
+				pack_send_task(config->maxTaskPerPkg, sockfd, fromAddr, true, migrateQueue);
 			}
 			else
 			{
-				pack_send_task(config->maxTaskPerPkg, sockfd, fromAddr, false);
+				pack_send_task(config->maxTaskPerPkg, sockfd, fromAddr, false, migrateQueue);
 			}
 			usleep(100);
 		}
 
 		if (more)
 		{
-			pack_send_task(numTaskLeft, sockfd, fromAddr, true);
+			pack_send_task(numTaskLeft, sockfd, fromAddr, true, migrateQueue);
 		}
 
 		/*for (int i = 0; i < numSend; i++)
@@ -301,13 +308,12 @@ void MatrixScheduler::send_task(int sockfd, sockaddr fromAddr)
 	}
 	else
 	{
+		wsqMutex.unlock();
 		mmNumTask.set_count(-1);
 		//string strNumTask = mmNumTask.SerializeAsString();
 		string strNumTask = mm_to_str(mmNumTask);
 		send_mul(sockfd, strNumTask, true);
 	}
-
-	wsqMutex.unlock();
 }
 
 /* receive tasks submitted by client */
@@ -324,7 +330,7 @@ void MatrixScheduler::recv_task_from_client(
 	send_bf(sockfd, numTaskStr);
 
 	long sec = 0, nsec = 0;
-	cout << "Number of task received is:" << mm.count() << endl;
+	//cout << "Number of task received is:" << mm.count() << endl;
 	for (int i = 0; i < mm.count(); i++)
 	{
 		//cout << "The task is:" << mm.tasks(i) << endl;
@@ -464,7 +470,7 @@ int MatrixScheduler::proc_req(int sockfd, char *buf, sockaddr fromAddr)
 		mmLoad.set_count(load);
 		string strLoad = mm_to_str(mmLoad);
 		//strLoad = mmLoad.SerializeAsString();
-		cout << "OK, I got a query load message" << endl;
+		//cout << "OK, I got a query load message" << endl;
 		send_bf(sockfd, strLoad);
 	}
 	else if (msg.compare("steal task") == 0)	// thief steals tasks
@@ -554,7 +560,7 @@ void MatrixScheduler::choose_neigh()
 		}
 		neighIdx[i] = idx;
 		chooseBitMap[idx] = true;
-		cout << "The neighbor to choose is:" << idx << endl;
+		//cout << "The neighbor to choose is:" << idx << endl;
 	}
 
 	reset_choosebm();
@@ -576,14 +582,14 @@ void MatrixScheduler::find_most_loaded_neigh()
 	for (int i = 0; i < numNeigh; i++)
 	{
 		string result;
-		cout << "I am sending load query to " << schedulerVec.at(neighIdx[i]) << endl;
+		//cout << "I am sending load query to " << schedulerVec.at(neighIdx[i]) << endl;
 		sockMutex.lock();
-		cout << "OK, I get the lock!" << endl;
+		//cout << "OK, I get the lock!" << endl;
 		int sockfd = send_first(schedulerVec.at(neighIdx[i]),
 				config->schedulerPortNo, strLoadQuery);
-		cout << "OK, I sent, the socket number is:" << sockfd << endl;
+		//cout << "OK, I sent, the socket number is:" << sockfd << endl;
 		recv_bf(sockfd, result);
-		cout << "OH, I received the result" << endl;
+		//cout << "OH, I received the result" << endl;
 		close(sockfd);
 		sockMutex.unlock();
 		if (result.empty())
@@ -594,7 +600,7 @@ void MatrixScheduler::find_most_loaded_neigh()
 		//mmLoad.ParseFromString(result);
 
 		load = mmLoad.count();
-		cout << "The load is:" << load << endl;
+		//cout << "The load is:" << load << endl;
 		if (maxLoad < load)
 		{
 			maxLoad = load;
@@ -676,9 +682,9 @@ void MatrixScheduler::find_most_loaded_neigh()
 bool MatrixScheduler::recv_task_from_scheduler(int sockfd)
 {
 	string taskStr;
-	cout << "Before receiving!" << endl;
+	//cout << "Before receiving!" << endl;
 	recv_mul(sockfd, taskStr);
-	cout << "After receiving!" << endl;
+	//cout << "After receiving!" << endl;
 
 	string taskStrLs = taskStr.substr(0, taskStr.length() - 1);
 
@@ -692,7 +698,7 @@ bool MatrixScheduler::recv_task_from_scheduler(int sockfd)
 	//mmNumTask.ParseFromString(stealVec.at(0));
 	int numTask = mmNumTask.count();
 
-	cout << "Number of task is:" << numTask << endl;
+	//cout << "Number of task is:" << numTask << endl;
 
 	for (int i = 1; i < stealVec.size(); i++)
 	{
@@ -702,10 +708,10 @@ bool MatrixScheduler::recv_task_from_scheduler(int sockfd)
 		vector<TaskMsg> tmVec;
 		string time = num_to_str<long>(get_time_usec());
 
-		cout << "Number of tasks received is:" << mm.count() << endl;
+		//cout << "Number of tasks received is:" << mm.count() << endl;
 		for (long j = 0; j < mm.count(); j++)
 		{
-			cout << "The " << j << "th task is:" << mm.tasks(j) << endl;
+			//cout << "The " << j << "th task is:" << mm.tasks(j) << endl;
 			tmVec.push_back(str_to_taskmsg(mm.tasks(j)));
 		}
 
@@ -748,9 +754,9 @@ bool MatrixScheduler::steal_task()
 	string strStealTask = mm_to_str(mm);
 
 	string numTaskPkgStr;
-	cout << "OK, before sending stealing task message!" << endl;
+	//cout << "OK, before sending stealing task message!" << endl;
 	sockMutex.lock();
-	cout << "OK, I am sending stealing task message!" << endl;
+	//cout << "OK, I am sending stealing task message!" << endl;
 	int sockfd = send_first(schedulerVec.at(maxLoadedIdx), config->schedulerPortNo, strStealTask);
 //	//recv_bf(sockfd, numTaskPkgStr);
 //	recv_mul(sockfd, numTaskPkgStr);
@@ -789,13 +795,13 @@ void *workstealing(void* args)
 
 	while (ms->running)
 	{
-		cout << "Now, start to do work stealing!" << endl;
+		//cout << "Now, start to do work stealing!" << endl;
 		while (ms->localQueue.size() + ms->wsQueue.size() == 0 &&
 				ms->pollInterval < ms->config->wsPollIntervalUb)
 		{
 			ms->choose_neigh();
 			ms->find_most_loaded_neigh();
-			cout << "The maxload idx:" << ms->maxLoadedIdx << ", and the maximum load is:" << ms->maxLoad << endl;
+			//cout << "The maxload idx:" << ms->maxLoadedIdx << ", and the maximum load is:" << ms->maxLoad << endl;
 			bool success = ms->steal_task();
 			ms->numWS++;
 			ms->maxLoadedIdx = -1;
@@ -813,7 +819,7 @@ void *workstealing(void* args)
 			else
 			{
 				ms->numWSFail++;
-				cout << "Failed to do work stealing!" << endl;
+				//cout << "Failed to do work stealing!" << endl;
 				usleep(ms->pollInterval);
 				ms->pollInterval *= 2;
 			}
@@ -829,7 +835,7 @@ void *workstealing(void* args)
 		ms->pollInterval = ms->config->wsPollIntervalStart;
 	}
 
-	cout << "I am out" << endl;
+	//cout << "I am out" << endl;
 	ms->ZHTMsgCountMutex.lock();
 	ms->incre_ZHT_msg_count(incre);
 	ms->ZHTMsgCountMutex.unlock();
@@ -859,7 +865,7 @@ void MatrixScheduler::fork_ws_thread()
 void MatrixScheduler::exec_a_task(TaskMsg &tm)
 {
 	string taskDetail;
-	cout << "Now, I am executing a task" << tm.taskid() << endl;
+	//cout << "Now, I am executing a task" << tm.taskid() << endl;
 	sockMutex.lock();
 	zc.lookup(tm.taskid(), taskDetail);
 	sockMutex.unlock();
@@ -1158,7 +1164,7 @@ bool MatrixScheduler::check_a_ready_task(TaskMsg &tm)
 	zc.lookup(tm.taskid(), taskDetail);
 	sockMutex.unlock();
 	Value value = str_to_value(taskDetail);
-	cout << "task indegree:" << tm.taskid() << "\t" << value.indegree() << endl;
+	//cout << "task indegree:" << tm.taskid() << "\t" << value.indegree() << endl;
 
 	if (value.indegree() == 0)
 	{
@@ -1205,17 +1211,17 @@ void *checking_ready_task(void *args)
 	{
 		while (ms->waitQueue.size() > 0)
 		{
-			cout << "number of task waiting is:" << ms->waitQueue.size() << endl;
+			//cout << "number of task waiting is:" << ms->waitQueue.size() << endl;
 			tm = ms->waitQueue.front();
 			ms->waitQueue.pop_front();
-			cout << "next one to process is:" << tm.taskid() << endl;
+			//cout << "next one to process is:" << tm.taskid() << endl;
 
 			bool ready = ms->check_a_ready_task(tm);
 			increment++;
 			if (!ready)
 			{
 				ms->waitQueue.push_back(tm);
-				cout << "Ok, the task is still not ready!" << tm.taskid() << endl;
+				//cout << "Ok, the task is still not ready!" << tm.taskid() << endl;
 			}
 		}
 	}
@@ -1248,7 +1254,7 @@ long MatrixScheduler::notify_children(const CmpQueueItem &cqItem)
 	string taskDetail;
 	long increment = 0;
 	//sockMutex.lock();
-	cout << "I got the lock, and I am notifying children!" << endl;
+	//cout << "I got the lock, and I am notifying children!" << endl;
 	zc.lookup(cqItem.taskId, taskDetail);
 	//sockMutex.unlock();
 	if (taskDetail.empty())
@@ -1261,7 +1267,7 @@ long MatrixScheduler::notify_children(const CmpQueueItem &cqItem)
 	string childTaskId, childTaskDetail, childTaskDetailAttempt, query_value;
 	Value childVal;
 
-	cout << "task finished, notify children:" << cqItem.taskId << "\t" << taskDetail << "\tChildren size is:" << value.children_size() << endl;
+	//cout << "task finished, notify children:" << cqItem.taskId << "\t" << taskDetail << "\tChildren size is:" << value.children_size() << endl;
 	for (int i = 0; i < value.children_size(); i++)
 	{
 		childTaskId = value.children(i);
@@ -1281,7 +1287,7 @@ long MatrixScheduler::notify_children(const CmpQueueItem &cqItem)
 		childVal.set_alldatasize(childVal.alldatasize() + cqItem.dataSize);
 		childTaskDetailAttempt = value_to_str(childVal);
 
-		cout << cqItem.taskId << "\t" << childTaskId << "\t" << childTaskDetail << "\t" << childTaskDetailAttempt << endl;
+		//cout << cqItem.taskId << "\t" << childTaskId << "\t" << childTaskDetail << "\t" << childTaskDetailAttempt << endl;
 		increment++;
 		//sockMutex.lock();
 		while (zc.compare_swap(childTaskId, childTaskDetail, childTaskDetailAttempt, query_value) != 0)
