@@ -24,7 +24,7 @@ MatrixScheduler::MatrixScheduler(const string
 		config->workStealingOn = 0;
 	}
 
-	numNeigh = (int)(sqrt(schedulerVec.size()));
+	numNeigh = (int)(sqrt(schedulerVec.size()) + 0.5);
 	neighIdx = new int[numNeigh];
 	maxLoadedIdx = -1;
 	maxLoad = -1000000;

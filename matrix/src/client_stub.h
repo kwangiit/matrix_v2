@@ -39,7 +39,8 @@ class MatrixClient : public Peer
 		/* the worst case senario where tasks are submitted
 		 * to just one random chosen scheduler
 		 * */
-		void split_task_wc(vector<string>, int);
+		void split_task_wc(void);
+		void split_task_one(vector<string>, int);
 
 		/* monitoring thread function */
 		//void *monitoring(void*);

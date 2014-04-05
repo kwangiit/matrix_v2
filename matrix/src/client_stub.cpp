@@ -6,6 +6,7 @@
  */
 
 #include "client_stub.h"
+#include "math.h"
 
 MatrixClient::MatrixClient(const string &configFile) : Peer(configFile)
 {
@@ -173,23 +174,6 @@ void MatrixClient::split_task()
 	 * */
 	long increment = 0;
 
-	/* for (long i = 0; i < config->numTaskPerClient; i++)
-	{
-		string taskId = tasks.at(i).taskid();
-		string taskDetail;
-		//zc.lookup(taskId, taskDetail);
-		lookup_wrap(taskId, taskDetail);
-		Value value = str_to_value(taskDetail);
-		value.set_submittime(get_time_usec());
-
-		taskDetail = value_to_str(value);
-		insert_wrap(taskId, taskDetail);
-
-		increment += 2;
-	}
-
-	incre_ZHT_msg_count(increment); */
-
 #ifdef PRINT_OUT
 	cout << "--------------------------------"
 			"----------------------------" << endl;
@@ -206,6 +190,8 @@ void MatrixClient::split_task()
 
 	clock_gettime(0, &start);
 	/* if the submission mode is best case */
+	int size = -1;
+
 	if (config->submitMode.compare("bestcase") == 0)
 	{
 		split_task_bc();
@@ -215,9 +201,7 @@ void MatrixClient::split_task()
 		/* otherwise, do the worst case scenario by randomly
 		 * selecting a scheduler to submit all the tasks
 		 * */
-
-		int toScheIdx = rand() % schedulerVec.size();
-		split_task_wc(taskVec, toScheIdx);
+		split_task_wc();
 	}
 
 	clock_gettime(0, &end);
@@ -271,16 +255,58 @@ void MatrixClient::split_task_bc()
 	 * */
 	for (int i = 0; i < numSche; i++)
 	{
-		split_task_wc(tasksVec[i], i);
+		split_task_one(tasksVec[i], i);
 	}
 }
 
+void MatrixClient::split_task_wc()
+{
+	int size = (int)(sqrt(schedulerVec.size()) + 0.5);
+	int *candidate = new int[size];
+	bool *selected = new bool[schedulerVec.size()];
+
+	for (int i = 0; i < schedulerVec.size(); i++)
+	{
+		selected[i] = false;
+	}
+
+	int value = -1;
+	for (int i = 0; i < size; i++)
+	{
+		value = rand() % schedulerVec.size();
+		while (selected[value])
+		{
+			value = rand() % schedulerVec.size();
+		}
+		candidate[i] = value;
+		selected[value] = true;
+	}
+	delete selected;
+
+	vector< vector<string> > tasksVec;
+	for (int i = 0; i < size; i++)
+	{
+		tasksVec.push_back(vector<string>());
+	}
+
+	for (int i = 0; i < config->numTaskPerClient; i++)
+	{
+		tasksVec[i % size].push_back(taskVec.at(i));
+	}
+
+	for (int i = 0; i < size; i++)
+	{
+		split_task_one(tasksVec[i], candidate[i]);
+	}
+
+	delete candidate;
+}
 /* submit tasks with the worst case scenario, in which,
  * all the tasks (listed in "taskVec") are submitted to
  * one scheduler (index is "toScheIdx")
  * */
 
-void MatrixClient::split_task_wc(vector<string> taskStrVec, int toScheIdx)
+void MatrixClient::split_task_one(vector<string> taskStrVec, int toScheIdx)
 {
 	string path = config->schedulerWorkloadPath +
 			"/workload." + num_to_str<int>(toScheIdx);

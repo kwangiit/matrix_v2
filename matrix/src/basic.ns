@@ -3,7 +3,7 @@ set ns [new Simulator]
 source tb_compat.tcl
 
 # two nodes for now
-set maxnodes 4
+set maxnodes 90
 
 for {set i 1} {$i <= $maxnodes} {incr i} {
         set node($i) [$ns node]

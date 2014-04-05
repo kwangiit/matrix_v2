@@ -468,6 +468,7 @@ void EpollServer::serve() {
 							break;
 
 						} else {
+
 #ifdef BIG_MSG
 							bool ready = false;
 							string bd = pbrb->getBdStr(sfd, buf, count, ready);

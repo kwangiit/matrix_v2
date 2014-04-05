@@ -160,7 +160,6 @@ string HTWorker::lookup_shared(const ZPack &zpack) {
 		return Const::ZSC_REC_EMPTYKEY; //-1
 
 	string key = zpack.key();
-
 	string *ret = PMAP->get(key);
 
 	if (ret == NULL) {
@@ -351,6 +350,7 @@ string HTWorker::compare_swap_internal(const ZPack &zpack) {
 
 	/*	printf("{%s}:{%s,%s}\n", zpack.key().c_str(), zpack.val().c_str(),
 	 zpack.newval().c_str());*/
+
 	/*they are equivalent, compare and swap*/
 	if (!seen_value_passed_in.compare(seen_value_stored)) {
 
