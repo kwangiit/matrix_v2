@@ -189,7 +189,7 @@ int MatrixEpollServer::make_svr_socket()
 			svrSock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
 		}
 
-		if (svrSock < 0)
+		if (svrSock <= 0)
 		{
 			printf("Error occurred when creating the socket:"
 					"%d to the server port:%ld\n", svrSock, port);
@@ -298,219 +298,248 @@ void MatrixEpollServer::serve()
 	if (sfd == -1)
 		abort();
 
-	s = make_socket_non_blocking(sfd);
-	if (s == -1)
-		abort();
+	//s = make_socket_non_blocking(sfd);
+	//if (s == -1)
+	//	abort();
 
-	reuse_sock(sfd);
+	//reuse_sock(sfd);
 
-	efd = epoll_create(1);
-	if (efd == -1)
-	{
-		perror("epoll_create");
-		abort();
-	}
+	//efd = epoll_create(1);
+	//if (efd == -1)
+	//{
+	//	perror("epoll_create");
+	//	abort();
+	//}
 
-	event.data.ptr = new MatrixEpollData(sfd, NULL);
-	event.events = EPOLLIN | EPOLLET;
-	s = epoll_ctl(efd, EPOLL_CTL_ADD, sfd, &event);
-	if (s == -1)
-	{
-		perror("epoll_ctl");
-		abort();
-	}
+	//event.data.ptr = new MatrixEpollData(sfd, NULL);
+	//event.events = EPOLLIN | EPOLLET;
+	//s = epoll_ctl(efd, EPOLL_CTL_ADD, sfd, &event);
+	//if (s == -1)
+	//{
+		//perror("epoll_ctl");
+		//abort();
+	//}
 
 	/* Buffer where events are returned */
-	events = (epoll_event *) calloc(MAX_EVENTS, sizeof event);
+	//events = (epoll_event *) calloc(MAX_EVENTS, sizeof event);
 
 	/* The event loop */
 	while (1)
 	{
-		int n, i;
-		n = epoll_wait(efd, events, MAX_EVENTS, -1);
-		//cout << "Number of events received is:" << n << endl;
+		sockaddr *in_addr = (sockaddr *) calloc(1, sizeof(struct sockaddr));
+		socklen_t in_len = sizeof(struct sockaddr);
 
-		for (i = 0; i < n; i++)
+		int infd = accept(sfd, in_addr, &in_len);
+		if (infd == -1)
 		{
-			MatrixEpollData *edata = (MatrixEpollData*) events[i].data.ptr;
-
-			if ((events[i].events & EPOLLERR) || (events[i].events & EPOLLHUP)
-					|| (!(events[i].events & EPOLLIN)))
+			free(in_addr);
+		}
+		else
+		{
+			char *buf = (char*)calloc(_BUF_SIZE, sizeof(char));
+			int count = recv(infd, buf, _BUF_SIZE, 0);
+			if (count > 0)
 			{
-				/* An error has occured on this fd, or the socket is not
-				 ready for reading (why were we notified then?) */
-				fprintf(stderr, "epoll error\n");
-				close(edata->fd());
-				delete edata;
-				continue;
+				MatrixEventData eventData(infd, buf, sizeof(buf), *in_addr);
+				eqMutex.lock();
+				_eventQueue.push(eventData);
+				//							//cout << "The event queue length of the epoll server is:" << _eventQueue.size() << endl;
+				eqMutex.unlock();
 			}
-			else if (sfd == edata->fd())
+			if (buf == NULL)
 			{
-				if (_ms->config->netProtoc.compare("TCP") == 0)
-				{
-					/* We have a notification on the listening socket, which
-					 means one or more incoming connections. */
-					while (1)
-					{
-						sockaddr *in_addr = (sockaddr *) calloc(1,
-								sizeof(struct sockaddr));
-						socklen_t in_len = sizeof(struct sockaddr);
-
-						int infd = accept(sfd, in_addr, &in_len);
-						if (infd == -1)
-						{
-							free(in_addr);
-
-							if ((errno == EAGAIN) || (errno == EWOULDBLOCK))
-							{
-								/* We have processed all incoming connections. */
-								break;
-							}
-							else
-							{
-								perror("accept");
-								break;
-							}
-						}
-
-						/* Make the incoming socket non-blocking and add it to the
-						 list of fds to monitor. */
-						s = make_socket_non_blocking(infd);
-						if (s == -1)
-						{
-							free(in_addr);
-							abort();
-						}
-
-						reuse_sock(infd);
-
-						event.data.ptr = new MatrixEpollData(infd, in_addr);
-						event.events = EPOLLIN | EPOLLET;
-						s = epoll_ctl(efd, EPOLL_CTL_ADD, infd, &event);
-						if (s == -1)
-						{
-							free(in_addr);
-							perror("epoll_ctl");
-							abort();
-						}
-					}
-					continue;
-				}
-				else
-				{
-					int done = 0;
-
-					while (1)
-					{
-						//char *buf = (char*)calloc(_BUF_SIZE, sizeof(char));
-						char buf[_BUF_SIZE];
-						memset(buf, 0, sizeof(buf));
-
-						sockaddr fromaddr;
-						socklen_t sender_len = sizeof(struct sockaddr);
-						ssize_t count = recvfrom(edata->fd(), buf, sizeof buf,
-								0, &fromaddr, &sender_len);
-
-						if (count == -1)
-						{
-							if (errno != EAGAIN)
-							{
-								perror("read");
-								done = 1;
-							}
-
-						}
-						else if (count == 0)
-						{
-							done = 1;
-							break;
-						}
-						else
-						{
-							MatrixEventData eventData(edata->fd(), buf, sizeof(buf),
-									fromaddr);
-							eqMutex.lock();
-							_eventQueue.push(eventData);
-							//cout << "The event queue length of the epoll server is:" << _eventQueue.size() << endl;
-							eqMutex.unlock();
-						}
-						//free(buf);
-					}
-				}
-
-			}
-			else
-			{
-				if (_ms->config->netProtoc.compare("TCP") == 0)
-				{
-					/* We have data on the fd waiting to be read. Read and
-					 display it. We must read whatever data is available
-					 completely, as we are running in edge-triggered mode
-					 and won't get a notification again for the same
-					 data. */
-					int done = 0;
-
-					while (1)
-					{
-						char buf[_BUF_SIZE];
-						memset(buf, 0, sizeof(buf));
-						//char *buf = (char*)calloc(_BUF_SIZE, sizeof(char));
-						//memset(buf, '\0', _BUF_SIZE);
-
-						//ssize_t count = recv(edata->fd(), buf, sizeof(buf), 0);
-						//cout << "The socket is:" << edata->fd() << endl;
-						ssize_t count = recv(edata->fd(), buf, sizeof(buf), 0);
-
-						if (count == -1)
-						{
-							/* If errno == EAGAIN, that means we have read all
-							 data. So go back to the main loop. */
-							if (errno != EAGAIN)
-							{
-								perror("read");
-								done = 1;
-							}
-							break;
-						}
-						else if (count == 0)
-						{
-							/* End of file. The remote has closed the
-							 connection. */
-							done = 1;
-							break;
-						}
-						else
-						{
-							MatrixEventData eventData(edata->fd(), buf, sizeof(buf),
-									*edata->sender());
-							eqMutex.lock();
-							_eventQueue.push(eventData);
-							//cout << "The event queue length of the epoll server is:" << _eventQueue.size() << endl;
-							eqMutex.unlock();
-						}
-//						if (buf != NULL)
-//						{
-//							free(buf);
-//							buf = NULL;
-//						}
-					}
-
-					if (done)
-					{
-						/* Closing the descriptor will make epoll remove it
-						 from the set of descriptors which are monitored. */
-						close(edata->fd());
-						delete edata;
-					}
-				}
+				free(buf);
+				buf = NULL;
 			}
 		}
 	}
 
-	free(events);
+//	{
+//		int n, i;
+//		n = epoll_wait(efd, events, MAX_EVENTS, -1);
+//		//cout << "Number of events received is:" << n << endl;
+//
+//		for (i = 0; i < n; i++)
+//		{
+//			MatrixEpollData *edata = (MatrixEpollData*) events[i].data.ptr;
+//
+//			if ((events[i].events & EPOLLERR) || (events[i].events & EPOLLHUP)
+//					|| (!(events[i].events & EPOLLIN)))
+//			{
+//				/* An error has occured on this fd, or the socket is not
+//				 ready for reading (why were we notified then?) */
+//				fprintf(stderr, "epoll error\n");
+//				close(edata->fd());
+//				delete edata;
+//				continue;
+//			}
+//			else if (sfd == edata->fd())
+//			{
+//				if (_ms->config->netProtoc.compare("TCP") == 0)
+//				{
+//					/* We have a notification on the listening socket, which
+//					 means one or more incoming connections. */
+//					while (1)
+//					{
+//						sockaddr *in_addr = (sockaddr *) calloc(1,
+//								sizeof(struct sockaddr));
+//						socklen_t in_len = sizeof(struct sockaddr);
+//
+//						int infd = accept(sfd, in_addr, &in_len);
+//						if (infd == -1)
+//						{
+//							free(in_addr);
+//
+//							if ((errno == EAGAIN) || (errno == EWOULDBLOCK))
+//							{
+//								/* We have processed all incoming connections. */
+//								break;
+//							}
+//							else
+//							{
+//								perror("accept");
+//								break;
+//							}
+//						}
+//
+//						/* Make the incoming socket non-blocking and add it to the
+//						 list of fds to monitor. */
+//						s = make_socket_non_blocking(infd);
+//						if (s == -1)
+//						{
+//							free(in_addr);
+//							abort();
+//						}
+//
+//						reuse_sock(infd);
+//
+//						event.data.ptr = new MatrixEpollData(infd, in_addr);
+//						event.events = EPOLLIN | EPOLLET;
+//						s = epoll_ctl(efd, EPOLL_CTL_ADD, infd, &event);
+//						if (s == -1)
+//						{
+//							free(in_addr);
+//							perror("epoll_ctl");
+//							abort();
+//						}
+//					}
+//					continue;
+//				}
+//				else
+//				{
+//					int done = 0;
+//
+//					while (1)
+//					{
+//						//char *buf = (char*)calloc(_BUF_SIZE, sizeof(char));
+//						char buf[_BUF_SIZE];
+//						memset(buf, 0, sizeof(buf));
+//
+//						sockaddr fromaddr;
+//						socklen_t sender_len = sizeof(struct sockaddr);
+//						ssize_t count = recvfrom(edata->fd(), buf, sizeof buf,
+//								0, &fromaddr, &sender_len);
+//
+//						if (count == -1)
+//						{
+//							if (errno != EAGAIN)
+//							{
+//								perror("read");
+//								done = 1;
+//							}
+//
+//						}
+//						else if (count == 0)
+//						{
+//							done = 1;
+//							break;
+//						}
+//						else
+//						{
+//							MatrixEventData eventData(edata->fd(), buf, sizeof(buf),
+//									fromaddr);
+//							eqMutex.lock();
+//							_eventQueue.push(eventData);
+//							//cout << "The event queue length of the epoll server is:" << _eventQueue.size() << endl;
+//							eqMutex.unlock();
+//						}
+//						//free(buf);
+//					}
+//				}
+//
+//			}
+//			else
+//			{
+//				if (_ms->config->netProtoc.compare("TCP") == 0)
+//				{
+//					/* We have data on the fd waiting to be read. Read and
+//					 display it. We must read whatever data is available
+//					 completely, as we are running in edge-triggered mode
+//					 and won't get a notification again for the same
+//					 data. */
+//					int done = 0;
+//
+//					while (1)
+//					{
+//						char buf[_BUF_SIZE];
+//						memset(buf, 0, sizeof(buf));
+//						//char *buf = (char*)calloc(_BUF_SIZE, sizeof(char));
+//						//memset(buf, '\0', _BUF_SIZE);
+//
+//						//ssize_t count = recv(edata->fd(), buf, sizeof(buf), 0);
+//						//cout << "The socket is:" << edata->fd() << endl;
+//						ssize_t count = recv(edata->fd(), buf, sizeof(buf), 0);
+//
+//						if (count == -1)
+//						{
+//							/* If errno == EAGAIN, that means we have read all
+//							 data. So go back to the main loop. */
+//							if (errno != EAGAIN)
+//							{
+//								perror("read");
+//								done = 1;
+//							}
+//							break;
+//						}
+//						else if (count == 0)
+//						{
+//							/* End of file. The remote has closed the
+//							 connection. */
+//							done = 1;
+//							break;
+//						}
+//						else
+//						{
+//							MatrixEventData eventData(edata->fd(), buf, sizeof(buf),
+//									*edata->sender());
+//							eqMutex.lock();
+//							_eventQueue.push(eventData);
+//							//cout << "The event queue length of the epoll server is:" << _eventQueue.size() << endl;
+//							eqMutex.unlock();
+//						}
+////						if (buf != NULL)
+////						{
+////							free(buf);
+////							buf = NULL;
+////						}
+//					}
+//
+//					if (done)
+//					{
+//						/* Closing the descriptor will make epoll remove it
+//						 from the set of descriptors which are monitored. */
+//						close(edata->fd());
+//						delete edata;
+//					}
+//				}
+//			}
+//		}
+//	}
+
+	//free(events);
 
 	close(sfd);
 
-	MatrixEpollData *edata = (MatrixEpollData*) event.data.ptr;
-	delete edata;
+	//MatrixEpollData *edata = (MatrixEpollData*) event.data.ptr;
+	//delete edata;
 }
