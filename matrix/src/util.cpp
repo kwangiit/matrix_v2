@@ -7,7 +7,7 @@
 
 #include "util.h"
 
-uint _BUF_SIZE = 3000;
+uint _BUF_SIZE = 8192;
 Mutex tokenMutex = Mutex();
 Mutex sockMutex = Mutex();
 

@@ -285,7 +285,7 @@ void MatrixScheduler::send_task(int sockfd, sockaddr fromAddr)
 			{
 				pack_send_task(config->maxTaskPerPkg, sockfd, fromAddr, false, migrateQueue);
 			}
-			usleep(100);
+//			usleep(100);
 		}
 
 		if (more)
@@ -960,8 +960,8 @@ void MatrixScheduler::exec_a_task(TaskMsg &tm)
 	//cout << tm.taskid() << "\tnow I received all the data" << endl;
 	const char *execmd = tm.cmd().c_str();
 	//cout << "The cmd is:" << execmd << endl;
-	string result = exec(execmd);
-	//string result = exec("sleep 0");
+	//string result = exec(execmd);
+	string result = num_to_str<int>(usleep(1000));//exec("sleep 0");
 	string key = get_id() + tm.taskid();
 
 #ifdef ZHT_STORAGE
