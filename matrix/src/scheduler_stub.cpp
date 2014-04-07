@@ -961,7 +961,8 @@ void MatrixScheduler::exec_a_task(TaskMsg &tm)
 	const char *execmd = tm.cmd().c_str();
 	//cout << "The cmd is:" << execmd << endl;
 	//string result = exec(execmd);
-	string result = num_to_str<int>(usleep(1000));//exec("sleep 0");
+	//string result = num_to_str<int>(usleep(1000));//
+	string result = exec("sleep 0");
 	string key = get_id() + tm.taskid();
 
 #ifdef ZHT_STORAGE
