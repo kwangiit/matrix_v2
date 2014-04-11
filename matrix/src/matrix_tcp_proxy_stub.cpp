@@ -60,6 +60,42 @@ int recv_bf(int sock, string &buf)
 	return ret;
 }
 
+int send_big(int sock, const string &buf)
+{
+	int length = buf.length();
+	int numSent = 0;
+	string str;
+
+	while (length >= _BUF_SIZE)
+	{
+		str = buf.substr(numSent, _BUF_SIZE);
+		send_bf(sock, str);
+		numSent += _BUF_SIZE;
+		length -= _BUF_SIZE;
+	}
+
+	if (length > 0)
+	{
+		str = buf.substr(numSent, length);
+		str.append("$");
+	}
+	else
+	{
+		str.assign("$");
+	}
+	send_bf(sock, str);
+	numSent += str.length();
+
+	return numSent;
+}
+
+int recv_big(int sock, string &buf)
+{
+	int count = recv_mul(sock, buf);
+	buf = buf.substr(0, buf.length() - 1);
+	return count;
+}
+
 int send_mul(int sock, const string &buf, bool end)
 {
 	string bufUp;

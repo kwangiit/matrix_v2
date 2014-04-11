@@ -31,6 +31,8 @@ class MatrixScheduler: public Peer
 
 		void regist();	// regist to ZHT server
 
+		void load_data();
+
 		void get_task_from_file();
 		/* receive tasks from another scheduler as a
 		 * consequence of successful work stealing
@@ -88,6 +90,8 @@ class MatrixScheduler: public Peer
 
 		void fork_record_task_thread();
 
+		void fork_localQueue_monitor_thread();
+
 		Mutex ZHTMsgCountMutex;	// Mutex of ZHT message count
 		Mutex numIdleCoreMutex;	// Mutex of number of idle cores
 		Mutex numTaskFinMutex;	// Mutex of number of tasks done
@@ -131,6 +135,8 @@ class MatrixScheduler: public Peer
 
 		ofstream taskLogOS;
 		vector<string> taskTimeEntry;
+
+		timespec start, end;
 };
 
 #endif /* SCHEDULER_STUB_H_ */

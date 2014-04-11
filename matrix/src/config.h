@@ -21,6 +21,8 @@ class Configuration
 		void parse_config(const string&);
 
 		long numTaskPerClient;	// number of task per client
+		int numFile;
+		double locality;
 		long numAllTask;	// number of all tasks
 		int numCorePerExecutor;	// number of cores per executor
 		long maxTaskPerPkg;	// maximum number of tasks per package
@@ -30,7 +32,10 @@ class Configuration
 		int workStealingOn;	// indicate whether to do work staling (1) or not (0)
 		long wsPollIntervalStart;	// the initial value of poll interval in microsecond
 		long wsPollIntervalUb;	// the upper bound of poll inerval in microsecond
+
+		string policy;
 		long dataSizeThreshold;
+		long estTimeThreadshold;
 
 		string schedulerMemFile;	// the memberlist file of all the schedulers
 		string netProtoc;	// network protocol type: TCP, UDP, UDT, etc

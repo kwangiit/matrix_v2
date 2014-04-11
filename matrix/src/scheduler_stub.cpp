@@ -146,6 +146,24 @@ void MatrixScheduler::regist()
 	}
 }
 
+void MatrixScheduler::load_data()
+{
+	string filePath("./workload_dag/file_" + num_to_str<int>(schedulerVec.size()) + "_" +
+			num_to_str<double>(config->locality) + "_" + num_to_str<int>(
+					config->numFile) + "_" + num_to_str<int>(config->numTaskPerClient));
+
+	vector<string> fileVec = read_from_file(filePath);
+
+	for (int i = 0; i < fileVec.size(); i++)
+	{
+		vector<string> lineVec = tokenize(fileVec.at(i), " ");
+		if (str_to_num<int>(lineVec.at(1)) == get_index())
+		{
+			localData.insert(make_pair(lineVec.at(0), "This is the data"));
+		}
+	}
+}
+
 void MatrixScheduler::get_task_from_file()
 {
 	string done;
@@ -508,7 +526,8 @@ int MatrixScheduler::proc_req(int sockfd, char *buf, sockaddr fromAddr)
 		mmDataPiece.set_extrainfo(dataPiece);
 		string dataStr = mm_to_str(mmDataPiece);
 		//mmDataPiece.SerializeAsString();
-		send_bf(sockfd, dataStr);
+		//send_bf(sockfd, dataStr);
+		send_big(sockfd, dataStr);
 	}
 	close(sockfd);
 	return 1;
@@ -895,6 +914,7 @@ void MatrixScheduler::exec_a_task(TaskMsg &tm)
 			if (value.parents(i).compare(get_id()) == 0)
 			{
 				ldMutex.lock();
+				//data += "what ever!";
 				data += localData.find(value.datanamelist(i))->second;
 				//cout << tm.taskid() << " find the data" << endl;
 				ldMutex.unlock();
@@ -934,8 +954,8 @@ void MatrixScheduler::exec_a_task(TaskMsg &tm)
 					//		<< "ns to send the " << i << "\tdata to scheduler " << value.parents(i) << endl;
 
 					string dataPiece;
-					recv_bf(sockfd, dataPiece);
-
+					//recv_bf(sockfd, dataPiece);
+					recv_big(sockfd, dataPiece);
 					close(sockfd);
 					sockMutex.unlock();
 					//cout << tm.taskid() << "\tit takes " << diff.tv_sec << "s, and " << diff.tv_nsec
@@ -960,9 +980,9 @@ void MatrixScheduler::exec_a_task(TaskMsg &tm)
 	//cout << tm.taskid() << "\tnow I received all the data" << endl;
 	const char *execmd = tm.cmd().c_str();
 	//cout << "The cmd is:" << execmd << endl;
-	//string result = exec(execmd);
-	//string result = num_to_str<int>(usleep(1000));//
-	string result = exec("sleep 0");
+	string result = exec(execmd);
+	string result = num_to_str<int>(usleep(275000));//
+	//string result = exec("sleep 0");
 	string key = get_id() + tm.taskid();
 
 #ifdef ZHT_STORAGE
@@ -985,7 +1005,8 @@ void MatrixScheduler::exec_a_task(TaskMsg &tm)
 	tteMutex.unlock();
 
 	cqMutex.lock();
-	completeQueue.push_back(CmpQueueItem(tm.taskid(), key, result.length()));
+	//completeQueue.push_back(CmpQueueItem(tm.taskid(), key, result.length()));
+	completeQueue.push_back(CmpQueueItem(tm.taskid(), key, 10000));
 	cqMutex.unlock();
 
 	numTaskFinMutex.lock();
@@ -1540,6 +1561,77 @@ void MatrixScheduler::fork_record_task_thread()
 	pthread_t trThread;
 
 	while (pthread_create(&trThread, NULL, record_task_time, this) != 0)
+	{
+		sleep(1);
+	}
+}
+
+void *localQueue_monitor(void *args)
+{
+	MatrixScheduler *ms = (MatrixScheduler*)args;
+	timespec diff;
+	double time =0.0, aveThroughput = 0.0, estTime = 0.0;
+	long maxSize = 0;
+
+	while (ms->running)
+	{
+		clock_gettime(0, &ms->end);
+		diff = time_diff(ms->start, ms->end);
+		time = (double)diff.tv_sec + (double)diff.tv_nsec / 1E9;
+		aveThroughput = (double)(ms->numTaskFin) / time;
+		maxSize = (long)(aveThroughput * ms->config->estTimeThreadshold);
+		vector<TaskMsg> vecRemain;
+		vector<TaskMsg> vecMigrated;
+		if (maxSize == 0)
+		{
+			usleep(ms->config->sleepLength);
+			continue;
+		}
+		ms->lqMutex.lock();
+		if (ms->localQueue.size() > maxSize)
+		{
+			int numTaskToMove = ms->localQueue.size() - maxSize;
+			for (int i = 0; i < maxSize; i++)
+			{
+				vecRemain.push_back(ms->localQueue.top());
+				ms->localQueue.pop();
+			}
+
+			for (int i = 0; i < numTaskToMove; i++)
+			{
+				vecMigrated.push_back(ms->localQueue.top());
+				ms->localQueue.pop();
+			}
+
+			for (int i = 0; i < maxSize; i++)
+			{
+				ms->localQueue.push(vecRemain.at(i));
+			}
+			ms->lqMutex.unlock();
+
+			ms->wsqMutex.lock();
+			for (int i = 0; i < numTaskToMove; i++)
+			{
+				ms->wsQueue.push(vecMigrated.at(i));
+			}
+			ms->wsqMutex.unlock();
+		}
+		else
+		{
+			ms->lqMutex.unlock();
+		}
+		usleep(ms->config->sleepLength);
+	}
+
+	pthread_exit(NULL);
+	return NULL;
+}
+
+void MatrixScheduler::fork_localQueue_monitor_thread()
+{
+	pthread_t lqMonThread;
+
+	while (pthread_create(&lqMonThread, NULL, localQueue_monitor, this) != 0)
 	{
 		sleep(1);
 	}

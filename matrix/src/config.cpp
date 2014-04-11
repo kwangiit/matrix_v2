@@ -49,6 +49,10 @@ void Configuration::parse_config(const string &configFile)
 	numTaskPerClient = str_to_num<long>(
 			configMap.find("NumTaskPerClient")->second);
 
+	numFile = str_to_num<int>(configMap.find("NumFile")->second);
+
+	locality = str_to_num<double>(configMap.find("Locality")->second);
+
 	numAllTask = str_to_num<long>(
 			configMap.find("NumAllTask")->second);
 
@@ -76,8 +80,13 @@ void Configuration::parse_config(const string &configFile)
 	wsPollIntervalUb = str_to_num<long>(
 			configMap.find("WorkStealPollIntervalUpperBound")->second);
 
+	policy = configMap.find("Policy")->second;
+
 	dataSizeThreshold = str_to_num<long>(
 			configMap.find("DataSizeThreshold")->second);
+
+	estTimeThreadshold = str_to_num<long>(
+			configMap.find("EstimatedTimeThreshold")->second);
 
 	schedulerMemFile = configMap.find("SchedulerMemlistFile")->second;
 

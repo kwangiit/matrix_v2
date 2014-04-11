@@ -84,41 +84,91 @@ void MatrixClient::insert_taskinfo_to_zht(
 
 	clock_gettime(0, &start);
 
-	for (adjList::iterator it = dagAdjList.begin();
-						it != dagAdjList.end(); ++it)
+//	for (adjList::iterator it = dagAdjList.begin();
+//						it != dagAdjList.end(); ++it)
+//	{
+//		stringstream ss;
+//		ss << get_index() << it->first;
+//		string taskId(ss.str());
+//
+//		vector<long> existList = it->second;
+//		long inDegree = dagInDegree[it->first];
+//
+//		Value value;
+//		value.set_id(taskId);
+//		value.set_indegree(inDegree);
+//
+//		for (long i = 0; i < existList.size(); i++)
+//		{
+//			stringstream ssChild;
+//			ssChild << get_index() << existList.at(i);
+//			string sChild(ssChild.str());
+//
+//			value.add_children(sChild);
+//		}
+//
+//		/*value.set_nummove(0);
+//		value.set_history("|" + get_id());
+//		value.set_submittime(0.0);
+//		value.set_arrivetime(0.0);
+//		value.set_rqueuedtime(0.0);
+//		value.set_exetime(0.0);
+//		value.set_fintime(0.0);*/
+//
+//		string seriValue;
+//		seriValue = value_to_str(value);
+//		zc.insert(taskId, seriValue);
+//	}
+
+	map<string, int> fileMap;
+
+	string filePath("./workload_dag/file_" + num_to_str<int>(schedulerVec.size()) + "_" +
+			num_to_str<double>(config->locality) + "_" + num_to_str<int>(
+					config->numFile) + "_" + num_to_str<int>(config->numTaskPerClient));
+	string taskPath("./workload_dag/task_" + num_to_str<int>(schedulerVec.size()) + "_" +
+			num_to_str<double>(config->locality) + "_" + num_to_str<int>(
+					config->numFile) + "_" + num_to_str<int>(config->numTaskPerClient));
+
+	vector<string> fileStr = read_from_file(filePath);
+	for (int i = 0; i < fileStr.size(); i++)
 	{
-		stringstream ss;
-		ss << get_index() << it->first;
-		string taskId(ss.str());
+		vector<string> lineVec = tokenize(fileStr.at(i), " ");
+		fileMap.insert(make_pair(lineVec.at(0), str_to_num<int>(lineVec.at(1))));
+	}
 
-		vector<long> existList = it->second;
-		long inDegree = dagInDegree[it->first];
+	vector<string> taskStr = read_from_file(taskPath);
+	string lastTaskId(num_to_str<int>(get_index()) + num_to_str<int>(taskStr.size() + 1));
 
+	for (int i = 0; i < taskStr.size(); i++)
+	{
+		vector<string> lineVec = tokenize(taskStr.at(i), " ");
+		string taskId(num_to_str<int>(get_index()) + lineVec.at(0));
 		Value value;
 		value.set_id(taskId);
-		value.set_indegree(inDegree);
-
-		for (long i = 0; i < existList.size(); i++)
-		{
-			stringstream ssChild;
-			ssChild << get_index() << existList.at(i);
-			string sChild(ssChild.str());
-
-			value.add_children(sChild);
-		}
-
-		/*value.set_nummove(0);
-		value.set_history("|" + get_id());
-		value.set_submittime(0.0);
-		value.set_arrivetime(0.0);
-		value.set_rqueuedtime(0.0);
-		value.set_exetime(0.0);
-		value.set_fintime(0.0);*/
-
-		string seriValue;
-		seriValue = value_to_str(value);
+		value.set_indegree(0);
+		value.add_parents(schedulerVec.at(fileMap.find(lineVec.at(1))->second));
+		value.add_datanamelist(lineVec.at(1));
+		value.add_datasize(2097152);
+		value.set_alldatasize(2097152);
+		value.add_children(lastTaskId);
+		string seriValue = value_to_str(value);
 		zc.insert(taskId, seriValue);
+		//
+		//		for (long i = 0; i < existList.size(); i++)
+		//		{
+		//			stringstream ssChild;
+		//			ssChild << get_index() << existList.at(i);
+		//			string sChild(ssChild.str());
+		//
+		//			value.add_children(sChild);
+		//		}
 	}
+
+	Value value;
+	value.set_id(lastTaskId);
+	value.set_indegree(taskStr.size());
+	string seriValue = value_to_str(value);
+	zc.insert(lastTaskId, seriValue);
 
 	incre_ZHT_msg_count(config->numTaskPerClient);
 
@@ -245,8 +295,16 @@ void MatrixClient::split_task_bc()
 
 	for (int i = 0; i < config->numTaskPerClient; i++)
 	{
-		toScheIdx = i % numSche;	// task index modular number of scheduler
-		tasksVec[toScheIdx].push_back(taskVec.at(i));
+		int base = i / numSche;
+		if (numSche * base == i)
+		{
+			tasksVec[base % numSche].push_back(taskVec.at(i));
+		}
+		else
+		{
+			toScheIdx = rand() % numSche;	// task index modular number of scheduler
+			tasksVec[toScheIdx].push_back(taskVec.at(i));
+		}
 	}
 
 	/* as long as all the tasks are distributed evenly,
