@@ -122,13 +122,14 @@ void MatrixClient::insert_taskinfo_to_zht(
 
 	map<string, int> fileMap;
 
-	string filePath("./workload_dag/file_" + num_to_str<int>(schedulerVec.size()) + "_" +
-			num_to_str<double>(config->locality) + "_" + num_to_str<int>(
+	string filePath("/users/kwangiit/sc14/matrix_v2/matrix/src/workload_dag/file_" + num_to_str<int>(schedulerVec.size()) + "_" +
+			num_to_str<double>(config->locality) + ".0_" + num_to_str<int>(
 					config->numFile) + "_" + num_to_str<int>(config->numTaskPerClient));
-	string taskPath("./workload_dag/task_" + num_to_str<int>(schedulerVec.size()) + "_" +
-			num_to_str<double>(config->locality) + "_" + num_to_str<int>(
+	string taskPath("/users/kwangiit/sc14/matrix_v2/matrix/src/workload_dag/task_" + num_to_str<int>(schedulerVec.size()) + "_" +
+			num_to_str<double>(config->locality) + ".0_" + num_to_str<int>(
 					config->numFile) + "_" + num_to_str<int>(config->numTaskPerClient));
 
+	cout << "file path is:" << filePath << ", and task path is:" << taskPath << endl;
 	vector<string> fileStr = read_from_file(filePath);
 	for (int i = 0; i < fileStr.size(); i++)
 	{
@@ -150,9 +151,10 @@ void MatrixClient::insert_taskinfo_to_zht(
 		value.add_datanamelist(lineVec.at(1));
 		value.add_datasize(2097152);
 		value.set_alldatasize(2097152);
-		value.add_children(lastTaskId);
+		//value.add_children(lastTaskId);
 		string seriValue = value_to_str(value);
 		zc.insert(taskId, seriValue);
+		//cout << "Task id is:" << taskId << ", and value is:" << seriValue << endl;
 		//
 		//		for (long i = 0; i < existList.size(); i++)
 		//		{
@@ -164,11 +166,11 @@ void MatrixClient::insert_taskinfo_to_zht(
 		//		}
 	}
 
-	Value value;
-	value.set_id(lastTaskId);
-	value.set_indegree(taskStr.size());
-	string seriValue = value_to_str(value);
-	zc.insert(lastTaskId, seriValue);
+//	Value value;
+//	value.set_id(lastTaskId);
+//	value.set_indegree(taskStr.size());
+//	string seriValue = value_to_str(value);
+//	zc.insert(lastTaskId, seriValue);
 
 	incre_ZHT_msg_count(config->numTaskPerClient);
 
@@ -295,12 +297,12 @@ void MatrixClient::split_task_bc()
 
 	for (int i = 0; i < config->numTaskPerClient; i++)
 	{
-		int base = i / numSche;
-		if (numSche * base == i)
-		{
-			tasksVec[base % numSche].push_back(taskVec.at(i));
-		}
-		else
+		//int base = i / numSche;
+		//if (numSche * base == i)
+		//{
+		//	tasksVec[base % numSche].push_back(taskVec.at(i));
+		//}
+		//else
 		{
 			toScheIdx = rand() % numSche;	// task index modular number of scheduler
 			tasksVec[toScheIdx].push_back(taskVec.at(i));

@@ -811,6 +811,8 @@ Peer::Peer(const string &configFile)
 	running = true;
 	numZHTMsg = 0;
 	init_zht_client(config->zhtConfigFile, config->zhtMemFile);
+	//config->numTaskPerClient++;
+	//config->numAllTask++;
 }
 
 Peer::~Peer()

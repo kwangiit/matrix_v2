@@ -148,8 +148,8 @@ void MatrixScheduler::regist()
 
 void MatrixScheduler::load_data()
 {
-	string filePath("./workload_dag/file_" + num_to_str<int>(schedulerVec.size()) + "_" +
-			num_to_str<double>(config->locality) + "_" + num_to_str<int>(
+	string filePath("/users/kwangiit/sc14/matrix_v2/matrix/src/workload_dag/file_" + num_to_str<int>(schedulerVec.size()) + "_" +
+			num_to_str<double>(config->locality) + ".0_" + num_to_str<int>(
 					config->numFile) + "_" + num_to_str<int>(config->numTaskPerClient));
 
 	vector<string> fileVec = read_from_file(filePath);
@@ -980,7 +980,7 @@ void MatrixScheduler::exec_a_task(TaskMsg &tm)
 	//cout << tm.taskid() << "\tnow I received all the data" << endl;
 	const char *execmd = tm.cmd().c_str();
 	//cout << "The cmd is:" << execmd << endl;
-	string result = exec(execmd);
+	//string result = exec(execmd);
 	string result = num_to_str<int>(usleep(275000));//
 	//string result = exec("sleep 0");
 	string key = get_id() + tm.taskid();
@@ -1282,6 +1282,7 @@ long MatrixScheduler::notify_children(const CmpQueueItem &cqItem)
 	sockMutex.lock();
 	//cout << "I got the lock, and I am notifying children!" << endl;
 	zc.lookup(cqItem.taskId, taskDetail);
+	//cout << "OK, the task id is:" << cqItem.taskId << ", and task detail is:" << taskDetail << endl;
 	sockMutex.unlock();
 	if (taskDetail.empty())
 	{
@@ -1299,6 +1300,8 @@ long MatrixScheduler::notify_children(const CmpQueueItem &cqItem)
 		childTaskId = value.children(i);
 		sockMutex.lock();
 		zc.lookup(childTaskId, childTaskDetail);
+		//cout << "The child task id is:" << childTaskId << "\t" << childTaskDetail << endl;
+		//cout << "The size is:" << childTaskDetail.length() << endl;
 		sockMutex.unlock();
 		increment++;
 		if (taskDetail.empty())
