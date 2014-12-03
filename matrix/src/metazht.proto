@@ -7,12 +7,13 @@ message Value
 	repeated string dataNameList = 5;
 	repeated int64 dataSize = 6;
 	optional int64 allDataSize = 7;
+	optional int64 tasklength = 8;
 	
-	optional int64 numTaskFin = 8;
-	optional int64 numWorkSteal = 9;
-	optional int64 numWorkStealFail = 10;
-	optional int32 numTaskWait = 11;
-	optional int32 numTaskReady = 12;
-	optional int32 numCoreAvilable = 13;
-	optional int32 numAllCore = 14;
+	optional int64 numTaskFin = 9;
+	optional int64 numWorkSteal = 10;
+	optional int64 numWorkStealFail = 11;
+	optional int32 numTaskWait = 12;
+	optional int32 numTaskReady = 13;
+	optional int32 numCoreAvilable = 14;
+	optional int32 numAllCore = 15;
 }

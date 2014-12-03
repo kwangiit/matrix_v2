@@ -122,31 +122,72 @@ void MatrixClient::insert_taskinfo_to_zht(
 
 	map<string, int> fileMap;
 
-	string filePath("/users/kwangiit/sc14/matrix_v2/matrix/src/workload_dag/file_" + num_to_str<int>(schedulerVec.size()) + "_" +
+	/*string filePath("/users/kwangiit/sc14/matrix_v2/matrix/src/workload_dag/file_" + num_to_str<int>(schedulerVec.size()) + "_" +
 			num_to_str<double>(config->locality) + ".0_" + num_to_str<int>(
 					config->numFile) + "_" + num_to_str<int>(config->numTaskPerClient));
 	string taskPath("/users/kwangiit/sc14/matrix_v2/matrix/src/workload_dag/task_" + num_to_str<int>(schedulerVec.size()) + "_" +
 			num_to_str<double>(config->locality) + ".0_" + num_to_str<int>(
-					config->numFile) + "_" + num_to_str<int>(config->numTaskPerClient));
+					config->numFile) + "_" + num_to_str<int>(config->numTaskPerClient));*/
 
-	cout << "file path is:" << filePath << ", and task path is:" << taskPath << endl;
-	vector<string> fileStr = read_from_file(filePath);
+
+	//cout << "file path is:" << filePath << ", and task path is:" << taskPath << endl;
+	string filePath("../workload_dag/file_" + num_to_str<int>(schedulerVec.size())
+				+ "_" + num_to_str<int>(config->numTaskPerClient));
+	string taskPath("../workload_dag/task_" + num_to_str<int>(schedulerVec.size())
+			+ "_" + num_to_str<int>(config->numTaskPerClient));
+	/*vector<string> fileStr = read_from_file(filePath);
 	for (int i = 0; i < fileStr.size(); i++)
 	{
+		vector<string> lineVec = tokenize(fileStr.at(i), " ");
+		fileMap.insert(make_pair(lineVec.at(0), str_to_num<int>(lineVec.at(1))));
+	}*/
+
+	/* This is to know which file is at which compute node */
+	vector<string> fileStr = read_from_file(filePath);
+	for (int i = 0; i < fileStr.size(); i++) {
 		vector<string> lineVec = tokenize(fileStr.at(i), " ");
 		fileMap.insert(make_pair(lineVec.at(0), str_to_num<int>(lineVec.at(1))));
 	}
 
 	vector<string> taskStr = read_from_file(taskPath);
-	string lastTaskId(num_to_str<int>(get_index()) + num_to_str<int>(taskStr.size() + 1));
+	//string lastTaskId(num_to_str<int>(get_index()) + num_to_str<int>(taskStr.size() + 1));
 
-	for (int i = 0; i < taskStr.size(); i++)
-	{
+//	for (int i = 0; i < taskStr.size(); i++)
+//	{
+//		vector<string> lineVec = tokenize(taskStr.at(i), " ");
+//		string taskId(num_to_str<int>(get_index()) + lineVec.at(0));
+//		Value value;
+//		value.set_id(taskId);
+//		value.set_indegree(0);
+//		value.add_parents(schedulerVec.at(fileMap.find(lineVec.at(1))->second));
+//		value.add_datanamelist(lineVec.at(1));
+//		value.add_datasize(2097152);
+//		value.set_alldatasize(2097152);
+//		//value.add_children(lastTaskId);
+//		string seriValue = value_to_str(value);
+//		zc.insert(taskId, seriValue);
+//		//cout << "Task id is:" << taskId << ", and value is:" << seriValue << endl;
+//		//
+//		//		for (long i = 0; i < existList.size(); i++)
+//		//		{
+//		//			stringstream ssChild;
+//		//			ssChild << get_index() << existList.at(i);
+//		//			string sChild(ssChild.str());
+//		//
+//		//			value.add_children(sChild);
+//		//		}
+//	}
+
+	/* task has the format: taskid map/reduce inputfilesize outputfilesize executelength*/
+	for (int i = 0; i < taskStr.size(); i++) {
 		vector<string> lineVec = tokenize(taskStr.at(i), " ");
 		string taskId(num_to_str<int>(get_index()) + lineVec.at(0));
 		Value value;
 		value.set_id(taskId);
-		value.set_indegree(0);
+		if (lineVec.at(1).compare("map") == 0)
+			value.set_indegree(0);
+		else
+			value.set_indegree(config->numMapTask);
 		value.add_parents(schedulerVec.at(fileMap.find(lineVec.at(1))->second));
 		value.add_datanamelist(lineVec.at(1));
 		value.add_datasize(2097152);

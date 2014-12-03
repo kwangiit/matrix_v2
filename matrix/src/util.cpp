@@ -540,6 +540,12 @@ extern string value_to_str(const Value &value)
 	}
 	str.append("~~");
 
+	if (value.has_tasklength())
+		str.append(num_to_str<long>(value.tasklength()));
+	else
+		str.append("notasklength");
+	str.append("~~");
+
 	if (value.has_numtaskfin())
 	{
 		str.append(num_to_str<long>(value.numtaskfin()));
@@ -618,7 +624,7 @@ extern Value str_to_value(const string &str)
 	Value value;
 	vector<string> vec = tokenize(str, "~~");
 
-	if (vec.size() < 14)
+	if (vec.size() < 15)
 	{
 		cout << "have some problem, the value to be converted is:" << str << endl;
 		exit(1);
@@ -672,39 +678,42 @@ extern Value str_to_value(const string &str)
 		value.set_alldatasize(str_to_num<long>(vec.at(6)));
 	}
 
-	if (vec.at(7).compare("nonumtaskfin") != 0)
+	if (vec.at(7).compare("notasklength") != 0)
+		value.set_tasklength(str_to_num<long>(vec.at(7)));
+
+	if (vec.at(8).compare("nonumtaskfin") != 0)
 	{
-		value.set_numtaskfin(str_to_num<long>(vec.at(7)));
+		value.set_numtaskfin(str_to_num<long>(vec.at(8)));
 	}
 
-	if (vec.at(8).compare("nonumworksteal") != 0)
+	if (vec.at(9).compare("nonumworksteal") != 0)
 	{
-		value.set_numworksteal(str_to_num<long>(vec.at(8)));
+		value.set_numworksteal(str_to_num<long>(vec.at(9)));
 	}
 
-	if (vec.at(9).compare("nonumworkstealfail") != 0)
+	if (vec.at(10).compare("nonumworkstealfail") != 0)
 	{
-		value.set_numworkstealfail(str_to_num<long>(vec.at(9)));
+		value.set_numworkstealfail(str_to_num<long>(vec.at(10)));
 	}
 
-	if (vec.at(10).compare("nonumtaskwait") != 0)
+	if (vec.at(11).compare("nonumtaskwait") != 0)
 	{
-		value.set_numtaskwait(str_to_num<int>(vec.at(10)));
+		value.set_numtaskwait(str_to_num<int>(vec.at(11)));
 	}
 
-	if (vec.at(11).compare("nonumtaskready") != 0)
+	if (vec.at(12).compare("nonumtaskready") != 0)
 	{
-		value.set_numtaskready(str_to_num<int>(vec.at(11)));
+		value.set_numtaskready(str_to_num<int>(vec.at(12)));
 	}
 
-	if (vec.at(12).compare("nonumcoreavail") != 0)
+	if (vec.at(13).compare("nonumcoreavail") != 0)
 	{
-		value.set_numcoreavilable(str_to_num<int>(vec.at(12)));
+		value.set_numcoreavilable(str_to_num<int>(vec.at(13)));
 	}
 
-	if (vec.at(13).compare("nonumallcore") != 0)
+	if (vec.at(14).compare("nonumallcore") != 0)
 	{
-		value.set_numallcore(str_to_num<int>(vec.at(13)));
+		value.set_numallcore(str_to_num<int>(vec.at(14)));
 	}
 
 	return value;
