@@ -616,6 +616,12 @@ extern string value_to_str(const Value &value)
 	}
 	str.append("~~");
 
+	if (value.hasoutputsize())
+		str.append(num_to_str<long>(value.outputsize()));
+	else
+		str.append("nooutputsize");
+	str.append("~~");
+
 	return str;
 }
 
@@ -624,7 +630,7 @@ extern Value str_to_value(const string &str)
 	Value value;
 	vector<string> vec = tokenize(str, "~~");
 
-	if (vec.size() < 15)
+	if (vec.size() < 16)
 	{
 		cout << "have some problem, the value to be converted is:" << str << endl;
 		exit(1);
@@ -716,6 +722,8 @@ extern Value str_to_value(const string &str)
 		value.set_numallcore(str_to_num<int>(vec.at(14)));
 	}
 
+	if (vec.at(15).compare("nooutputsize") != 0)
+		value.set_outputsize(str_to_num<int>(vec.at(15)));
 	return value;
 }
 

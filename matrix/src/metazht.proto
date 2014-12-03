@@ -16,4 +16,6 @@ message Value
 	optional int32 numTaskReady = 13;
 	optional int32 numCoreAvilable = 14;
 	optional int32 numAllCore = 15;
+	
+	optional int64 outputsize = 16;
 }

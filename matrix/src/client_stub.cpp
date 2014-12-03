@@ -178,20 +178,31 @@ void MatrixClient::insert_taskinfo_to_zht(
 //		//		}
 //	}
 
-	/* task has the format: taskid map/reduce inputfilesize outputfilesize executelength*/
+	/* task has the format: taskid map/reduce filename inputfilesize outputfilesize executelength*/
 	for (int i = 0; i < taskStr.size(); i++) {
 		vector<string> lineVec = tokenize(taskStr.at(i), " ");
 		string taskId(num_to_str<int>(get_index()) + lineVec.at(0));
 		Value value;
 		value.set_id(taskId);
-		if (lineVec.at(1).compare("map") == 0)
+		if (lineVec.at(1).compare("map") == 0) {
 			value.set_indegree(0);
-		else
+			value.add_parents(schedulerVec.at(fileMap.find(lineVec.at(2))->second));
+			value.add_datanamelist(lineVec.at(2));
+			value.add_datasize(str_to_num<long>(lineVec.at(3)));
+			value.set_alldatasize(str_to_num<long>(lineVec.at(3)));
+			value.set_outputsize(str_to_num<long>(lineVec.at(4)));
+			value.set_tasklength(str_to_num<long>(lineVec.at(5)));
+			for (int i = 0; i < config->numReduceTask; i++) {
+				stringstream ssChild;
+				ssChild << get_index() << (i + config->numMapTask);
+				string sChild(ssChild.str());
+				value.add_children(sChild);
+			}
+		} else {
 			value.set_indegree(config->numMapTask);
-		value.add_parents(schedulerVec.at(fileMap.find(lineVec.at(1))->second));
-		value.add_datanamelist(lineVec.at(1));
-		value.add_datasize(2097152);
-		value.set_alldatasize(2097152);
+			value.set_tasklength(lineVec.at(2));
+		}
+
 		//value.add_children(lastTaskId);
 		string seriValue = value_to_str(value);
 		zc.insert(taskId, seriValue);
