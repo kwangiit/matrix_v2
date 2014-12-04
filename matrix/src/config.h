@@ -24,6 +24,8 @@ class Configuration
 		int numFile;
 		double locality;
 		long numAllTask;	// number of all tasks
+		long numMapTask;
+		long numReduceTask;
 		int numCorePerExecutor;	// number of cores per executor
 		long maxTaskPerPkg;	// maximum number of tasks per package
 		long monitorInterval;	//monitor interval in microsecond

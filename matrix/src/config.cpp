@@ -56,6 +56,12 @@ void Configuration::parse_config(const string &configFile)
 	numAllTask = str_to_num<long>(
 			configMap.find("NumAllTask")->second);
 
+	numMapTask = str_to_num<long> (
+			configMap.find("NumMapTask")->second);
+
+	numReduceTask = str_to_num<long> (
+			configMap.find("NumReduceTask")->second);
+
 	numCorePerExecutor = str_to_num<int>(
 			configMap.find("NumCorePerExecutor")->second);
 
