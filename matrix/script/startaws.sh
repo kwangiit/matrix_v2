@@ -1,3 +1,5 @@
+#!/bin/bash
+
 numNode=$1
 numTaskPerClient=$2
 numAllTask=$3
@@ -5,18 +7,29 @@ matrixSrcPath=$4
 zhtSrcPath=$5
 DagType=$6
 DagArgument=$7
+numMapTask=$8
+numReduceTask=$9
 
 numClient=$(($numAllTask/$numTaskPerClient))
 
-rm -rf host
+#rm -rf host
 
-for i in `seq 1 $numNode`; do
+#for i in `seq 1 $numNode`; do
         echo node-$i.matrix.usrc.kodiak.nx >> host
+#done
+
+#cp host $matrixSrcPath/memlist
+
+
+#copy the memberlist file to all the nodes
+IFS=$'\n'
+set -f
+
+for i in $(cat host); do
+	scp -o 'StrictHostKeyChecking no' -o 'UserKnownHostsFile /dev/null' host $i:$matrixSrcPath/memlist
 done
 
-cp host $matrixSrcPath/memlist
-
-parallel-ssh -t 0 -o /tmp/ -p 250 -O StrictHostKeyChecking=no -O UserKnownHostsFile=/dev/null --hosts=host "sudo cp /users/kwangiit/sc14/matrix_v2/script/ld.so.conf /etc/; sudo ldconfig"
+#parallel-ssh -t 0 -o /tmp/ -p 250 -O StrictHostKeyChecking=no -O UserKnownHostsFile=/dev/null --hosts=host "sudo cp /users/kwangiit/sc14/matrix_v2/script/ld.so.conf /etc/; sudo ldconfig"
 
 
 echo "change the system maximum number of open files"
