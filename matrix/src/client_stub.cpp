@@ -125,12 +125,12 @@ void MatrixClient::insert_taskinfo_to_zht(adjList &dagAdjList, inDegree &dagInDe
 
 	//cout << "file path is:" << filePath << ", and task path is:" << taskPath << endl;
 	/* file that defines file locations */
-	string filePath("../workload_dag/file_" + num_to_str<int>(schedulerVec.size()) +
+	string filePath("./workload_dag/file_" + num_to_str<int>(schedulerVec.size()) +
 			"_" + num_to_str<int>(config->numTaskPerClient));
 
 	/* task specifications: task input/out datasize,
 	 * task input data files, task type: map/reduce, task length */
-	string taskPath("../workload_dag/task_" + num_to_str<int>(schedulerVec.size()) +
+	string taskPath("./workload_dag/task_" + num_to_str<int>(schedulerVec.size()) +
 			"_" + num_to_str<int>(config->numTaskPerClient));
 	/*vector<string> fileStr = read_from_file(filePath);
 	 for (int i = 0; i < fileStr.size(); i++)
@@ -183,12 +183,12 @@ void MatrixClient::insert_taskinfo_to_zht(adjList &dagAdjList, inDegree &dagInDe
 		value.set_id(taskId);
 		if (lineVec.at(1).compare("map") == 0) {
 			value.set_indegree(0);
-			value.add_parents(schedulerVec.at(fileMap.find(lineVec.at(2))->second));
-			value.add_datanamelist(lineVec.at(2));
-			value.add_datasize(str_to_num<long>(lineVec.at(3)));
-			value.set_alldatasize(str_to_num<long>(lineVec.at(3)));
-			value.set_outputsize(str_to_num<long>(lineVec.at(4)));
-			value.set_tasklength(str_to_num<long>(lineVec.at(5)));
+			value.add_datasize(str_to_num<long>(lineVec.at(2)));
+			value.set_alldatasize(str_to_num<long>(lineVec.at(2)));
+			value.set_outputsize(str_to_num<long>(lineVec.at(3)));
+			value.set_tasklength(str_to_num<long>(lineVec.at(4)));
+			value.add_parents(schedulerVec.at(fileMap.find(lineVec.at(5))->second));
+			value.add_datanamelist(lineVec.at(5));
 			for (int i = 0; i < config->numReduceTask; i++) {
 				stringstream ssChild;
 				ssChild << get_index() << (i + config->numMapTask);

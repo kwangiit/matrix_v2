@@ -10,21 +10,19 @@
 #include <math.h>
 #include <algorithm>
 
-MatrixScheduler::MatrixScheduler(const string
-		&configFile): Peer(configFile)
-{
+MatrixScheduler::MatrixScheduler(const string &configFile) :
+		Peer(configFile) {
 	timespec start, end;
 	clock_gettime(0, &start);
 
 	/* number of neighbors is equal to the
 	 * squared root of all number of schedulers
 	 * */
-	if (schedulerVec.size() == 1)
-	{
+	if (schedulerVec.size() == 1) {
 		config->workStealingOn = 0;
 	}
 
-	numNeigh = (int)(sqrt(schedulerVec.size()) + 0.5);
+	numNeigh = (int) (sqrt(schedulerVec.size()) + 0.5);
 	neighIdx = new int[numNeigh];
 	maxLoadedIdx = -1;
 	maxLoad = -1000000;
@@ -47,17 +45,17 @@ MatrixScheduler::MatrixScheduler(const string
 
 	clock_gettime(0, &end);
 
-	if (config->schedulerLog == 1)
-	{
-		string schedulerLogFile("./scheduler_" + (num_to_str<int>(
-			schedulerVec.size())) + "_" + num_to_str<long>(
-			config->numTaskPerClient) + "_" + num_to_str<int>(get_index()));
+	if (config->schedulerLog == 1) {
+		string schedulerLogFile(
+				"./scheduler_" + (num_to_str<int>(schedulerVec.size())) + "_"
+						+ num_to_str<long>(config->numTaskPerClient) + "_"
+						+ num_to_str<int>(get_index()));
 		schedulerLogOS.open(schedulerLogFile.c_str());
 
 		timespec diff = time_diff(start, end);
-		schedulerLogOS << "I am a Matrix Scheduler, it takes me " <<
-				diff.tv_sec << "s, and " << diff.tv_nsec <<
-				" ns for initialization!" << endl;
+		schedulerLogOS << "I am a Matrix Scheduler, it takes me " << diff.tv_sec
+				<< "s, and " << diff.tv_nsec << " ns for initialization!"
+				<< endl;
 	}
 
 	numIdleCore = config->numCorePerExecutor;
@@ -69,8 +67,10 @@ MatrixScheduler::MatrixScheduler(const string
 	numWSFail = 0;
 
 	waitQueue = deque<TaskMsg>();
-	localQueue = priority_queue<TaskMsg, vector<TaskMsg>, HighPriorityByDataSize>();
-	wsQueue = priority_queue<TaskMsg, vector<TaskMsg>, HighPriorityByDataSize>();
+	localQueue =
+			priority_queue<TaskMsg, vector<TaskMsg>, HighPriorityByDataSize>();
+	wsQueue =
+			priority_queue<TaskMsg, vector<TaskMsg>, HighPriorityByDataSize>();
 	completeQueue = deque<CmpQueueItem>();
 
 	localData = map<string, string>();
@@ -79,16 +79,16 @@ MatrixScheduler::MatrixScheduler(const string
 	cache = true;
 #endif
 
-	string taskLogFile("./task_" + (num_to_str<int>(
-			schedulerVec.size())) + "_" + num_to_str<long>(
-			config->numTaskPerClient) + "_" + num_to_str<int>(get_index()));
+	string taskLogFile(
+			"./task_" + (num_to_str<int>(schedulerVec.size())) + "_"
+					+ num_to_str<long>(config->numTaskPerClient) + "_"
+					+ num_to_str<int>(get_index()));
 	taskLogOS.open(taskLogFile.c_str());
 
 	srand(time(NULL));
 }
 
-MatrixScheduler::~MatrixScheduler(void)
-{
+MatrixScheduler::~MatrixScheduler(void) {
 
 }
 
@@ -96,8 +96,7 @@ MatrixScheduler::~MatrixScheduler(void)
  * The purpose of doing the registration is to ensure that all the
  * schedulers are running at the beginning before moving forward
  * */
-void MatrixScheduler::regist()
-{
+void MatrixScheduler::regist() {
 	string regKey("number of scheduler registered");
 	string taskFinKey("num tasks done");
 	string recvKey("num tasks recv");
@@ -106,21 +105,17 @@ void MatrixScheduler::regist()
 	 * including both the number of registered schedulers and
 	 * the number of tasks done
 	 * */
-	if (get_index() == 0)
-	{
+	if (get_index() == 0) {
 		cout << "I am the first" << endl;
 		//sockMutex.lock();
 		zc.insert(regKey, string("1"));
 		zc.insert(taskFinKey, string("0"));
 		zc.insert(recvKey, string("0"));
 		//sockMutex.unlock();
-	}
-	else
-	{
+	} else {
 		string value;
 		zc.lookup(regKey, value);
-		while (value.empty())
-		{
+		while (value.empty()) {
 			usleep(config->sleepLength);
 			zc.lookup(regKey, value);
 		}
@@ -129,14 +124,10 @@ void MatrixScheduler::regist()
 		string newVal = num_to_str<int>(newValNum);
 		string queryVal;
 
-		while (zc.compare_swap(regKey, value, newVal, queryVal) != 0)
-		{
-			if (queryVal.empty())
-			{
+		while (zc.compare_swap(regKey, value, newVal, queryVal) != 0) {
+			if (queryVal.empty()) {
 				zc.lookup(regKey, value);
-			}
-			else
-			{
+			} else {
 				value = queryVal;
 			}
 			newValNum = str_to_num<int>(value) + 1;
@@ -146,49 +137,40 @@ void MatrixScheduler::regist()
 	}
 }
 
-void MatrixScheduler::load_data()
-{
-	string filePath("/users/kwangiit/sc14/matrix_v2/matrix/src/workload_dag/file_" + num_to_str<int>(schedulerVec.size()) + "_" +
-			num_to_str<double>(config->locality) + ".0_" + num_to_str<int>(
-					config->numFile) + "_" + num_to_str<int>(config->numTaskPerClient));
+void MatrixScheduler::load_data() {
+	string filePath("./workload_dag/file_" + num_to_str<int>(
+			schedulerVec.size()) + "_" + num_to_str<int>(config->numTaskPerClient));
 
 	vector<string> fileVec = read_from_file(filePath);
 
-	for (int i = 0; i < fileVec.size(); i++)
-	{
+	for (int i = 0; i < fileVec.size(); i++) {
 		vector<string> lineVec = tokenize(fileVec.at(i), " ");
-		if (str_to_num<int>(lineVec.at(1)) == get_index())
-		{
+		if (str_to_num<int>(lineVec.at(1)) == get_index()) {
 			localData.insert(make_pair(lineVec.at(0), "This is the data"));
 		}
 	}
 }
 
-void MatrixScheduler::get_task_from_file()
-{
+void MatrixScheduler::get_task_from_file() {
 	string done;
 	string key("Split Workload");
 	zc.lookup(key, done);
 
-	while (done.empty())
-	{
+	while (done.empty()) {
 		usleep(config->sleepLength);
 		zc.lookup(key, done);
 	}
 
-	string filePath = config->schedulerWorkloadPath + "/workload." + num_to_str<int>(get_index());
+	string filePath = config->schedulerWorkloadPath + "/workload."
+			+ num_to_str<int>(get_index());
 	string line;
 
 	ifstream fileStream(filePath.c_str());
-	if (!fileStream.good())
-	{
+	if (!fileStream.good()) {
 		return;
-	}
-	else
-	{
+	} else {
 		int numTask = 0;
-		while (getline(fileStream, line))
-		{
+		while (getline(fileStream, line)) {
 			numTask++;
 			vector<string> taskItemStr = tokenize(line, " ");
 			TaskMsg tm;
@@ -198,8 +180,8 @@ void MatrixScheduler::get_task_from_file()
 			tm.set_cmd(taskItemStr.at(3));
 			tm.set_datalength(0);
 			long time = get_time_usec();
-			taskTimeEntry.push_back(tm.taskid() +
-					"\tWaitQueueTime\t" + num_to_str<long>(time));
+			taskTimeEntry.push_back(
+					tm.taskid() + "\tWaitQueueTime\t" + num_to_str<long>(time));
 			waitQueue.push_back(tm);
 		}
 
@@ -211,14 +193,11 @@ void MatrixScheduler::get_task_from_file()
 		numTaskRecv += numTask;
 		numTaskRecvMoreStr = num_to_str<long>(numTaskRecv);
 		//cout << "number of task more recv is:" << numTaskRecv << endl;
-		while (zc.compare_swap(recvKey, numTaskRecvStr, numTaskRecvMoreStr, queryValue) != 0)
-		{
-			if (queryValue.empty())
-			{
+		while (zc.compare_swap(recvKey, numTaskRecvStr, numTaskRecvMoreStr,
+				queryValue) != 0) {
+			if (queryValue.empty()) {
 				zc.lookup(recvKey, numTaskRecvStr);
-			}
-			else
-			{
+			} else {
 				numTaskRecvStr = queryValue;
 			}
 			//cout << "OK, conflict, current value is:" << numTaskRecvStr << endl;
@@ -233,16 +212,14 @@ void MatrixScheduler::get_task_from_file()
  * with one package to another thief scheduler. The tasks
  * are delimited with "eot"
  * */
-void MatrixScheduler::pack_send_task(int numTask, int sockfd,
-		sockaddr fromAddr, bool end, deque<TaskMsg> &migrateQueue)
-{
+void MatrixScheduler::pack_send_task(int numTask, int sockfd, sockaddr fromAddr,
+		bool end, deque<TaskMsg> &migrateQueue) {
 	MatrixMsg mmTasks;
 	mmTasks.set_msgtype("scheduler send task");
 	mmTasks.set_count(numTask);
 	//cout << "The task count that is going to send is:" << numTask << endl;
 
-	for (int j = 0; j < numTask; j++)
-	{
+	for (int j = 0; j < numTask; j++) {
 		mmTasks.add_tasks(taskmsg_to_str(migrateQueue.front()));
 		migrateQueue.pop_front();
 	}
@@ -255,8 +232,7 @@ void MatrixScheduler::pack_send_task(int numTask, int sockfd,
 }
 
 /* send tasks to another thief scheduler */
-void MatrixScheduler::send_task(int sockfd, sockaddr fromAddr)
-{
+void MatrixScheduler::send_task(int sockfd, sockaddr fromAddr) {
 	int numTaskToSend = -1;
 
 	wsqMutex.lock();
@@ -274,11 +250,9 @@ void MatrixScheduler::send_task(int sockfd, sockaddr fromAddr)
 	string strNumTask = mm_to_str(mmNumTask);
 	//send_bf(sockfd, strNumTask);
 
-	if (numTaskToSend > 0)
-	{
+	if (numTaskToSend > 0) {
 		deque<TaskMsg> migrateQueue = deque<TaskMsg>();
-		for (int i = 0; i < numTaskToSend; i++)
-		{
+		for (int i = 0; i < numTaskToSend; i++) {
 			migrateQueue.push_back(wsQueue.top());
 			wsQueue.pop();
 		}
@@ -288,44 +262,38 @@ void MatrixScheduler::send_task(int sockfd, sockaddr fromAddr)
 		//cout << "The number of send is:" << numSend << endl;
 		bool more = false;
 		long numTaskLeft = numTaskToSend - numSend * config->maxTaskPerPkg;
-		if (numTaskLeft > 0)
-		{
+		if (numTaskLeft > 0) {
 			more = true;
 		}
 
-		for (int i = 0; i < numSend; i++)
-		{
-			if (!more && i == numSend - 1)
-			{
-				pack_send_task(config->maxTaskPerPkg, sockfd, fromAddr, true, migrateQueue);
-			}
-			else
-			{
-				pack_send_task(config->maxTaskPerPkg, sockfd, fromAddr, false, migrateQueue);
+		for (int i = 0; i < numSend; i++) {
+			if (!more && i == numSend - 1) {
+				pack_send_task(config->maxTaskPerPkg, sockfd, fromAddr, true,
+						migrateQueue);
+			} else {
+				pack_send_task(config->maxTaskPerPkg, sockfd, fromAddr, false,
+						migrateQueue);
 			}
 //			usleep(100);
 		}
 
-		if (more)
-		{
+		if (more) {
 			pack_send_task(numTaskLeft, sockfd, fromAddr, true, migrateQueue);
 		}
 
 		/*for (int i = 0; i < numSend; i++)
-		{
-			pack_send_task(config->maxTaskPerPkg, sockfd, fromAddr);
-		}
+		 {
+		 pack_send_task(config->maxTaskPerPkg, sockfd, fromAddr);
+		 }
 
-		long numTaskLeft = numTaskToSend - numSend * config->maxTaskPerPkg;
+		 long numTaskLeft = numTaskToSend - numSend * config->maxTaskPerPkg;
 
-		if (numTaskLeft > 0)
-		{
-			cout << "One more send is:" << numTaskLeft << endl;
-			pack_send_task(numTaskLeft, sockfd, fromAddr);
-		}*/
-	}
-	else
-	{
+		 if (numTaskLeft > 0)
+		 {
+		 cout << "One more send is:" << numTaskLeft << endl;
+		 pack_send_task(numTaskLeft, sockfd, fromAddr);
+		 }*/
+	} else {
 		wsqMutex.unlock();
 		mmNumTask.set_count(-1);
 		//string strNumTask = mmNumTask.SerializeAsString();
@@ -335,9 +303,8 @@ void MatrixScheduler::send_task(int sockfd, sockaddr fromAddr)
 }
 
 /* receive tasks submitted by client */
-void MatrixScheduler::recv_task_from_client(
-		MatrixMsg &mm, int sockfd, sockaddr fromAddr)
-{
+void MatrixScheduler::recv_task_from_client(MatrixMsg &mm, int sockfd,
+		sockaddr fromAddr) {
 	long increment = 0;
 	MatrixMsg mmNumTask;
 	mmNumTask.set_msgtype("return to client");
@@ -349,8 +316,7 @@ void MatrixScheduler::recv_task_from_client(
 
 	long sec = 0, nsec = 0;
 	//cout << "Number of task received is:" << mm.count() << endl;
-	for (int i = 0; i < mm.count(); i++)
-	{
+	for (int i = 0; i < mm.count(); i++) {
 		//cout << "The task is:" << mm.tasks(i) << endl;
 		TaskMsg tm = str_to_taskmsg(mm.tasks(i));
 		//cout << "The id is:" << tm.taskid() << endl;
@@ -402,15 +368,12 @@ void MatrixScheduler::recv_task_from_client(
 	numTaskRecvMoreStr = num_to_str<long>(numTaskRecv);
 	increment += 2;
 	//cout << "number of task more recv is:" << numTaskRecv << endl;
-	while (zc.compare_swap("num tasks recv", numTaskRecvStr, numTaskRecvMoreStr, queryValue) != 0)
-	{
-		if (queryValue.empty())
-		{
+	while (zc.compare_swap("num tasks recv", numTaskRecvStr, numTaskRecvMoreStr,
+			queryValue) != 0) {
+		if (queryValue.empty()) {
 			lookup_wrap("num tasks recv", numTaskRecvStr);
 			increment++;
-		}
-		else
-		{
+		} else {
 			numTaskRecvStr = queryValue;
 		}
 		//cout << "OK, conflict, current value is:" << numTaskRecvStr << endl;
@@ -419,8 +382,7 @@ void MatrixScheduler::recv_task_from_client(
 		numTaskRecvMoreStr = num_to_str<long>(numTaskRecv);
 	}
 
-	if (increment > 0)
-	{
+	if (increment > 0) {
 		//ZHTMsgCountMutex.lock();
 		incre_ZHT_msg_count(increment);
 		//ZHTMsgCountMutex.unlock();
@@ -428,23 +390,24 @@ void MatrixScheduler::recv_task_from_client(
 	//cout << "I am done with receiving tasks!" << endl;
 }
 
-void MatrixScheduler::recv_pushing_task(MatrixMsg &mm, int sockfd, sockaddr fromAddr)
-{
+void MatrixScheduler::recv_pushing_task(MatrixMsg &mm, int sockfd,
+		sockaddr fromAddr) {
 	long increment = 0;
 	TaskMsg tm = str_to_taskmsg(mm.tasks(0));
 
 	/*string taskDetail;
-	lookup_wrap(tm.taskid(), taskDetail);
-	Value value = str_to_value(taskDetail);
-	value.set_rqueuedtime(get_time_usec());
-	value.set_nummove(value.nummove() + 1);
-	value.set_history(value.history() + "|" + get_id());
-	taskDetail = value_to_str(value);
-	insert_wrap(tm.taskid(), taskDetail);*/
+	 lookup_wrap(tm.taskid(), taskDetail);
+	 Value value = str_to_value(taskDetail);
+	 value.set_rqueuedtime(get_time_usec());
+	 value.set_nummove(value.nummove() + 1);
+	 value.set_history(value.history() + "|" + get_id());
+	 taskDetail = value_to_str(value);
+	 insert_wrap(tm.taskid(), taskDetail);*/
 
 	tteMutex.lock();
-	taskTimeEntry.push_back(tm.taskid() + "\tPushQueuedTime\t"
-			+ num_to_str<long>(get_time_usec()));
+	taskTimeEntry.push_back(
+			tm.taskid() + "\tPushQueuedTime\t"
+					+ num_to_str<long>(get_time_usec()));
 	tteMutex.unlock();
 
 	lqMutex.lock();
@@ -459,13 +422,12 @@ void MatrixScheduler::recv_pushing_task(MatrixMsg &mm, int sockfd, sockaddr from
 	send_bf(sockfd, mmSucStr);
 
 	/*ZHTMsgCountMutex.lock();
-	incre_ZHT_msg_count(increment);
-	ZHTMsgCountMutex.unlock();*/
+	 incre_ZHT_msg_count(increment);
+	 ZHTMsgCountMutex.unlock();*/
 }
 
 /* processing requests received by the epoll server */
-int MatrixScheduler::proc_req(int sockfd, char *buf, sockaddr fromAddr)
-{
+int MatrixScheduler::proc_req(int sockfd, char *buf, sockaddr fromAddr) {
 	MatrixMsg mm;
 	//string *sbuf = static_cast<string*>(buf);
 	//string bufStr = *sbuf;
@@ -481,7 +443,7 @@ int MatrixScheduler::proc_req(int sockfd, char *buf, sockaddr fromAddr)
 	 * are stored in pkg.readfullpath() */
 	string msg = mm.msgtype();
 	if (msg.compare("query load") == 0)	// thief quering load
-	{
+			{
 		int load = wsQueue.size();
 		MatrixMsg mmLoad;
 		mmLoad.set_msgtype("send load");
@@ -490,33 +452,24 @@ int MatrixScheduler::proc_req(int sockfd, char *buf, sockaddr fromAddr)
 		//strLoad = mmLoad.SerializeAsString();
 		//cout << "OK, I got a query load message" << endl;
 		send_bf(sockfd, strLoad);
-	}
-	else if (msg.compare("steal task") == 0)	// thief steals tasks
-	{
+	} else if (msg.compare("steal task") == 0)	// thief steals tasks
+			{
 		send_task(sockfd, fromAddr);
-	}
-	else if (msg.compare("client send task") == 0)	// client sent tasks
-	{
+	} else if (msg.compare("client send task") == 0)	// client sent tasks
+			{
 		/* add tasks and then send ack back */
 		recv_task_from_client(mm, sockfd, fromAddr);
-	}
-	else if (msg.compare("scheduler push task") == 0)
-	{
+	} else if (msg.compare("scheduler push task") == 0) {
 		recv_pushing_task(mm, sockfd, fromAddr);
-	}
-	else if (msg.compare("scheduler require data") == 0)
-	{
+	} else if (msg.compare("scheduler require data") == 0) {
 		//cout << "The required information is" << mm.extrainfo() << endl;
 		string dataPiece;
 		ldMutex.lock();
 
-		if (localData.find(mm.extrainfo()) == localData.end())
-		{
+		if (localData.find(mm.extrainfo()) == localData.end()) {
 			//cout << "What is the hell!" << endl;
 			dataPiece = "shit, that is wrong!";
-		}
-		else
-		{
+		} else {
 			dataPiece = localData.find(mm.extrainfo())->second;
 		}
 		ldMutex.unlock();
@@ -534,33 +487,29 @@ int MatrixScheduler::proc_req(int sockfd, char *buf, sockaddr fromAddr)
 }
 
 /* epoll server thread function */
-void *epoll_serving(void *args)
-{
-	MatrixEpollServer *mes = (MatrixEpollServer*)args;
+void *epoll_serving(void *args) {
+	MatrixEpollServer *mes = (MatrixEpollServer*) args;
 	mes->serve();
 	pthread_exit(NULL);
 	return NULL;
 }
 
 /* fork epoll server thread */
-void MatrixScheduler::fork_es_thread()
-{
-	MatrixEpollServer *mes = new MatrixEpollServer(config->schedulerPortNo, this);
+void MatrixScheduler::fork_es_thread() {
+	MatrixEpollServer *mes = new MatrixEpollServer(config->schedulerPortNo,
+			this);
 
 	pthread_t esThread;
 
-	while (pthread_create(&esThread, NULL, epoll_serving, (void*)mes) != 0)
-	{
+	while (pthread_create(&esThread, NULL, epoll_serving, (void*) mes) != 0) {
 		sleep(1);
 	}
 }
 
 /* reset the bitmap of neighbors chosen, "false"
  * means hasn't been chosen */
-void MatrixScheduler::reset_choosebm()
-{
-	for (int i = 0; i < schedulerVec.size(); i++)
-	{
+void MatrixScheduler::reset_choosebm() {
+	for (int i = 0; i < schedulerVec.size(); i++) {
 		chooseBitMap[i] = false;
 	}
 }
@@ -568,14 +517,11 @@ void MatrixScheduler::reset_choosebm()
 /* choose candidate neighbors to steal tasks,
  * for simplicity, we randomly choose neighbors
  * */
-void MatrixScheduler::choose_neigh()
-{
+void MatrixScheduler::choose_neigh() {
 	int idx = -1;
-	for (int i = 0; i < numNeigh; i++)
-	{
+	for (int i = 0; i < numNeigh; i++) {
 		idx = rand() % schedulerVec.size();
-		while (idx == get_index() || chooseBitMap[idx])
-		{
+		while (idx == get_index() || chooseBitMap[idx]) {
 			idx = rand() % schedulerVec.size();
 		}
 		neighIdx[i] = idx;
@@ -589,8 +535,7 @@ void MatrixScheduler::choose_neigh()
 /* find the neighbor with the maximum load by quering
  * the load information of each scheduler one by one
  * */
-void MatrixScheduler::find_most_loaded_neigh()
-{
+void MatrixScheduler::find_most_loaded_neigh() {
 	MatrixMsg mm;
 	mm.set_msgtype("query load");
 
@@ -599,8 +544,7 @@ void MatrixScheduler::find_most_loaded_neigh()
 
 	long load = -1;
 
-	for (int i = 0; i < numNeigh; i++)
-	{
+	for (int i = 0; i < numNeigh; i++) {
 		string result;
 		//cout << "I am sending load query to " << schedulerVec.at(neighIdx[i]) << endl;
 		sockMutex.lock();
@@ -613,8 +557,7 @@ void MatrixScheduler::find_most_loaded_neigh()
 		//cout << "OH, I received the result" << endl;
 		close(sockfd);
 		sockMutex.unlock();
-		if (result.empty())
-		{
+		if (result.empty()) {
 			continue;
 		}
 		MatrixMsg mmLoad = str_to_mm(result);
@@ -622,8 +565,7 @@ void MatrixScheduler::find_most_loaded_neigh()
 
 		load = mmLoad.count();
 		//cout << "The load is:" << load << endl;
-		if (maxLoad < load)
-		{
+		if (maxLoad < load) {
 			maxLoad = load;
 			maxLoadedIdx = neighIdx[i];
 		}
@@ -699,9 +641,7 @@ void MatrixScheduler::find_most_loaded_neigh()
 //		ZHTMsgCountMutex.unlock();
 //	}*/
 //}
-
-bool MatrixScheduler::recv_task_from_scheduler(int sockfd)
-{
+bool MatrixScheduler::recv_task_from_scheduler(int sockfd) {
 	string taskStr;
 	//cout << "Before receiving!" << endl;
 	recv_mul(sockfd, taskStr);
@@ -710,8 +650,7 @@ bool MatrixScheduler::recv_task_from_scheduler(int sockfd)
 	string taskStrLs = taskStr.substr(0, taskStr.length() - 1);
 
 	vector<string> stealVec = tokenize(taskStrLs, "##");
-	if (stealVec.size() == 1)
-	{
+	if (stealVec.size() == 1) {
 		return false;
 	}
 
@@ -721,8 +660,7 @@ bool MatrixScheduler::recv_task_from_scheduler(int sockfd)
 
 	//cout << "Number of task is:" << numTask << endl;
 
-	for (int i = 1; i < stealVec.size(); i++)
-	{
+	for (int i = 1; i < stealVec.size(); i++) {
 		MatrixMsg mm = str_to_mm(stealVec.at(i));
 		//mm.ParseFromString(stealVec.at(i));
 
@@ -730,23 +668,20 @@ bool MatrixScheduler::recv_task_from_scheduler(int sockfd)
 		string time = num_to_str<long>(get_time_usec());
 
 		//cout << "Number of tasks received is:" << mm.count() << endl;
-		for (long j = 0; j < mm.count(); j++)
-		{
+		for (long j = 0; j < mm.count(); j++) {
 			//cout << "The " << j << "th task is:" << mm.tasks(j) << endl;
 			tmVec.push_back(str_to_taskmsg(mm.tasks(j)));
 		}
 
 		tteMutex.lock();
-		for (long j = 0; j < mm.count(); j++)
-		{
-			taskTimeEntry.push_back(tmVec.at(j).taskid() +
-					"\tWorkStealQueuedTime\t" + time);
+		for (long j = 0; j < mm.count(); j++) {
+			taskTimeEntry.push_back(
+					tmVec.at(j).taskid() + "\tWorkStealQueuedTime\t" + time);
 		}
 		tteMutex.unlock();
 
 		wsqMutex.lock();
-		for (long j = 0; j < mm.count(); j++)
-		{
+		for (long j = 0; j < mm.count(); j++) {
 			wsQueue.push(tmVec.at(j));
 		}
 		wsqMutex.unlock();
@@ -761,11 +696,9 @@ bool MatrixScheduler::recv_task_from_scheduler(int sockfd)
  * notifying how many tasks could be migrated, then sends all the
  * tasks batch by batch.
  * */
-bool MatrixScheduler::steal_task()
-{
+bool MatrixScheduler::steal_task() {
 	/* if no neighbors have ready tasks */
-	if (maxLoad <= 0)
-	{
+	if (maxLoad <= 0) {
 		return false;
 	}
 
@@ -778,7 +711,8 @@ bool MatrixScheduler::steal_task()
 	//cout << "OK, before sending stealing task message!" << endl;
 	sockMutex.lock();
 	//cout << "OK, I am sending stealing task message!" << endl;
-	int sockfd = send_first(schedulerVec.at(maxLoadedIdx), config->schedulerPortNo, strStealTask);
+	int sockfd = send_first(schedulerVec.at(maxLoadedIdx),
+			config->schedulerPortNo, strStealTask);
 //	//recv_bf(sockfd, numTaskPkgStr);
 //	recv_mul(sockfd, numTaskPkgStr);
 //
@@ -810,17 +744,14 @@ bool MatrixScheduler::steal_task()
  * poll interval has reached the upper bound, the scheduler would do work
  * stealing.
  * */
-void *workstealing(void* args)
-{
-	MatrixScheduler *ms = (MatrixScheduler*)args;
+void *workstealing(void* args) {
+	MatrixScheduler *ms = (MatrixScheduler*) args;
 	long incre = 0;
 
-	while (ms->running)
-	{
+	while (ms->running) {
 		//cout << "Now, start to do work stealing!" << endl;
-		while (ms->localQueue.size() + ms->wsQueue.size() == 0 &&
-				ms->pollInterval < ms->config->wsPollIntervalUb)
-		{
+		while (ms->localQueue.size() + ms->wsQueue.size() == 0
+				&& ms->pollInterval < ms->config->wsPollIntervalUb) {
 			ms->choose_neigh();
 			ms->find_most_loaded_neigh();
 			//cout << "The maxload idx:" << ms->maxLoadedIdx << ", and the maximum load is:" << ms->maxLoad << endl;
@@ -834,12 +765,9 @@ void *workstealing(void* args)
 			 * sleep the poll interval length, and double the poll
 			 * interval, and tries to do work stealing again
 			 * */
-			if (success)
-			{
+			if (success) {
 				ms->pollInterval = ms->config->wsPollIntervalStart;
-			}
-			else
-			{
+			} else {
 				ms->numWSFail++;
 				//cout << "Failed to do work stealing!" << endl;
 				usleep(ms->pollInterval);
@@ -850,8 +778,7 @@ void *workstealing(void* args)
 
 		//usleep(ms->config->sleepLength);
 
-		if (ms->pollInterval >= ms->config->wsPollIntervalUb)
-		{
+		if (ms->pollInterval >= ms->config->wsPollIntervalUb) {
 			break;
 		}
 
@@ -869,13 +796,10 @@ void *workstealing(void* args)
 }
 
 /* fork work stealing thread */
-void MatrixScheduler::fork_ws_thread()
-{
-	if (config->workStealingOn == 1)
-	{
+void MatrixScheduler::fork_ws_thread() {
+	if (config->workStealingOn == 1) {
 		pthread_t wsThread;
-		while (pthread_create(&wsThread, NULL, workstealing, this) != 0)
-		{
+		while (pthread_create(&wsThread, NULL, workstealing, this) != 0) {
 			sleep(1);
 		}
 	}
@@ -886,8 +810,7 @@ void MatrixScheduler::fork_ws_thread()
  * delimited with space. After a task is done, move it to the
  * complete queue.
  * */
-void MatrixScheduler::exec_a_task(TaskMsg &tm)
-{
+void MatrixScheduler::exec_a_task(TaskMsg &tm) {
 	string taskDetail;
 	//cout << "Now, I am executing a task" << tm.taskid() << endl;
 	sockMutex.lock();
@@ -907,37 +830,28 @@ void MatrixScheduler::exec_a_task(TaskMsg &tm)
 		data += dataPiece;
 	}
 #else
-	for (int i = 0; i < value.parents_size(); i++)
-	{
-		if (value.datasize(i) > 0)
-		{
-			if (value.parents(i).compare(get_id()) == 0)
-			{
+	for (int i = 0; i < value.parents_size(); i++) {
+		if (value.datasize(i) > 0) {
+			if (value.parents(i).compare(get_id()) == 0) {
 				ldMutex.lock();
 				//data += "what ever!";
 				data += localData.find(value.datanamelist(i))->second;
 				//cout << tm.taskid() << " find the data" << endl;
 				ldMutex.unlock();
-			}
-			else
-			{
+			} else {
 				bool dataReq = true;
-				if (cache)
-				{
+				if (cache) {
 					ldMutex.lock();
-					if (localData.find(value.datanamelist(i)) != localData.end())
-					{
+					if (localData.find(value.datanamelist(i))
+							!= localData.end()) {
 						data += localData.find(value.datanamelist(i))->second;
 						dataReq = false;
-					}
-					else
-					{
+					} else {
 						dataReq = true;
 					}
 					ldMutex.unlock();
 				}
-				if (dataReq)
-				{
+				if (dataReq) {
 					MatrixMsg mm;
 					mm.set_msgtype("scheduler require data");
 					//cout << "The require data is:" << value.datanamelist(i) << endl;
@@ -947,7 +861,8 @@ void MatrixScheduler::exec_a_task(TaskMsg &tm)
 					//cout << tm.taskid() << "\trequires " << i << "\tdata!" << endl;
 
 					sockMutex.lock();
-					int sockfd = send_first(value.parents(i), config->schedulerPortNo, mmStr);
+					int sockfd = send_first(value.parents(i),
+							config->schedulerPortNo, mmStr);
 					//sockMutex.unlock();
 
 					//cout << tm.taskid() << "\tit takes " << diff.tv_sec << "s, and " << diff.tv_nsec
@@ -965,10 +880,11 @@ void MatrixScheduler::exec_a_task(TaskMsg &tm)
 					//mmData.ParseFromString(dataPiece);
 					//cout << "After parse, extra info is:" << mmData.extrainfo() << endl;
 					data += mmData.extrainfo();
-					if (cache)
-					{
+					if (cache) {
 						ldMutex.lock();
-						localData.insert(make_pair(value.datanamelist(i), mmData.extrainfo()));
+						localData.insert(
+								make_pair(value.datanamelist(i),
+										mmData.extrainfo()));
 						ldMutex.unlock();
 					}
 				}
@@ -981,8 +897,9 @@ void MatrixScheduler::exec_a_task(TaskMsg &tm)
 	const char *execmd = tm.cmd().c_str();
 	//cout << "The cmd is:" << execmd << endl;
 	//string result = exec(execmd);
-	string result = num_to_str<int>(usleep(275000));//
+	//string result = num_to_str<int>(usleep(275000));	//
 	//string result = exec("sleep 0");
+	string result = num_to_str<ing>(usleep(value.tasklength()));
 	string key = get_id() + tm.taskid();
 
 #ifdef ZHT_STORAGE
@@ -998,15 +915,15 @@ void MatrixScheduler::exec_a_task(TaskMsg &tm)
 
 	long finTime = get_time_usec();
 	tteMutex.lock();
-	taskTimeEntry.push_back(tm.taskid() + "\tStartTime\t" +
-			num_to_str<long>(startTime));
-	taskTimeEntry.push_back(tm.taskid() + "\tFinTime\t" +
-			num_to_str<long>(finTime));
+	taskTimeEntry.push_back(
+			tm.taskid() + "\tStartTime\t" + num_to_str<long>(startTime));
+	taskTimeEntry.push_back(
+			tm.taskid() + "\tFinTime\t" + num_to_str<long>(finTime));
 	tteMutex.unlock();
 
 	cqMutex.lock();
 	//completeQueue.push_back(CmpQueueItem(tm.taskid(), key, result.length()));
-	completeQueue.push_back(CmpQueueItem(tm.taskid(), key, 10000));
+	completeQueue.push_back(CmpQueueItem(tm.taskid(), key, value.outputsize()));
 	cqMutex.unlock();
 
 	numTaskFinMutex.lock();
@@ -1023,48 +940,34 @@ void MatrixScheduler::exec_a_task(TaskMsg &tm)
  * scheduler is still processing tasks, as long as there are
  * tasks in the ready queue, execute the task one by one
  * */
-void *executing_task(void *args)
-{
-	MatrixScheduler *ms = (MatrixScheduler*)args;
+void *executing_task(void *args) {
+	MatrixScheduler *ms = (MatrixScheduler*) args;
 	TaskMsg tm;
 
-	while (ms->running)
-	{
-		while (ms->localQueue.size() > 0 || ms->wsQueue.size() > 0)
-		{
-			if (ms->localQueue.size() > 0)
-			{
+	while (ms->running) {
+		while (ms->localQueue.size() > 0 || ms->wsQueue.size() > 0) {
+			if (ms->localQueue.size() > 0) {
 				ms->lqMutex.lock();
-				if (ms->localQueue.size() > 0)
-				{
+				if (ms->localQueue.size() > 0) {
 					tm = ms->localQueue.top();
 					ms->localQueue.pop();
 					ms->lqMutex.unlock();
-				}
-				else
-				{
+				} else {
 					ms->lqMutex.unlock();
 					continue;
 				}
-			}
-			else if (ms->wsQueue.size() > 0)
-			{
+			} else if (ms->wsQueue.size() > 0) {
 				ms->wsqMutex.lock();
-				if (ms->wsQueue.size() > 0)
-				{
+				if (ms->wsQueue.size() > 0) {
 					//cout << "The ready queue length is:" << ms->wsQueue.size() << endl;
 					tm = ms->wsQueue.top();
 					ms->wsQueue.pop();
 					ms->wsqMutex.unlock();
-				}
-				else
-				{
+				} else {
 					ms->wsqMutex.unlock();
 					continue;
 				}
-			}
-			else
-			{
+			} else {
 				continue;
 			}
 
@@ -1089,22 +992,17 @@ void *executing_task(void *args)
  * given by the configuration file, and it is usually eaqual to the
  * number of cores a machine has.
  * */
-void MatrixScheduler::fork_exec_task_thread()
-{
+void MatrixScheduler::fork_exec_task_thread() {
 	pthread_t *execThread = new pthread_t[config->numCorePerExecutor];
 
-	for (int i = 0; i < config->numCorePerExecutor; i++)
-	{
-		while (pthread_create(&execThread[i], NULL, executing_task, this) != 0)
-		{
+	for (int i = 0; i < config->numCorePerExecutor; i++) {
+		while (pthread_create(&execThread[i], NULL, executing_task, this) != 0) {
 			sleep(1);
 		}
 	}
 }
 
-int MatrixScheduler::task_ready_process(
-		const Value &valuePkg, TaskMsg &tm)
-{
+int MatrixScheduler::task_ready_process(const Value &valuePkg, TaskMsg &tm) {
 	/* flag = 0, keep it in the work stealing queue
 	 * flag = 1, keep it in the local queue
 	 * flag = 2, push it to other scheduler's local queue
@@ -1115,48 +1013,35 @@ int MatrixScheduler::task_ready_process(
 	tm.set_datalength(valuePkg.alldatasize());
 	flag = 0;
 #else
-	if (valuePkg.alldatasize() <= config->dataSizeThreshold)
-	{
+	if (valuePkg.alldatasize() <= config->dataSizeThreshold) {
 		tm.set_datalength(valuePkg.alldatasize());
 		flag = 0;
-	}
-	else
-	{
+	} else {
 		long maxDataSize = -1000000;
 		string maxDataScheduler, key;
-		for (int i = 0; i < valuePkg.datasize_size(); i++)
-		{
-			if (valuePkg.datasize(i) > maxDataSize)
-			{
+		for (int i = 0; i < valuePkg.datasize_size(); i++) {
+			if (valuePkg.datasize(i) > maxDataSize) {
 				maxDataSize = valuePkg.datasize(i);
 				maxDataScheduler = valuePkg.parents(i);
 				key = valuePkg.datanamelist(i);
 			}
 		}
 		tm.set_datalength(maxDataSize);
-		if (maxDataScheduler.compare(get_id()) == 0)
-		{
+		if (maxDataScheduler.compare(get_id()) == 0) {
 			flag = 1;
-		}
-		else
-		{
+		} else {
 			bool taskPush = true;
-			if (cache)
-			{
+			if (cache) {
 				ldMutex.lock();
-				if (localData.find(key) != localData.end())
-				{
+				if (localData.find(key) != localData.end()) {
 					flag = 1;
 					taskPush = false;
-				}
-				else
-				{
+				} else {
 					taskPush = true;
 				}
 				ldMutex.unlock();
 			}
-			if (taskPush)
-			{
+			if (taskPush) {
 				MatrixMsg mm;
 				mm.set_msgtype("scheduler push task");
 				mm.set_count(1);
@@ -1164,7 +1049,8 @@ int MatrixScheduler::task_ready_process(
 				//string mmStr = mm.SerializeAsString();
 				string mmStr = mm_to_str(mm);
 				sockMutex.lock();
-				int sockfd = send_first(maxDataScheduler, config->schedulerPortNo, mmStr);
+				int sockfd = send_first(maxDataScheduler,
+						config->schedulerPortNo, mmStr);
 				//sockMutex.unlock();
 				string ack;
 				recv_bf(sockfd, ack);
@@ -1182,8 +1068,7 @@ int MatrixScheduler::task_ready_process(
  * ready only if all of its parants are done (the indegree counter
  * equals to 0).
  * */
-bool MatrixScheduler::check_a_ready_task(TaskMsg &tm)
-{
+bool MatrixScheduler::check_a_ready_task(TaskMsg &tm) {
 	string taskDetail;
 	bool ready = false;
 	sockMutex.lock();
@@ -1192,26 +1077,22 @@ bool MatrixScheduler::check_a_ready_task(TaskMsg &tm)
 	Value value = str_to_value(taskDetail);
 	//cout << "task indegree:" << tm.taskid() << "\t" << value.indegree() << endl;
 
-	if (value.indegree() == 0)
-	{
+	if (value.indegree() == 0) {
 		ready = true;
 		int flag = task_ready_process(value, tm);
-		if (flag != 2)
-		{
+		if (flag != 2) {
 			tteMutex.lock();
-			taskTimeEntry.push_back(tm.taskid() + "\tReadyQueuedTime\t"
-					+ num_to_str<long>(get_time_usec()));
+			taskTimeEntry.push_back(
+					tm.taskid() + "\tReadyQueuedTime\t"
+							+ num_to_str<long>(get_time_usec()));
 			tteMutex.unlock();
 
 		}
-		if (flag == 0)
-		{
+		if (flag == 0) {
 			wsqMutex.lock();
 			wsQueue.push(tm);
 			wsqMutex.unlock();
-		}
-		else if (flag == 1)
-		{
+		} else if (flag == 1) {
 			lqMutex.lock();
 			localQueue.push(tm);
 			lqMutex.unlock();
@@ -1227,16 +1108,13 @@ bool MatrixScheduler::check_a_ready_task(TaskMsg &tm)
  * waiting queue to see it they are ready to run. Move the
  * tasks that are ready to run to the ready queue.
  * */
-void *checking_ready_task(void *args)
-{
-	MatrixScheduler *ms = (MatrixScheduler*)args;
+void *checking_ready_task(void *args) {
+	MatrixScheduler *ms = (MatrixScheduler*) args;
 	TaskMsg tm;
 	long increment = 0;
 
-	while (ms->running)
-	{
-		while (ms->waitQueue.size() > 0)
-		{
+	while (ms->running) {
+		while (ms->waitQueue.size() > 0) {
 			//cout << "number of task waiting is:" << ms->waitQueue.size() << endl;
 			tm = ms->waitQueue.front();
 			ms->waitQueue.pop_front();
@@ -1244,8 +1122,7 @@ void *checking_ready_task(void *args)
 
 			bool ready = ms->check_a_ready_task(tm);
 			increment++;
-			if (!ready)
-			{
+			if (!ready) {
 				ms->waitQueue.push_back(tm);
 				//cout << "Ok, the task is still not ready!" << tm.taskid() << endl;
 			}
@@ -1261,13 +1138,11 @@ void *checking_ready_task(void *args)
 }
 
 /* fork check ready task thread */
-void MatrixScheduler::fork_crt_thread()
-{
+void MatrixScheduler::fork_crt_thread() {
 	pthread_t crtThread;
 	//cout << "The number of waiting task is:" << waitQueue.size() << endl;
 	//cout << "The first one is:" << waitQueue.front().taskid() << endl;
-	while (pthread_create(&crtThread, NULL, checking_ready_task, this) != 0)
-	{
+	while (pthread_create(&crtThread, NULL, checking_ready_task, this) != 0) {
 		sleep(1);
 	}
 }
@@ -1275,8 +1150,7 @@ void MatrixScheduler::fork_crt_thread()
 /* decrease the indegree of a task by one, because one of
  * its parents has been done.
  * */
-long MatrixScheduler::notify_children(const CmpQueueItem &cqItem)
-{
+long MatrixScheduler::notify_children(const CmpQueueItem &cqItem) {
 	string taskDetail;
 	long increment = 0;
 	sockMutex.lock();
@@ -1284,9 +1158,9 @@ long MatrixScheduler::notify_children(const CmpQueueItem &cqItem)
 	zc.lookup(cqItem.taskId, taskDetail);
 	//cout << "OK, the task id is:" << cqItem.taskId << ", and task detail is:" << taskDetail << endl;
 	sockMutex.unlock();
-	if (taskDetail.empty())
-	{
-		cout << "I am notifying a children, that is insane:" << cqItem.taskId << endl;
+	if (taskDetail.empty()) {
+		cout << "I am notifying a children, that is insane:" << cqItem.taskId
+				<< endl;
 	}
 	Value value = str_to_value(taskDetail);
 
@@ -1295,8 +1169,7 @@ long MatrixScheduler::notify_children(const CmpQueueItem &cqItem)
 	Value childVal;
 
 	//cout << "task finished, notify children:" << cqItem.taskId << "\t" << taskDetail << "\tChildren size is:" << value.children_size() << endl;
-	for (int i = 0; i < value.children_size(); i++)
-	{
+	for (int i = 0; i < value.children_size(); i++) {
 		childTaskId = value.children(i);
 		sockMutex.lock();
 		zc.lookup(childTaskId, childTaskDetail);
@@ -1304,9 +1177,9 @@ long MatrixScheduler::notify_children(const CmpQueueItem &cqItem)
 		//cout << "The size is:" << childTaskDetail.length() << endl;
 		sockMutex.unlock();
 		increment++;
-		if (taskDetail.empty())
-		{
-			cout << "I am notifying a children, that is insane:" << cqItem.taskId << endl;
+		if (taskDetail.empty()) {
+			cout << "I am notifying a children, that is insane:"
+					<< cqItem.taskId << endl;
 		}
 		childVal = str_to_value(childTaskDetail);
 		childVal.set_indegree(childVal.indegree() - 1);
@@ -1319,15 +1192,12 @@ long MatrixScheduler::notify_children(const CmpQueueItem &cqItem)
 		//cout << cqItem.taskId << "\t" << childTaskId << "\t" << childTaskDetail << "\t" << childTaskDetailAttempt << endl;
 		increment++;
 		sockMutex.lock();
-		while (zc.compare_swap(childTaskId, childTaskDetail, childTaskDetailAttempt, query_value) != 0)
-		{
-			if (query_value.empty())
-			{
+		while (zc.compare_swap(childTaskId, childTaskDetail,
+				childTaskDetailAttempt, query_value) != 0) {
+			if (query_value.empty()) {
 				zc.lookup(childTaskId, childTaskDetail);
 				increment++;
-			}
-			else
-			{
+			} else {
 				childTaskDetail = query_value;
 			}
 			childVal = str_to_value(childTaskDetail);
@@ -1350,26 +1220,20 @@ long MatrixScheduler::notify_children(const CmpQueueItem &cqItem)
  * complete queue is not empty, for each task in the queue, decrease
  * the indegree of each child by one.
  * */
-void *checking_complete_task(void *args)
-{
-	MatrixScheduler *ms = (MatrixScheduler*)args;
+void *checking_complete_task(void *args) {
+	MatrixScheduler *ms = (MatrixScheduler*) args;
 	CmpQueueItem cqItem = CmpQueueItem();
 
 	long increment = 0;
 
-	while (ms->running)
-	{
-		while (ms->completeQueue.size() > 0)
-		{
+	while (ms->running) {
+		while (ms->completeQueue.size() > 0) {
 			ms->cqMutex.lock();
-			if (ms->completeQueue.size() > 0)
-			{
+			if (ms->completeQueue.size() > 0) {
 				cqItem = ms->completeQueue.front();
 				ms->completeQueue.pop_front();
 				ms->cqMutex.unlock();
-			}
-			else
-			{
+			} else {
 				ms->cqMutex.unlock();
 				continue;
 			}
@@ -1386,12 +1250,10 @@ void *checking_complete_task(void *args)
 }
 
 /* fork check complete queue tasks thread */
-void MatrixScheduler::fork_cct_thread()
-{
+void MatrixScheduler::fork_cct_thread() {
 	pthread_t cctThread;
 
-	while (pthread_create(&cctThread, NULL, checking_complete_task, this) != 0)
-	{
+	while (pthread_create(&cctThread, NULL, checking_complete_task, this) != 0) {
 		sleep(1);
 	}
 }
@@ -1401,20 +1263,18 @@ void MatrixScheduler::fork_cct_thread()
  * and ready; number of idle/all cores, and number of (failed) working
  * stealing operations) to ZHT.
  * */
-void *recording_stat(void *args)
-{
-	MatrixScheduler *ms = (MatrixScheduler*)args;
+void *recording_stat(void *args) {
+	MatrixScheduler *ms = (MatrixScheduler*) args;
 	long increment = 0;
 	timespec time;
 
-	if (ms->schedulerLogOS.is_open())
-	{
+	if (ms->schedulerLogOS.is_open()) {
 		ms->schedulerLogOS << "Time\tNumTaskFin\tNumTaskWait\tNumTaskReady\t"
-				"NumIdleCore\tNumAllCore\tNumWorkSteal\tNumWorkStealFail" << endl;
+				"NumIdleCore\tNumAllCore\tNumWorkSteal\tNumWorkStealFail"
+				<< endl;
 	}
 
-	while (1)
-	{
+	while (1) {
 		Value recordVal;
 		recordVal.set_id(ms->get_id());
 		recordVal.set_numtaskfin(ms->numTaskFin);
@@ -1429,12 +1289,12 @@ void *recording_stat(void *args)
 		ms->zc.insert(ms->get_id(), recordValStr);
 		sockMutex.unlock();
 
-		if (ms->schedulerLogOS.is_open())
-		{
-			ms->schedulerLogOS << get_time_usec() << "\t" << ms->numTaskFin << "\t" <<
-					ms->waitQueue.size() << "\t" << ms->localQueue.size() + ms->wsQueue.size() <<
-					"\t" << ms->numIdleCore << "\t" << ms->config->numCorePerExecutor << "\t" <<
-					ms->numWS << "\t" << ms->numWSFail << endl;
+		if (ms->schedulerLogOS.is_open()) {
+			ms->schedulerLogOS << get_time_usec() << "\t" << ms->numTaskFin
+					<< "\t" << ms->waitQueue.size() << "\t"
+					<< ms->localQueue.size() + ms->wsQueue.size() << "\t"
+					<< ms->numIdleCore << "\t" << ms->config->numCorePerExecutor
+					<< "\t" << ms->numWS << "\t" << ms->numWSFail << endl;
 		}
 
 		/* check and modify how many tasks are done for all the schedulers. If all
@@ -1451,14 +1311,14 @@ void *recording_stat(void *args)
 		increment += 2;
 
 		long numTaskDone = str_to_num<long>(numTaskDoneStr);
-		if (numTaskDone == ms->config->numAllTask)
-		{
-			if (ms->schedulerLogOS.is_open())
-			{
-				ms->schedulerLogOS << get_time_usec() << "\t" << ms->numTaskFin << "\t" <<
-						ms->waitQueue.size() << "\t" << ms->localQueue.size() + ms->wsQueue.size()
-						<< "\t" << ms->numIdleCore << "\t" << ms->config->numCorePerExecutor <<
-						"\t" << ms->numWS << "\t" << ms->numWSFail << endl;
+		if (numTaskDone == ms->config->numAllTask) {
+			if (ms->schedulerLogOS.is_open()) {
+				ms->schedulerLogOS << get_time_usec() << "\t" << ms->numTaskFin
+						<< "\t" << ms->waitQueue.size() << "\t"
+						<< ms->localQueue.size() + ms->wsQueue.size() << "\t"
+						<< ms->numIdleCore << "\t"
+						<< ms->config->numCorePerExecutor << "\t" << ms->numWS
+						<< "\t" << ms->numWSFail << endl;
 
 			}
 			ms->running = false;
@@ -1472,21 +1332,16 @@ void *recording_stat(void *args)
 		string queryValue;
 		increment++;
 		sockMutex.lock();
-		while (ms->zc.compare_swap(key, numTaskDoneStr,
-				numTaskDoneStrNew, queryValue) != 0)
-		{
-			if (queryValue.empty())
-			{
+		while (ms->zc.compare_swap(key, numTaskDoneStr, numTaskDoneStrNew,
+				queryValue) != 0) {
+			if (queryValue.empty()) {
 				ms->zc.lookup(key, numTaskDoneStr);
 				increment++;
-			}
-			else
-			{
+			} else {
 				numTaskDoneStr = queryValue;
 			}
 			numTaskDone = str_to_num<long>(numTaskDoneStr);
-			if (numTaskDone == ms->config->numAllTask)
-			{
+			if (numTaskDone == ms->config->numAllTask) {
 				break;
 			}
 			numTaskDone += (ms->numTaskFin - ms->prevNumTaskFin);
@@ -1505,14 +1360,14 @@ void *recording_stat(void *args)
 	ms->incre_ZHT_msg_count(increment);
 	ms->ZHTMsgCountMutex.unlock();
 
-	ms->schedulerLogOS << "The number of ZHT message is:" << ms->numZHTMsg << endl;
-	ms->schedulerLogOS.flush(); ms->schedulerLogOS.close();
+	ms->schedulerLogOS << "The number of ZHT message is:" << ms->numZHTMsg
+			<< endl;
+	ms->schedulerLogOS.flush();
+	ms->schedulerLogOS.close();
 
-	if (ms->taskTimeEntry.size() > 0)
-	{
+	if (ms->taskTimeEntry.size() > 0) {
 		//ms->tteMutex.lock();
-		for (int i = 0; i < ms->taskTimeEntry.size(); i++)
-		{
+		for (int i = 0; i < ms->taskTimeEntry.size(); i++) {
 			ms->taskLogOS << ms->taskTimeEntry.at(i) << endl;
 		}
 		//ms->tteMutex.unlock();
@@ -1523,27 +1378,21 @@ void *recording_stat(void *args)
 }
 
 /* fork recording status thread */
-void MatrixScheduler::fork_record_stat_thread()
-{
+void MatrixScheduler::fork_record_stat_thread() {
 	pthread_t rsThread;
 
-	while (pthread_create(&rsThread, NULL, recording_stat, this) != 0)
-	{
+	while (pthread_create(&rsThread, NULL, recording_stat, this) != 0) {
 		sleep(1);
 	}
 }
 
-void *record_task_time(void *args)
-{
-	MatrixScheduler *ms = (MatrixScheduler*)args;
+void *record_task_time(void *args) {
+	MatrixScheduler *ms = (MatrixScheduler*) args;
 
-	while (ms->running)
-	{
-		if (ms->taskTimeEntry.size() > 0)
-		{
+	while (ms->running) {
+		if (ms->taskTimeEntry.size() > 0) {
 			ms->tteMutex.lock();
-			while (ms->taskTimeEntry.size() > 0)
-			{
+			while (ms->taskTimeEntry.size() > 0) {
 				ms->taskLogOS << ms->taskTimeEntry.back() << endl;
 				ms->taskTimeEntry.pop_back();
 			}
@@ -1553,74 +1402,63 @@ void *record_task_time(void *args)
 		usleep(ms->config->sleepLength);
 	}
 
-	ms->taskLogOS.flush(); ms->taskLogOS.close();
+	ms->taskLogOS.flush();
+	ms->taskLogOS.close();
 	pthread_exit(NULL);
 
 	return NULL;
 }
 
-void MatrixScheduler::fork_record_task_thread()
-{
+void MatrixScheduler::fork_record_task_thread() {
 	pthread_t trThread;
 
-	while (pthread_create(&trThread, NULL, record_task_time, this) != 0)
-	{
+	while (pthread_create(&trThread, NULL, record_task_time, this) != 0) {
 		sleep(1);
 	}
 }
 
-void *localQueue_monitor(void *args)
-{
-	MatrixScheduler *ms = (MatrixScheduler*)args;
+void *localQueue_monitor(void *args) {
+	MatrixScheduler *ms = (MatrixScheduler*) args;
 	timespec diff;
-	double time =0.0, aveThroughput = 0.0, estTime = 0.0;
+	double time = 0.0, aveThroughput = 0.0, estTime = 0.0;
 	long maxSize = 0;
 
-	while (ms->running)
-	{
+	while (ms->running) {
 		clock_gettime(0, &ms->end);
 		diff = time_diff(ms->start, ms->end);
-		time = (double)diff.tv_sec + (double)diff.tv_nsec / 1E9;
-		aveThroughput = (double)(ms->numTaskFin) / time;
-		maxSize = (long)(aveThroughput * ms->config->estTimeThreadshold);
+		time = (double) diff.tv_sec + (double) diff.tv_nsec / 1E9;
+		aveThroughput = (double) (ms->numTaskFin) / time;
+		maxSize = (long) (aveThroughput * ms->config->estTimeThreadshold);
 		vector<TaskMsg> vecRemain;
 		vector<TaskMsg> vecMigrated;
-		if (maxSize == 0)
-		{
+		if (maxSize == 0) {
 			usleep(ms->config->sleepLength);
 			continue;
 		}
 		ms->lqMutex.lock();
-		if (ms->localQueue.size() > maxSize)
-		{
+		if (ms->localQueue.size() > maxSize) {
 			int numTaskToMove = ms->localQueue.size() - maxSize;
-			for (int i = 0; i < maxSize; i++)
-			{
+			for (int i = 0; i < maxSize; i++) {
 				vecRemain.push_back(ms->localQueue.top());
 				ms->localQueue.pop();
 			}
 
-			for (int i = 0; i < numTaskToMove; i++)
-			{
+			for (int i = 0; i < numTaskToMove; i++) {
 				vecMigrated.push_back(ms->localQueue.top());
 				ms->localQueue.pop();
 			}
 
-			for (int i = 0; i < maxSize; i++)
-			{
+			for (int i = 0; i < maxSize; i++) {
 				ms->localQueue.push(vecRemain.at(i));
 			}
 			ms->lqMutex.unlock();
 
 			ms->wsqMutex.lock();
-			for (int i = 0; i < numTaskToMove; i++)
-			{
+			for (int i = 0; i < numTaskToMove; i++) {
 				ms->wsQueue.push(vecMigrated.at(i));
 			}
 			ms->wsqMutex.unlock();
-		}
-		else
-		{
+		} else {
 			ms->lqMutex.unlock();
 		}
 		usleep(ms->config->sleepLength);
@@ -1630,32 +1468,27 @@ void *localQueue_monitor(void *args)
 	return NULL;
 }
 
-void MatrixScheduler::fork_localQueue_monitor_thread()
-{
+void MatrixScheduler::fork_localQueue_monitor_thread() {
 	pthread_t lqMonThread;
 
-	while (pthread_create(&lqMonThread, NULL, localQueue_monitor, this) != 0)
-	{
+	while (pthread_create(&lqMonThread, NULL, localQueue_monitor, this) != 0) {
 		sleep(1);
 	}
 }
 
-CmpQueueItem::CmpQueueItem(const string &taskId,
-		const string &key, long dataSize)
-{
+CmpQueueItem::CmpQueueItem(const string &taskId, const string &key,
+		long dataSize) {
 	this->taskId = taskId;
 	this->key = key;
 	this->dataSize = dataSize;
 }
 
-CmpQueueItem::CmpQueueItem()
-{
+CmpQueueItem::CmpQueueItem() {
 	this->taskId = "";
 	this->key = "";
 	this->dataSize = 0;
 }
 
-CmpQueueItem::~CmpQueueItem()
-{
+CmpQueueItem::~CmpQueueItem() {
 
 }

@@ -9,11 +9,9 @@
 
 using namespace std;
 
-int main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
 	/* check whether specified a configuration file */
-	if (argc != 2)
-	{
+	if (argc != 2) {
 		fprintf(stderr, "The usage is: client\tconfiguration_file!\n");
 		exit(-1);
 	}
@@ -45,8 +43,7 @@ int main(int argc, char *argv[])
 
 	ms->fork_ws_thread();	// forks work stealing thread
 
-	if (ms->config->policy.compare("FLWS") == 0)
-	{
+	if (ms->config->policy.compare("FLWS") == 0) {
 		ms->fork_localQueue_monitor_thread();
 	}
 
@@ -54,8 +51,7 @@ int main(int argc, char *argv[])
 
 	//ms->fork_record_task_thread();
 
-	while (1)
-	{
+	while (1) {
 		sleep(1);
 	}
 }
