@@ -197,7 +197,7 @@ void MatrixClient::insert_taskinfo_to_zht(adjList &dagAdjList, inDegree &dagInDe
 			}
 		} else {
 			value.set_indegree(config->numMapTask);
-			value.set_tasklength(lineVec.at(2));
+			value.set_tasklength(str_to_num<long>(lineVec.at(2)));
 		}
 
 		//value.add_children(lastTaskId);
@@ -403,21 +403,21 @@ void MatrixClient::split_task_wc() {
  * */
 
 /* old split tasks to the NSF file, now don't need to do that*/
-//void MatrixClient::split_task_one(vector<string> taskStrVec, int toScheIdx)
-//{
-//	string path = config->schedulerWorkloadPath +
-//			"/workload." + num_to_str<int>(toScheIdx);
-//
-//	ofstream workloadFS;
-//	workloadFS.open(path.c_str());
-//
-//	for (int i = 0; i < taskStrVec.size(); i++)
-//	{
-//		workloadFS << taskStrVec.at(i) << endl;
-//	}
-//
-//	workloadFS.flush(); workloadFS.close();
-//}
+void MatrixClient::split_task_one(vector<string> taskStrVec, int toScheIdx)
+{
+	string path = config->schedulerWorkloadPath +
+			"/workload." + num_to_str<int>(toScheIdx);
+
+	ofstream workloadFS;
+	workloadFS.open(path.c_str());
+
+	for (int i = 0; i < taskStrVec.size(); i++)
+	{
+		workloadFS << taskStrVec.at(i) << endl;
+	}
+
+	workloadFS.flush(); workloadFS.close();
+}
 //void MatrixClient::split_task_wc(vector<string> tmVec, int toScheIdx)
 //{
 //	long numTaskLeft = tmVec.size();

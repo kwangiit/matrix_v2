@@ -8,11 +8,11 @@ DagArgument=$7
 
 numClient=$(($numAllTask/$numTaskPerClient))
 
-rm -rf host
+#rm -rf host
 
-for i in `seq 1 $numNode`; do
-        echo node-$i.matrix.usrc.kodiak.nx >> host
-done
+#for i in `seq 1 $numNode`; do
+#        echo node-$i.matrix.usrc.kodiak.nx >> host
+#done
 
 cp host $matrixSrcPath/memlist
 

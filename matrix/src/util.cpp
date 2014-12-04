@@ -616,7 +616,7 @@ extern string value_to_str(const Value &value)
 	}
 	str.append("~~");
 
-	if (value.hasoutputsize())
+	if (value.has_outputsize())
 		str.append(num_to_str<long>(value.outputsize()));
 	else
 		str.append("nooutputsize");

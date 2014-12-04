@@ -899,7 +899,7 @@ void MatrixScheduler::exec_a_task(TaskMsg &tm) {
 	//string result = exec(execmd);
 	//string result = num_to_str<int>(usleep(275000));	//
 	//string result = exec("sleep 0");
-	string result = num_to_str<ing>(usleep(value.tasklength()));
+	string result = num_to_str<int>(usleep(value.tasklength()));
 	string key = get_id() + tm.taskid();
 
 #ifdef ZHT_STORAGE
