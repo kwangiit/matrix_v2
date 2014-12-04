@@ -9,24 +9,23 @@
 
 using namespace std;
 
-int main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
 	/* check whether specified a configuration file */
-	if (argc != 2)
-	{
+	if (argc != 2) {
 		fprintf(stderr, "The usage is: client\tconfiguration_file!\n");
 		exit(-1);
 	}
 
-	srand(time(NULL));
+	srand (time(NULL));
 
 	/* create a new matrix client */
-	string configFileStr(argv[1]);
+	string 	configFileStr(argv[1]);
 	MatrixClient *mc = new MatrixClient(configFileStr);
 
 	/* generate task dag adjecent list (children) */
 	adjList dagAdjList;
-	gen_dag_adjlist(dagAdjList, mc->config->dagType, mc->config->dagArg, mc->config->numTaskPerClient);
+	gen_dag_adjlist(dagAdjList, mc->config->dagType, mc->config->dagArg,
+			mc->config->numTaskPerClient);
 
 	/* calculate indegrees (number of parents) for every tasks */
 	inDegree dagInDegree;
@@ -40,12 +39,11 @@ int main(int argc, char *argv[])
 	/* wait until all schedulers have registered to ZHT */
 #ifdef PRINT_OUT
 	cout << "--------------------------------"
-			"----------------------------" << endl;
+	"----------------------------" << endl;
 	cout << "Now, I am waiting until all the schedulers are running!" << endl;
 #endif
 
-	if (mc->clientLogOS.is_open())
-	{
+	if (mc->clientLogOS.is_open()) {
 		mc->clientLogOS << "--------------------------------"
 				"----------------------------" << endl;
 		mc->clientLogOS << "Now, I am waiting until all the "
@@ -61,17 +59,16 @@ int main(int argc, char *argv[])
 
 #ifdef PRINT_OUT
 	cout << "It took " << diff.tv_sec << "s, and "
-			<< diff.tv_nsec << " ns" << endl;
+	<< diff.tv_nsec << " ns" << endl;
 	cout << "--------------------------------"
-			"----------------------------" << endl;
+	"----------------------------" << endl;
 #endif
 
-	if (mc->clientLogOS.is_open())
-	{
+	if (mc->clientLogOS.is_open()) {
 		mc->clientLogOS << "It took " << diff.tv_sec << "s, and "
 				<< diff.tv_nsec << " ns" << endl;
 		mc->clientLogOS << "--------------------------------"
-						"----------------------------" << endl;
+				"----------------------------" << endl;
 	}
 
 	/* initalize tasks by assigning taskId information to each task */
