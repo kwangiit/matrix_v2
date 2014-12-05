@@ -15,7 +15,7 @@ numClient=$(($numAllTask/$numTaskPerClient))
 #rm -rf host
 
 #for i in `seq 1 $numNode`; do
-        echo node-$i.matrix.usrc.kodiak.nx >> host
+#        echo node-$i.matrix.usrc.kodiak.nx >> host
 #done
 
 #cp host $matrixSrcPath/memlist
@@ -24,6 +24,15 @@ numClient=$(($numAllTask/$numTaskPerClient))
 #copy the memberlist file to all the nodes
 IFS=$'\n'
 set -f
+
+echo "Host *" >> ~/.ssh/config
+echo " IdentityFile ~/MATRIX_KEY.pem" >> ~/.ssh/config
+echo " StrictHostKeyChecking no" >> ~/.ssh/config
+echo " UserKnownHostsFile /dev/null" >> ~/.ssh/config
+
+for i in $(cat host); do
+	ssh -o 'StrictHostKeyChecking no' -o 'UserKnownHostsFile /dev/null' ~/.ssh/config $i:/home/ubuntu/.ssh/config
+done
 
 for i in $(cat host); do
 	scp -o 'StrictHostKeyChecking no' -o 'UserKnownHostsFile /dev/null' host $i:$matrixSrcPath/memlist

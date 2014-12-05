@@ -21,8 +21,8 @@ class Configuration
 		void parse_config(const string&);
 
 		long numTaskPerClient;	// number of task per client
-		int numFile;
-		double locality;
+		//int numFile;
+		//double locality;
 		long numAllTask;	// number of all tasks
 		long numMapTask;
 		long numReduceTask;

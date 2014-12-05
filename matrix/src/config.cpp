@@ -49,9 +49,9 @@ void Configuration::parse_config(const string &configFile)
 	numTaskPerClient = str_to_num<long>(
 			configMap.find("NumTaskPerClient")->second);
 
-	numFile = str_to_num<int>(configMap.find("NumFile")->second);
+	//numFile = str_to_num<int>(configMap.find("NumFile")->second);
 
-	locality = str_to_num<double>(configMap.find("Locality")->second);
+	//locality = str_to_num<double>(configMap.find("Locality")->second);
 
 	numAllTask = str_to_num<long>(
 			configMap.find("NumAllTask")->second);
