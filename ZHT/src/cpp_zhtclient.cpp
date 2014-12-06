@@ -187,6 +187,7 @@ string ZHTClient::extract_value(const string &returnStr) {
 	string val;
 
 	StrTokenizer strtok(returnStr, ":");
+	//StrTokenizer strtok(returnStr, ";");
 	/*
 	 * hello,zht:hello,ZHT ==> zht:ZHT
 	 * */

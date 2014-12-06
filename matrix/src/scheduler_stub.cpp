@@ -1173,8 +1173,8 @@ long MatrixScheduler::notify_children(const CmpQueueItem &cqItem) {
 		childTaskId = value.children(i);
 		sockMutex.lock();
 		zc.lookup(childTaskId, childTaskDetail);
-		//cout << "The child task id is:" << childTaskId << "\t" << childTaskDetail << endl;
-		//cout << "The size is:" << childTaskDetail.length() << endl;
+		cout << "The child task id is:" << childTaskId << "\t" << childTaskDetail << endl;
+		cout << "The size is:" << childTaskDetail.length() << endl;
 		sockMutex.unlock();
 		increment++;
 		if (taskDetail.empty()) {

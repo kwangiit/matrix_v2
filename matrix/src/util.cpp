@@ -58,10 +58,11 @@ int get_ip(char *outIP)
 	close(sockfd);
 
 	ifreq_local = (struct ifreq*)buf;
+	cout << "before the ip!" << endl;
 	for(i=(ifconf_local.ifc_len / sizeof(struct ifreq));i > 0;i--)
 	{
 		ip = inet_ntoa(((struct sockaddr_in*)&(ifreq_local->ifr_addr))->sin_addr);
-
+		printf("The ip is:%s\n", ip);
 		if(strcmp(ip, "127.0.0.1") == 0)
 		{
 			ifreq_local++;
@@ -71,6 +72,7 @@ int get_ip(char *outIP)
 		strcpy(outIP, ip);
 		return 0;
 	}
+	printf("The ip address is:%s\n", outIP);
 	return -1;
 }
 
@@ -113,6 +115,7 @@ string get_host_id(const string &type)
 	}
 	else if (type.compare("ip") == 0)
 	{
+		cout << "Now I am getting the ip address!" << endl;
 		char ip_cstr[30];
 		memset(ip_cstr, '\0', 30);
 		get_ip(ip_cstr);
@@ -151,12 +154,18 @@ int get_self_idx(const string &str, vector<string> strVec)
 
 	for (int i = 0; i < strVec.size(); i++)
 	{
+		cout << str << "\t" << strVec.at(i) << endl;
 		if (str.compare(strVec.at(i)) == 0)
 		{
+			cout << "They are equal!\n" << endl;
 			idx = i;
+			cout << "index is:" << idx;
 			break;
-		}
+		} else
+			cout << "That is weird!\n" << endl;
 	}
+
+	cout << "My index is:" << idx << endl;
 
 	return idx;
 }
@@ -822,8 +831,11 @@ int Mutex::unlock()
 Peer::Peer(const string &configFile)
 {
 	config = new Configuration(configFile);
+	//cout << "The host id type is:" << config->hostIdType << endl;
 	set_id(get_host_id(config->hostIdType));
 	schedulerVec = read_from_file(config->schedulerMemFile);
+	for (int i = 0; i < schedulerVec.size(); i++)
+		cout << "The id is:" << schedulerVec.at(i) << endl;
 	set_index(get_self_idx(get_id(), schedulerVec));
 	running = true;
 	numZHTMsg = 0;
