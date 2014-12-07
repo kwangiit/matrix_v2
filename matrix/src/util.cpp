@@ -11,36 +11,31 @@ uint _BUF_SIZE = 8192;
 Mutex tokenMutex = Mutex();
 Mutex sockMutex = Mutex();
 
-vector<string> tokenize(const std::string &source, const char *delimiter = " ")
-{
+vector<string> tokenize(const std::string &source,
+		const char *delimiter = " ") {
 	tokenMutex.lock();
 	vector<string> results;
 	size_t prev = 0, next = 0;
 
-	if (source.empty())
-	{
+	if (source.empty()) {
 		return results;
 	}
 
-	while ((next = source.find_first_of(delimiter, prev)) != string::npos)
-	{
-		if (next - prev != 0)
-		{
+	while ((next = source.find_first_of(delimiter, prev)) != string::npos) {
+		if (next - prev != 0) {
 			results.push_back(source.substr(prev, next - prev));
 		}
 		prev = next + 1;
 	}
 
-	if (prev < source.size())
-	{
+	if (prev < source.size()) {
 		results.push_back(source.substr(prev));
 	}
 	tokenMutex.unlock();
 	return results;
 }
 
-int get_ip(char *outIP)
-{
+int get_ip(char *outIP) {
 	int i = 0, sockfd;
 	struct ifconf ifconf_local;
 	char buf[512];
@@ -49,22 +44,18 @@ int get_ip(char *outIP)
 	ifconf_local.ifc_len = 512;
 	ifconf_local.ifc_buf = buf;
 
-	if((sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0)
-	{
+	if ((sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
 		return -1;
 	}
 
 	ioctl(sockfd, SIOCGIFCONF, &ifconf_local);
 	close(sockfd);
 
-	ifreq_local = (struct ifreq*)buf;
-	cout << "before the ip!" << endl;
-	for(i=(ifconf_local.ifc_len / sizeof(struct ifreq));i > 0;i--)
-	{
-		ip = inet_ntoa(((struct sockaddr_in*)&(ifreq_local->ifr_addr))->sin_addr);
-		printf("The ip is:%s\n", ip);
-		if(strcmp(ip, "127.0.0.1") == 0)
-		{
+	ifreq_local = (struct ifreq*) buf;
+	for (i = (ifconf_local.ifc_len / sizeof(struct ifreq)); i > 0; i--) {
+		ip = inet_ntoa(
+				((struct sockaddr_in*) &(ifreq_local->ifr_addr))->sin_addr);
+		if (strcmp(ip, "127.0.0.1") == 0) {
 			ifreq_local++;
 			continue;
 		}
@@ -72,109 +63,82 @@ int get_ip(char *outIP)
 		strcpy(outIP, ip);
 		return 0;
 	}
-	printf("The ip address is:%s\n", outIP);
 	return -1;
 }
 
-string exec(const char *cmd)
-{
+string exec(const char *cmd) {
 	FILE* pipe = popen(cmd, "r");
-	if (!pipe)
-	{
+	if (!pipe) {
 		return "ERROR";
 	}
 
 	char buffer[128];
 	string result = "";
 
-	while (!feof(pipe))
-	{
-		if(fgets(buffer, 128, pipe) != NULL)
-		{
-	    	result += buffer;
-	    }
+	while (!feof(pipe)) {
+		if (fgets(buffer, 128, pipe) != NULL) {
+			result += buffer;
+		}
 	}
 
 	pclose(pipe);
 
-	if (!result.empty() && result[result.length() - 1] == '\n')
-	{
+	if (!result.empty() && result[result.length() - 1] == '\n') {
 		result.erase(result.length() - 1);
 	}
 
 	return result;
 }
 
-string get_host_id(const string &type)
-{
+string get_host_id(const string &type) {
 	string id;
 
-	if (type.compare("localhost") == 0)
-	{
+	if (type.compare("localhost") == 0) {
 		id = "localhost";
-	}
-	else if (type.compare("ip") == 0)
-	{
-		cout << "Now I am getting the ip address!" << endl;
+	} else if (type.compare("ip") == 0) {
 		char ip_cstr[30];
 		memset(ip_cstr, '\0', 30);
 		get_ip(ip_cstr);
 		id.assign(ip_cstr);
-	}
-	else if (type.compare("hostname") == 0)
-	{
+	} else if (type.compare("hostname") == 0) {
 		id = exec("hostname");
 	}
 
 	return id;
 }
 
-vector<string> read_from_file(const string &fileName)
-{
+vector<string> read_from_file(const string &fileName) {
 	ifstream fileStream(fileName.c_str());
 	vector<string> fileVec;
 	string line;
 
-	if (!fileStream.good())
-	{
+	if (!fileStream.good()) {
 		return fileVec;
 	}
 
-	while(getline(fileStream, line))
-	{
+	while (getline(fileStream, line)) {
 		fileVec.push_back(line);
 	}
 
 	return fileVec;
 }
 
-int get_self_idx(const string &str, vector<string> strVec)
-{
+int get_self_idx(const string &str, vector<string> strVec) {
 	int idx = -1;
 
-	for (int i = 0; i < strVec.size(); i++)
-	{
-		cout << str << "\t" << strVec.at(i) << endl;
-		if (str.compare(strVec.at(i)) == 0)
-		{
-			cout << "They are equal!\n" << endl;
+	for (int i = 0; i < strVec.size(); i++) {
+		if (str.compare(strVec.at(i)) == 0) {
 			idx = i;
-			cout << "index is:" << idx;
 			break;
-		} else
-			cout << "That is weird!\n" << endl;
+		}
 	}
-
-	cout << "My index is:" << idx << endl;
 
 	return idx;
 }
 
- /* generate adjecency list for BOT independent tasks */
-void gen_bot_adjlist(adjList &dagAdjList, long numTask)
-{
-	for (long i = 0; i < numTask; i++)
-	{
+/* generate adjecency list for BOT independent tasks */
+void gen_bot_adjlist(adjList &dagAdjList, long numTask) {
+	for (long i = 0; i < numTask; i++) {
 		vector<long> newList;
 		dagAdjList.insert(make_pair(i, newList));
 	}
@@ -184,24 +148,18 @@ void gen_bot_adjlist(adjList &dagAdjList, long numTask)
  * generate adjacency list for fanout dags,
  * the argument is the fan out degree
  * */
-void gen_fanout_adjlist(adjList &dagAdjList, long dagArg, long numTask)
-{
+void gen_fanout_adjlist(adjList &dagAdjList, long dagArg, long numTask) {
 	long next = -1;
 
-	for (long i = 0; i < numTask; i++)
-	{
+	for (long i = 0; i < numTask; i++) {
 		vector<long> newList;
 
-		for (long j = 1; j <= dagArg; j++)
-		{
+		for (long j = 1; j <= dagArg; j++) {
 			next = i * dagArg + j;
 
-			if (next >= numTask)
-			{
+			if (next >= numTask) {
 				break;
-			}
-			else
-			{
+			} else {
 				newList.push_back(next);
 			}
 		}
@@ -214,8 +172,7 @@ void gen_fanout_adjlist(adjList &dagAdjList, long dagArg, long numTask)
  * generate adjacency list for fan in dags,
  * the argument is the fan in degree
  * */
-void gen_fanin_adjlist(adjList &dagAdjList, long dagArg, long numTask)
-{
+void gen_fanin_adjlist(adjList &dagAdjList, long dagArg, long numTask) {
 	adjList tmpAdjList;
 
 	/* first generate an adjacency list for fan out dag,
@@ -223,8 +180,7 @@ void gen_fanin_adjlist(adjList &dagAdjList, long dagArg, long numTask)
 	 * right to get the adjacency list for fan in dags */
 	gen_fanout_adjlist(tmpAdjList, dagArg, numTask);
 
-	for (long i = 0; i < numTask; i++)
-	{
+	for (long i = 0; i < numTask; i++) {
 		long reverseId = numTask - 1 - i;
 
 		vector<long> newList;
@@ -232,10 +188,10 @@ void gen_fanin_adjlist(adjList &dagAdjList, long dagArg, long numTask)
 
 		vector<long> tmpList = tmpAdjList.find(i)->second;
 
-		for (long j = 0; j < tmpList.size(); j++)
-		{
-			dagAdjList.insert(make_pair(numTask - 1 -
-					tmpList.at(tmpList.size() - 1 - j), newList));
+		for (long j = 0; j < tmpList.size(); j++) {
+			dagAdjList.insert(
+					make_pair(numTask - 1 - tmpList.at(tmpList.size() - 1 - j),
+							newList));
 		}
 	}
 
@@ -243,20 +199,16 @@ void gen_fanin_adjlist(adjList &dagAdjList, long dagArg, long numTask)
 	dagAdjList.insert(make_pair(numTask - 1, lastVec));
 }
 
-void gen_pipeline_adjlist(adjList &dagAdjList, long dagArg, long numTask)
-{
+void gen_pipeline_adjlist(adjList &dagAdjList, long dagArg, long numTask) {
 	long numPipe = numTask / dagArg, index = -1, next = -1;
 
-	for (long i = 0; i < numPipe; i++)
-	{
-		for (long j = 0; j < dagArg; j++)
-		{
+	for (long i = 0; i < numPipe; i++) {
+		for (long j = 0; j < dagArg; j++) {
 			index = i * dagArg + j;
 			next = index + 1;
 			vector<long> newList;
 
-			if (next % dagArg != 0 && next < numTask)
-			{
+			if (next % dagArg != 0 && next < numTask) {
 				newList.push_back(next);
 			}
 
@@ -264,13 +216,11 @@ void gen_pipeline_adjlist(adjList &dagAdjList, long dagArg, long numTask)
 		}
 	}
 
-	for (index = numPipe * dagArg; index < numTask; index++)
-	{
+	for (index = numPipe * dagArg; index < numTask; index++) {
 		next = index + 1;
 		vector<long> newList;
 
-		if (next % dagArg != 0 && next < numTask)
-		{
+		if (next % dagArg != 0 && next < numTask) {
 			newList.push_back(next);
 		}
 
@@ -278,87 +228,67 @@ void gen_pipeline_adjlist(adjList &dagAdjList, long dagArg, long numTask)
 	}
 }
 
-void print_adjlist(adjList &dagAdjList)
-{
-	for(adjList::iterator it = dagAdjList.begin();
-			it != dagAdjList.end(); ++it)
-	{
+void print_adjlist(adjList &dagAdjList) {
+	for (adjList::iterator it = dagAdjList.begin(); it != dagAdjList.end();
+			++it) {
 		vector<long> existList = it->second;
-        cout << " " << it->first << " -> ";
+		cout << " " << it->first << " -> ";
 
-        for(long i = 0; i < existList.size(); i++)
-        {
-        	cout << " " << existList[i] << ",";
-        }
+		for (long i = 0; i < existList.size(); i++) {
+			cout << " " << existList[i] << ",";
+		}
 
-        cout << endl;
+		cout << endl;
 	}
 }
 
-void gen_dag_adjlist(adjList &dagAdjList, string &dagType,
-							long dagArg, long numTask)
-{
-	if (dagType.compare("BOT") == 0)
-	{
+void gen_dag_adjlist(adjList &dagAdjList, string &dagType, long dagArg,
+		long numTask) {
+	if (dagType.compare("BOT") == 0) {
 		gen_bot_adjlist(dagAdjList, numTask);
-	}
-	else if (dagType.compare("FanOut") == 0)
-	{
+	} else if (dagType.compare("FanOut") == 0) {
 		gen_fanout_adjlist(dagAdjList, dagArg, numTask);
-	}
-	else if (dagType.compare("FanIn") == 0)
-	{
+	} else if (dagType.compare("FanIn") == 0) {
 		gen_fanin_adjlist(dagAdjList, dagArg, numTask);
-	}
-	else if (dagType.compare("Pipeline") == 0)
-	{
+	} else if (dagType.compare("Pipeline") == 0) {
 		gen_pipeline_adjlist(dagAdjList, dagArg, numTask);
 	}
 	print_adjlist(dagAdjList);
 }
 
-void gen_dag_indegree(adjList &dagAdjList, inDegree &dagInDegree)
-{
-	for (long i = 0; i < dagAdjList.size(); i++)
-	{
+void gen_dag_indegree(adjList &dagAdjList, inDegree &dagInDegree) {
+	for (long i = 0; i < dagAdjList.size(); i++) {
 		dagInDegree[i] = 0;
 	}
-	for(adjList::iterator it = dagAdjList.begin();
-						it != dagAdjList.end(); ++it)
-	{
+	for (adjList::iterator it = dagAdjList.begin(); it != dagAdjList.end();
+			++it) {
 		long index = it->first;
 		vector<long> existList = it->second;
 
-		for (long j = 0; j < existList.size(); j++)
-		{
+		for (long j = 0; j < existList.size(); j++) {
 			dagInDegree[existList.at(j)]++;
 		}
 	}
 }
 
-void gen_dag_parents(adjList &dagAdjList, adjList &dagParentList)
-{
-	for (long i = 0; i < dagAdjList.size(); i++)
-	{
+void gen_dag_parents(adjList &dagAdjList, adjList &dagParentList) {
+	for (long i = 0; i < dagAdjList.size(); i++) {
 		vector<long> parents;
 		dagParentList.insert(make_pair(i, parents));
 	}
 
-	for (adjList::iterator it = dagAdjList.begin();
-						it != dagAdjList.end(); ++it)
-	{
+	for (adjList::iterator it = dagAdjList.begin(); it != dagAdjList.end();
+			++it) {
 		long index = it->first;
 		vector<long> existList = it->second;
 
-		for (long i = 0; i < existList.size(); i++)
-		{
+		for (long i = 0; i < existList.size(); i++) {
 			dagParentList.find(existList.at(i))->second.push_back(index);
 		}
 	}
 }
 
-long get_time_usec()
-{
+long get_time_usec() {
 	struct timeval currentTime;
 
 	gettimeofday(&currentTime, NULL);
@@ -368,8 +298,7 @@ long get_time_usec()
 	return time;
 }
 
-double get_time_msec()
-{
+double get_time_msec() {
 	struct timeval currentTime;
 
 	gettimeofday(&currentTime, NULL);
@@ -377,8 +306,7 @@ double get_time_msec()
 			+ static_cast<double>(currentTime.tv_usec) / 1000.0;
 }
 
-double get_time_sec()
-{
+double get_time_sec() {
 	struct timeval currentTime;
 
 	gettimeofday(&currentTime, NULL);
@@ -386,21 +314,19 @@ double get_time_sec()
 			+ static_cast<double>(currentTime.tv_usec) / 1000000.0;
 }
 
-timespec time_diff(timespec start, timespec end)
-{
+timespec time_diff(timespec start, timespec end) {
 	timespec diff;
 	uint64_t ts, te;
 
-	ts = (uint64_t)start.tv_sec * 1000000000 + (uint64_t)start.tv_nsec;
-	te = (uint64_t)end.tv_sec * 1000000000 + (uint64_t)end.tv_nsec;
+	ts = (uint64_t) start.tv_sec * 1000000000 + (uint64_t) start.tv_nsec;
+	te = (uint64_t) end.tv_sec * 1000000000 + (uint64_t) end.tv_nsec;
 	diff.tv_sec = (te - ts) / 1000000000;
 	diff.tv_nsec = (te - ts) % 1000000000;
 
 	return diff;
 }
 
-extern string taskmsg_to_str(const TaskMsg &taskMsg)
-{
+extern string taskmsg_to_str(const TaskMsg &taskMsg) {
 	string str("");
 
 	str.append(taskMsg.taskid());
@@ -417,134 +343,98 @@ extern string taskmsg_to_str(const TaskMsg &taskMsg)
 	return str;
 }
 
-extern TaskMsg str_to_taskmsg(const string &str)
-{
+extern TaskMsg str_to_taskmsg(const string &str) {
 	vector<string> vecStr = tokenize(str, "@@");
 
-	if (vecStr.size() == 0)
-	{
+	if (vecStr.size() == 0) {
 		cout << "have some problem" << endl;
 		exit(1);
 	}
 	TaskMsg tm;
 	tm.set_taskid(vecStr.at(0));
-	if (vecStr.size() > 1)
-	{
+	if (vecStr.size() > 1) {
 		tm.set_user(vecStr.at(1));
-	}
-	else
-	{
+	} else {
 		cout << "has problem, the vector size is:1" << endl;
 		tm.set_user("kwang");
 	}
-	if (vecStr.size() > 2)
-	{
+	if (vecStr.size() > 2) {
 		tm.set_dir(vecStr.at(2));
-	}
-	else
-	{
+	} else {
 		cout << "has problem, the vector size is:2" << endl;
 		tm.set_dir("/home/kwang/Documents");
 	}
-	if (vecStr.size() > 3)
-	{
+	if (vecStr.size() > 3) {
 		tm.set_cmd(vecStr.at(3));
-	}
-	else
-	{
+	} else {
 		cout << "has problem, the vector size is:3" << endl;
 		tm.set_cmd("hostname");
 	}
-	if (vecStr.size() > 4)
-	{
+	if (vecStr.size() > 4) {
 		tm.set_datalength(str_to_num<long>(vecStr.at(4)));
-	}
-	else
-	{
+	} else {
 		cout << "has problem, the vector size is:4" << endl;
 		tm.set_datalength(0);
 	}
 	return tm;
 }
 
-extern string value_to_str(const Value &value)
-{
+extern string value_to_str(const Value &value) {
 	string str("");
 
-	str.append(value.id()); str.append("~~");
+	str.append(value.id());
+	str.append("~~");
 
-	if (value.has_indegree())
-	{
+	if (value.has_indegree()) {
 		str.append(num_to_str<long>(value.indegree()));
-	}
-	else
-	{
+	} else {
 		str.append("noindegree");
 	}
 	str.append("~~");
 
-	if (value.parents_size() > 0)
-	{
-		for (int i = 0; i < value.parents_size(); i++)
-		{
+	if (value.parents_size() > 0) {
+		for (int i = 0; i < value.parents_size(); i++) {
 			str.append(value.parents(i));
 			str.append("??");
 		}
-	}
-	else
-	{
+	} else {
 		str.append("noparents");
 	}
 	str.append("~~");
 
-	if (value.children_size() > 0)
-	{
-		for (int i = 0; i < value.children_size(); i++)
-		{
+	if (value.children_size() > 0) {
+		for (int i = 0; i < value.children_size(); i++) {
 			str.append(value.children(i));
 			str.append("??");
 		}
-	}
-	else
-	{
+	} else {
 		str.append("nochildren");
 	}
 	str.append("~~");
 
-	if (value.datanamelist_size() > 0)
-	{
-		for (int i = 0; i < value.datanamelist_size(); i++)
-		{
+	if (value.datanamelist_size() > 0) {
+		for (int i = 0; i < value.datanamelist_size(); i++) {
 			str.append(value.datanamelist(i));
 			str.append("??");
 		}
-	}
-	else
-	{
+	} else {
 		str.append("nodataname");
 	}
 	str.append("~~");
 
-	if (value.datasize_size() > 0)
-	{
-		for (int i = 0; i < value.datasize_size(); i++)
-		{
+	if (value.datasize_size() > 0) {
+		for (int i = 0; i < value.datasize_size(); i++) {
 			str.append(num_to_str<long>(value.datasize(i)));
 			str.append("??");
 		}
-	}
-	else
-	{
+	} else {
 		str.append("nodatasize");
 	}
 	str.append("~~");
 
-	if (value.has_alldatasize())
-	{
+	if (value.has_alldatasize()) {
 		str.append(num_to_str<long>(value.alldatasize()));
-	}
-	else
-	{
+	} else {
 		str.append("noalldatasize");
 	}
 	str.append("~~");
@@ -555,72 +445,51 @@ extern string value_to_str(const Value &value)
 		str.append("notasklength");
 	str.append("~~");
 
-	if (value.has_numtaskfin())
-	{
+	if (value.has_numtaskfin()) {
 		str.append(num_to_str<long>(value.numtaskfin()));
-	}
-	else
-	{
+	} else {
 		str.append("nonumtaskfin");
 	}
 	str.append("~~");
 
-	if (value.has_numworksteal())
-	{
+	if (value.has_numworksteal()) {
 		str.append(num_to_str<long>(value.numworksteal()));
-	}
-	else
-	{
+	} else {
 		str.append("nonumworksteal");
 	}
 	str.append("~~");
 
-	if (value.has_numworkstealfail())
-	{
+	if (value.has_numworkstealfail()) {
 		str.append(num_to_str<long>(value.numworkstealfail()));
-	}
-	else
-	{
+	} else {
 		str.append("nonumworkstealfail");
 	}
 	str.append("~~");
 
-	if (value.has_numtaskwait())
-	{
+	if (value.has_numtaskwait()) {
 		str.append(num_to_str<int>(value.numtaskwait()));
-	}
-	else
-	{
+	} else {
 		str.append("nonumtaskwait");
 	}
 	str.append("~~");
 
-	if (value.has_numtaskready())
-	{
+	if (value.has_numtaskready()) {
 		str.append(num_to_str<int>(value.numtaskready()));
-	}
-	else
-	{
+	} else {
 		str.append("nonumtaskready");
 	}
 	str.append("~~");
 
-	if (value.has_numcoreavilable())
-	{
+	if (value.has_numcoreavilable()) {
 		str.append(num_to_str<int>(value.numcoreavilable()));
-	}
-	else
-	{
+	} else {
 		str.append("nonumcoreavail");
 	}
 	str.append("~~");
 
-	if (value.has_numallcore())
-	{
+	if (value.has_numallcore()) {
 		str.append(num_to_str<int>(value.numallcore()));
-	}
-	else
-	{
+	} else {
 		str.append("nonumallcore");
 	}
 	str.append("~~");
@@ -634,100 +503,82 @@ extern string value_to_str(const Value &value)
 	return str;
 }
 
-extern Value str_to_value(const string &str)
-{
+extern Value str_to_value(const string &str) {
 	Value value;
 	vector<string> vec = tokenize(str, "~~");
 
-	if (vec.size() < 16)
-	{
-		cout << "have some problem, the value to be converted is:" << str << endl;
+	if (vec.size() < 16) {
+		cout << "have some problem, the value to be converted is:" << str
+				<< endl;
 		exit(1);
 	}
 
 	value.set_id(vec.at(0));
 
-	if (vec.at(1).compare("noindegree") != 0)
-	{
+	if (vec.at(1).compare("noindegree") != 0) {
 		value.set_indegree(str_to_num<long>(vec.at(1)));
 	}
 
-	if (vec.at(2).compare("noparents") != 0)
-	{
+	if (vec.at(2).compare("noparents") != 0) {
 		vector<string> parentVec = tokenize(vec.at(2), "??");
-		for (int i = 0; i < parentVec.size(); i++)
-		{
+		for (int i = 0; i < parentVec.size(); i++) {
 			value.add_parents(parentVec.at(i));
 		}
 	}
 
-	if (vec.at(3).compare("nochildren") != 0)
-	{
+	if (vec.at(3).compare("nochildren") != 0) {
 		vector<string> childVec = tokenize(vec.at(3), "??");
-		for (int i = 0; i < childVec.size(); i++)
-		{
+		for (int i = 0; i < childVec.size(); i++) {
 			value.add_children(childVec.at(i));
 		}
 	}
 
-	if (vec.at(4).compare("nodataname") != 0)
-	{
+	if (vec.at(4).compare("nodataname") != 0) {
 		vector<string> dataNameVec = tokenize(vec.at(4), "??");
-		for (int i = 0; i < dataNameVec.size(); i++)
-		{
+		for (int i = 0; i < dataNameVec.size(); i++) {
 			value.add_datanamelist(dataNameVec.at(i));
 		}
 	}
 
-	if (vec.at(5).compare("nodatasize") != 0)
-	{
+	if (vec.at(5).compare("nodatasize") != 0) {
 		vector<string> dataSizeVec = tokenize(vec.at(5), "??");
-		for (int i = 0; i < dataSizeVec.size(); i++)
-		{
+		for (int i = 0; i < dataSizeVec.size(); i++) {
 			value.add_datasize(str_to_num<long>(dataSizeVec.at(i)));
 		}
 	}
 
-	if (vec.at(6).compare("noalldatasize") != 0)
-	{
+	if (vec.at(6).compare("noalldatasize") != 0) {
 		value.set_alldatasize(str_to_num<long>(vec.at(6)));
 	}
 
 	if (vec.at(7).compare("notasklength") != 0)
 		value.set_tasklength(str_to_num<long>(vec.at(7)));
 
-	if (vec.at(8).compare("nonumtaskfin") != 0)
-	{
+	if (vec.at(8).compare("nonumtaskfin") != 0) {
 		value.set_numtaskfin(str_to_num<long>(vec.at(8)));
 	}
 
-	if (vec.at(9).compare("nonumworksteal") != 0)
-	{
+	if (vec.at(9).compare("nonumworksteal") != 0) {
 		value.set_numworksteal(str_to_num<long>(vec.at(9)));
 	}
 
-	if (vec.at(10).compare("nonumworkstealfail") != 0)
-	{
+	if (vec.at(10).compare("nonumworkstealfail") != 0) {
 		value.set_numworkstealfail(str_to_num<long>(vec.at(10)));
 	}
 
-	if (vec.at(11).compare("nonumtaskwait") != 0)
-	{
+	if (vec.at(11).compare("nonumtaskwait") != 0) {
 		value.set_numtaskwait(str_to_num<int>(vec.at(11)));
 	}
 
-	if (vec.at(12).compare("nonumtaskready") != 0)
-	{
+	if (vec.at(12).compare("nonumtaskready") != 0) {
 		value.set_numtaskready(str_to_num<int>(vec.at(12)));
 	}
 
-	if (vec.at(13).compare("nonumcoreavail") != 0)
-	{
+	if (vec.at(13).compare("nonumcoreavail") != 0) {
 		value.set_numcoreavilable(str_to_num<int>(vec.at(13)));
 	}
 
-	if (vec.at(14).compare("nonumallcore") != 0)
-	{
+	if (vec.at(14).compare("nonumallcore") != 0) {
 		value.set_numallcore(str_to_num<int>(vec.at(14)));
 	}
 
@@ -737,44 +588,34 @@ extern Value str_to_value(const string &str)
 }
 
 /*required string msgType = 1;
-optional string extraInfo = 2;
-optional int64 count = 3;
-repeated string tasks = 4;*/
-extern string mm_to_str(const MatrixMsg &mm)
-{
+ optional string extraInfo = 2;
+ optional int64 count = 3;
+ repeated string tasks = 4;*/
+extern string mm_to_str(const MatrixMsg &mm) {
 	string str("");
-	str.append(mm.msgtype()); str.append("&&");
+	str.append(mm.msgtype());
+	str.append("&&");
 
-	if (mm.has_extrainfo())
-	{
+	if (mm.has_extrainfo()) {
 		str.append(mm.extrainfo());
-	}
-	else
-	{
+	} else {
 		str.append("noextrainfo");
 	}
 	str.append("&&");
 
-	if (mm.has_count())
-	{
+	if (mm.has_count()) {
 		str.append(num_to_str<int>(mm.count()));
-	}
-	else
-	{
+	} else {
 		str.append("nocount");
 	}
 	str.append("&&");
 
-	if (mm.tasks_size() > 0)
-	{
-		for (int i = 0; i < mm.tasks_size(); i++)
-		{
+	if (mm.tasks_size() > 0) {
+		for (int i = 0; i < mm.tasks_size(); i++) {
 			str.append(mm.tasks(i));
 			str.append("!!");
 		}
-	}
-	else
-	{
+	} else {
 		str.append("notask");
 	}
 	str.append("&&");
@@ -782,25 +623,20 @@ extern string mm_to_str(const MatrixMsg &mm)
 	return str;
 }
 
-extern MatrixMsg str_to_mm(const string &str)
-{
+extern MatrixMsg str_to_mm(const string &str) {
 	vector<string> vec = tokenize(str, "&&");
 	MatrixMsg mm;
 	mm.set_msgtype(vec.at(0));
 
-	if (vec.at(1).compare("noextrainfo") != 0)
-	{
+	if (vec.at(1).compare("noextrainfo") != 0) {
 		mm.set_extrainfo(vec.at(1));
 	}
-	if (vec.at(2).compare("nocount") != 0)
-	{
+	if (vec.at(2).compare("nocount") != 0) {
 		mm.set_count(str_to_num<int>(vec.at(2)));
 	}
-	if (vec.at(3).compare("notask") != 0)
-	{
+	if (vec.at(3).compare("notask") != 0) {
 		vector<string> taskVec = tokenize(vec.at(3), "!!");
-		for (int i = 0; i < taskVec.size(); i++)
-		{
+		for (int i = 0; i < taskVec.size(); i++) {
 			mm.add_tasks(taskVec.at(i));
 		}
 	}
@@ -808,28 +644,23 @@ extern MatrixMsg str_to_mm(const string &str)
 	return mm;
 }
 
-Mutex::Mutex()
-{
-	int ret = pthread_mutex_init (&mutex, NULL);
+Mutex::Mutex() {
+	int ret = pthread_mutex_init(&mutex, NULL);
 }
 
-Mutex::~Mutex()
-{
+Mutex::~Mutex() {
 
 }
 
-int Mutex::lock()
-{
-	return (pthread_mutex_lock (&mutex));
+int Mutex::lock() {
+	return (pthread_mutex_lock(&mutex));
 }
 
-int Mutex::unlock()
-{
-	return (pthread_mutex_unlock (&mutex));
+int Mutex::unlock() {
+	return (pthread_mutex_unlock(&mutex));
 }
 
-Peer::Peer(const string &configFile)
-{
+Peer::Peer(const string &configFile) {
 	config = new Configuration(configFile);
 	//cout << "The host id type is:" << config->hostIdType << endl;
 	set_id(get_host_id(config->hostIdType));
@@ -844,124 +675,95 @@ Peer::Peer(const string &configFile)
 	//config->numAllTask++;
 }
 
-Peer::~Peer()
-{
+Peer::~Peer() {
 
 }
 
-bool Peer::init_zht_client(const string &zhtcfgFile, const string &neighFile)
-{
-	if (zhtcfgFile.empty() || neighFile.empty())
-	{
+bool Peer::init_zht_client(const string &zhtcfgFile, const string &neighFile) {
+	if (zhtcfgFile.empty() || neighFile.empty()) {
 		return false;
-	}
-	else
-	{
-		if (zc.init(zhtcfgFile, neighFile) != 0)
-		{
+	} else {
+		if (zc.init(zhtcfgFile, neighFile) != 0) {
 			return false;
-		}
-		else
-		{
+		} else {
 			return true;
 		}
 	}
 }
 
-void Peer::insert_wrap(const string &key, const string &val)
-{
-	if (key.empty())
-	{
+void Peer::insert_wrap(const string &key, const string &val) {
+	if (key.empty()) {
 		cout << "There is empty key!" << endl;
 		return;
 	}
-	while (zc.insert(key, val) != 0)
-	{
+	while (zc.insert(key, val) != 0) {
 		usleep(1);
 	}
 }
 
-void Peer::insert_wrap(const char *key, const char *val)
-{
-	if (key == NULL)
-	{
+void Peer::insert_wrap(const char *key, const char *val) {
+	if (key == NULL) {
 		cout << "There is empty key!" << endl;
 		return;
 	}
-	while (zc.insert(key, val) != 0)
-	{
+	while (zc.insert(key, val) != 0) {
 		usleep(1);
 	}
 }
 
-void Peer::lookup_wrap(const string &key, string &result)
-{
-	if (key.empty())
-	{
+void Peer::lookup_wrap(const string &key, string &result) {
+	if (key.empty()) {
 		return;
 	}
-	while (zc.lookup(key, result) != 0 && result.empty())
-	{
+	while (zc.lookup(key, result) != 0 && result.empty()) {
 		cout << "the key is:" << key << endl;
 		usleep(1);
 	}
 }
 
-void Peer::lookup_wrap(const char *key, char *result)
-{
-	if (key == NULL)
-	{
+void Peer::lookup_wrap(const char *key, char *result) {
+	if (key == NULL) {
 		return;
 	}
-	while (zc.lookup(key, result) != 0 && result == NULL)
-	{
+	while (zc.lookup(key, result) != 0 && result == NULL) {
 		usleep(1);
 	}
 }
 
-void Peer::set_id(const string &id)
-{
+void Peer::set_id(const string &id) {
 	this->id = id;
 }
 
-string Peer::get_id()
-{
+string Peer::get_id() {
 	return id;
 }
 
-void Peer::set_index(int index)
-{
+void Peer::set_index(int index) {
 	this->index = index;
 }
 
-int Peer::get_index()
-{
+int Peer::get_index() {
 	return index;
 }
 
-void Peer::wait_all_scheduler()
-{
+void Peer::wait_all_scheduler() {
 	string key("number of scheduler registered");
 	string expValue = num_to_str<int>(schedulerVec.size());
 
-	while (zc.state_change_callback(key, expValue, config->sleepLength) != 0)
-	{
+	while (zc.state_change_callback(key, expValue, config->sleepLength) != 0) {
 		usleep(1);
 	}
 }
 
-void Peer::wait_all_task_recv()
-{
+void Peer::wait_all_task_recv() {
 	string key("num tasks recv");
 	string expValue = num_to_str<long>(config->numAllTask);
 
-	while (zc.state_change_callback(key, expValue, config->sleepLength) != 0)
-	{
+	while (zc.state_change_callback(key, expValue, config->sleepLength) != 0) {
 		usleep(1);
 	}
 }
 
-void Peer::incre_ZHT_msg_count(long increment)
-{
+void Peer::incre_ZHT_msg_count(long increment) {
 	numZHTMsg += increment;
 }

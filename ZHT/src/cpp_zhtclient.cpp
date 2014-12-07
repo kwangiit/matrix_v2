@@ -107,7 +107,6 @@ int ZHTClient::lookup(const string &key, string &result) {
 	string val;
 	string val2;
 	int rc = commonOp(Const::ZSC_OPC_LOOKUP, key, val, val2, result, 1);
-
 	result = extract_value(result);
 
 	return rc;
@@ -192,25 +191,25 @@ string ZHTClient::extract_value(const string &returnStr) {
 	 * hello,zht:hello,ZHT ==> zht:ZHT
 	 * */
 
-	if (strtok.has_more_tokens()) {
-
-		while (strtok.has_more_tokens()) {
-
-			ZPack zpack;
-			zpack.ParseFromString(strtok.next_token());
-
-			if (zpack.valnull())
-				val.append("");
-			else
-				val.append(zpack.val());
-
-			val.append(":");
-		}
-
-		size_t found = val.find_last_of(":");
-		val = val.substr(0, found);
-
-	} else {
+//	if (strtok.has_more_tokens()) {
+//
+//		while (strtok.has_more_tokens()) {
+//
+//			ZPack zpack;
+//			zpack.ParseFromString(strtok.next_token());
+//
+//			if (zpack.valnull())
+//				val.append("");
+//			else
+//				val.append(zpack.val());
+//
+//			val.append(":");
+//		}
+//
+//		size_t found = val.find_last_of(":");
+//		val = val.substr(0, found);
+//
+//	} else {
 
 		ZPack zpack;
 		zpack.ParseFromString(returnStr);
@@ -219,7 +218,7 @@ string ZHTClient::extract_value(const string &returnStr) {
 			val = "";
 		else
 			val = zpack.val();
-	}
+	//}
 
 	return val;
 }
@@ -315,7 +314,6 @@ string ZHTClient::commonOpInternal(const string &opcode, const string &key,
 
 	char *buf = (char*) calloc(_msg_maxsize, sizeof(char));
 	size_t msz = _msg_maxsize;
-
 	/*send to and receive from*/
 	_proxy->sendrecv(msg.c_str(), msg.size(), buf, msz);
 

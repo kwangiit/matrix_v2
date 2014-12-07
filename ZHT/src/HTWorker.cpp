@@ -120,6 +120,7 @@ string HTWorker::insert_shared(const ZPack &zpack) {
 
 	string key = zpack.key();
 	int ret = PMAP->put(key, zpack.SerializeAsString());
+	//cout << "insert: (" << key << ", " << zpack.SerializeAsString() << ")" << endl;
 
 	if (ret != 0) {
 
@@ -162,6 +163,7 @@ string HTWorker::lookup_shared(const ZPack &zpack) {
 	string key = zpack.key();
 	string *ret = PMAP->get(key);
 
+
 	if (ret == NULL) {
 
 		printf("thread[%lu] DB Error: lookup found nothing\n", pthread_self());
@@ -174,7 +176,7 @@ string HTWorker::lookup_shared(const ZPack &zpack) {
 		result = Const::ZSC_REC_SUCC;
 		result.append(*ret);
 	}
-
+	//cout << "lookup: (" << key << ", " << result << ")" << endl;
 	return result;
 }
 
@@ -347,6 +349,8 @@ string HTWorker::compare_swap_internal(const ZPack &zpack) {
 
 	/*get seen_value stored*/
 	string seen_value_stored = lzpack.val();
+	//cout << "cswap: (" << zpack.key() << ", " << seen_value_passed_in <<
+	//		", " << seen_value_stored << ", " << zpack.newval() << ")" << endl;
 
 	/*	printf("{%s}:{%s,%s}\n", zpack.key().c_str(), zpack.val().c_str(),
 	 zpack.newval().c_str());*/

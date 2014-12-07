@@ -2,7 +2,7 @@ NumTaskPerClient	1000
 NumAllTask	1000
 NumMapTask	999
 NumReduceTask	1
-NumCorePerExecutor	2
+NumCorePerExecutor	1
 MaxTaskPerPkg	50
 
 MonitorInterval	1000000

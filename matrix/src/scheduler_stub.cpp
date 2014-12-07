@@ -106,7 +106,6 @@ void MatrixScheduler::regist() {
 	 * the number of tasks done
 	 * */
 	if (get_index() == 0) {
-		cout << "I am the first" << endl;
 		//sockMutex.lock();
 		zc.insert(regKey, string("1"));
 		zc.insert(taskFinKey, string("0"));
@@ -1173,8 +1172,8 @@ long MatrixScheduler::notify_children(const CmpQueueItem &cqItem) {
 		childTaskId = value.children(i);
 		sockMutex.lock();
 		zc.lookup(childTaskId, childTaskDetail);
-		cout << "The child task id is:" << childTaskId << "\t" << childTaskDetail << endl;
-		cout << "The size is:" << childTaskDetail.length() << endl;
+		//cout << "The child task id is:" << childTaskId << "\t" << childTaskDetail << endl;
+		//cout << "The size is:" << childTaskDetail.length() << endl;
 		sockMutex.unlock();
 		increment++;
 		if (taskDetail.empty()) {
@@ -1198,6 +1197,7 @@ long MatrixScheduler::notify_children(const CmpQueueItem &cqItem) {
 				zc.lookup(childTaskId, childTaskDetail);
 				increment++;
 			} else {
+				cout << "The query_value is:" << query_value << endl;
 				childTaskDetail = query_value;
 			}
 			childVal = str_to_value(childTaskDetail);
