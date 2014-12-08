@@ -29,7 +29,7 @@
  */
 
 #include "HTWorker.h"
-
+#include "ZHTUtil.h"
 #include "Const-impl.h"
 #include "Env.h"
 #include "ConfHandler.h"
@@ -81,9 +81,10 @@ string HTWorker::run(const char *buf) {
 
 	string result;
 
-	ZPack zpack;
+	//ZPack zpack;
 	string str(buf);
-	zpack.ParseFromString(str);
+	ZPack zpack = str_to_zpack(str);
+	//zpack.ParseFromString(str);
 
 	if (zpack.opcode() == Const::ZSC_OPC_LOOKUP) {
 
@@ -119,7 +120,8 @@ string HTWorker::insert_shared(const ZPack &zpack) {
 		return Const::ZSC_REC_EMPTYKEY; //-1
 
 	string key = zpack.key();
-	int ret = PMAP->put(key, zpack.SerializeAsString());
+	//int ret = PMAP->put(key, zpack.SerializeAsString());
+	int ret = PMAP->put(key, zpack_to_str(zpack));
 	//cout << "insert: (" << key << ", " << zpack.SerializeAsString() << ")" << endl;
 
 	if (ret != 0) {
@@ -300,8 +302,8 @@ string HTWorker::state_change_callback_internal(const ZPack &zpack) {
 		result = Const::ZSC_REC_NONEXISTKEY;
 	} else {
 
-		ZPack rltpack;
-		rltpack.ParseFromString(*ret);
+		ZPack rltpack = str_to_zpack(*ret);
+		//rltpack.ParseFromString(*ret);
 
 		if (zpack.val() == rltpack.val()) {
 
@@ -340,10 +342,10 @@ string HTWorker::compare_swap_internal(const ZPack &zpack) {
 
 	/*get Package stored by lookup*/
 	string lresult = lookup_shared(zpack);
-	ZPack lzpack;
+	//ZPack lzpack;
 	lresult = erase_status_code(lresult);
-	lzpack.ParseFromString(lresult);
-
+	//lzpack.ParseFromString(lresult);
+	ZPack lzpack = str_to_zpack(lresult);
 	/*get seen_value passed in*/
 	string seen_value_passed_in = zpack.val();
 

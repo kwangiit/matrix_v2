@@ -73,6 +73,23 @@ public:
 	static const uint ID_LEN;
 };
 
-extern string zpack_to_string(Const ZPack &zpack);
-extern ZPack string_to_zpack(Const string &str);
+template<typename T> string zht_num_to_str(T num)
+{
+	stringstream ss;
+	ss << num;
+	return ss.str();
+}
+
+/* template of converting a string
+ * to a number using stringstream */
+template<typename T> T zht_str_to_num(const string &str)
+{
+	stringstream ss(str);
+	T num;
+	return ss >> num ? num : 0;
+}
+
+extern vector<string> zht_tokenize(const string&, const char*);
+extern string zpack_to_str(const ZPack&);
+extern ZPack str_to_zpack(const string&);
 #endif /* ZHTUTIL_H_ */

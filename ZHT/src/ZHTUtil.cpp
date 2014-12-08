@@ -109,11 +109,114 @@ uint64_t IdHelper::genId() {
 	return HashUtil::genHash(HashUtil::randomString(62).c_str());
 }
 
-extern string zpack_to_string(Const ZPack &zpack) {
-	string str("");
-	if (zpack.has)
+vector<string> zht_tokenize(const std::string &source,
+		const char *delimiter = " ") {
+	//tokenMutex.lock();
+	vector<string> results;
+	size_t prev = 0, next = 0;
+
+	if (source.empty()) {
+		return results;
+	}
+
+	while ((next = source.find_first_of(delimiter, prev)) != string::npos) {
+		if (next - prev != 0) {
+			results.push_back(source.substr(prev, next - prev));
+		}
+		prev = next + 1;
+	}
+
+	if (prev < source.size()) {
+		results.push_back(source.substr(prev));
+	}
+	//tokenMutex.unlock();
+	return results;
 }
 
-extern ZPack string_to_zpack(Const string &str) {
+extern string zpack_to_str(const ZPack &zpack) {
+	string str("");
 
+	if (zpack.has_opcode())
+		str.append(zpack.opcode());
+	else
+		str.append("noopcode");
+	str.append("//");
+
+	if (zapck.has_key())
+		str.append(zpack.key());
+	else
+		str.append("nokey");
+	str.append("//");
+
+	if (zpack.has_val())
+		str.append(zpack.val());
+	else
+		str.append("noval");
+	str.append("//");
+
+	if (zpack.has_newval())
+		str.append(zpack.newval());
+	else
+		str.append("nonewval");
+	str.append("//");
+
+	if (zpack.has_lease())
+		str.append(zpack.lease());
+	else
+		str.append("nolease");
+	str.append("//");
+
+	if (zpack.has_valnull())
+		str.append(zht_num_to_str<bool>(zpack.valnull()));
+	else
+		str.append("novaln");
+	str.append("//");
+
+	if (zpack.has_newvalnull())
+		str.append(zht_num_to_str<bool>(zpack.newvalnull()));
+	else
+		str.append("nonewvaln");
+	str.append("//");
+
+	if (zpack.has_replicanum())
+		str.append(zht_num_to_str<int>(zpack.replicanum()));
+	else
+		str.append("noreplicanum");
+	str.append("//");
+}
+
+extern ZPack str_to_zpack(const string &str) {
+	ZPack zpack;
+	vector<string> vec = zht_tokenize(str, "//");
+	if (vec.size() < 8) {
+		cout << "have some problem, the value to be converted is:" << str
+				<< endl;
+		exit(1);
+	}
+
+	if (vec.at(0).compare("noopcode") != 0)
+		zpack.set_opcode(vec.at(0));
+
+	if (vec.at(1).compare("nokey") != 0)
+		zpack.set_key(vec.at(1));
+
+	if (vec.at(2).compare("noval") != 0)
+		zpack.set_val(vec.at(2));
+
+	if (vec.at(3).compare("nonewval") != 0)
+		zpack.set_newval(vec.at(3));
+
+	if (vec.at(4).compare("nolease") != 0)
+		zpack.set_lease(vec.at(4));
+
+	if (vec.at(5).compare("novaln") != 0)
+		zpack.set_valnull(zht_str_to_num<bool>(vec.at(5)));
+
+	if (vec.at(6).compare("nonewvaln") != 0)
+		zpack.set_newvalnull(zht_str_to_num<bool>(vec.at(6)));
+
+	if (vec.at(7).compare("noreplicanum") != 0)
+		zpack.set_replicanum(zht_str_to_num<int>(vec.at(7)));
+
+	return zpack;
 }

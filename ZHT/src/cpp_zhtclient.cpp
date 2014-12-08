@@ -33,7 +33,8 @@
 #include  <stdlib.h>
 #include <string.h>
 
-#include "zpack.pb.h"
+//#include "zpack.pb.h"
+#include "ZHTUtil.h"
 #include "ConfHandler.h"
 #include "Env.h"
 #include "StrTokenizer.h"
@@ -211,8 +212,8 @@ string ZHTClient::extract_value(const string &returnStr) {
 //
 //	} else {
 
-		ZPack zpack;
-		zpack.ParseFromString(returnStr);
+		ZPack zpack = str_to_zpack(returnStr);
+		//zpack.ParseFromString(returnStr);
 
 		if (zpack.valnull())
 			val = "";
@@ -305,8 +306,8 @@ string ZHTClient::commonOpInternal(const string &opcode, const string &key,
 
 	zpack.set_lease(Const::toString(lease));
 
-	string msg = zpack.SerializeAsString();
-
+	//string msg = zpack.SerializeAsString();
+	string msg = zpack_to_str(zpack);
 	/*ZPack tmp;
 	 tmp.ParseFromString(msg);
 	 printf("{%s}:{%s,%s}\n", tmp.key().c_str(), tmp.val().c_str(),
