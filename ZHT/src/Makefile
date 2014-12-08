@@ -82,10 +82,10 @@ libzht.a:
 .PHONY:	clean
 
 clean:	
-	rm *.o
-	rm $(TARGETS)	
-	rm zht-mpibroker
-	rm zht-mpiserver	
+	rm -rf *.o
+	rm -rf $(TARGETS)	
+	rm -rf zht-mpibroker
+	rm -rf zht-mpiserver	
 	
 mpi:
 	mpicxx mpi_broker.cpp proxy_stub.cpp mq_proxy_stub.cpp ipc_plus.cpp mpi_proxy_stub.cpp ConfHandler.cpp ConfEntry.cpp StrTokenizer.cpp Util.cpp Env.cpp HTWorker.cpp Const.cpp novoht.cpp meta.pb.cc zpack.pb.cc lock_guard.cpp $(MPIFLAGS) $(MPILIBFLAGS) -o zht-mpibroker

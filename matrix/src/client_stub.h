@@ -15,47 +15,45 @@
 
 #include "matrix_tcp_proxy_stub.h"
 
-class MatrixClient : public Peer
-{
-	public:
-		MatrixClient(const string&);
-		virtual ~MatrixClient();
+class MatrixClient: public Peer {
+public:
+	MatrixClient(const string&);
+	virtual ~MatrixClient();
 
-		/* insert task information to ZHT */
-		void insert_taskinfo_to_zht(adjList&, inDegree&);
-		//void insert_taskinfo_to_zht(adjList&, adjList&);
+	/* insert task information to ZHT */
+	void insert_taskinfo_to_zht(adjList&, inDegree&);
+	//void insert_taskinfo_to_zht(adjList&, adjList&);
 
-		/* initialize tasks by adding taskId for each task */
-		void init_task(void);
+	/* initialize tasks by adding taskId for each task */
+	void init_task(void);
 
-		/* submit all the tasks to schedulers */
-		void split_task(void);
+	/* submit all the tasks to schedulers */
+	void split_task(void);
 
-		/* the best case senario where tasks are submitted
-		 * in a interleaved load balanced way
-		 * */
-		void split_task_bc(void);
+	/* the best case senario where tasks are submitted
+	 * in a interleaved load balanced way
+	 * */
+	void split_task_bc(void);
 
-		/* the worst case senario where tasks are submitted
-		 * to just one random chosen scheduler
-		 * */
-		void split_task_wc(void);
-		void split_task_one(vector<string>, int);
+	/* the worst case senario where tasks are submitted
+	 * to just one random chosen scheduler
+	 * */
+	void split_task_wc(void);
+	void split_task_one(vector<string>, int);
 
-		/* monitoring thread function */
-		//void *monitoring(void*);
+	/* monitoring thread function */
+	//void *monitoring(void*);
+	/* fork a monitoring thread */
+	void do_monitoring();
 
-		/* fork a monitoring thread */
-		void do_monitoring();
+	vector<string> taskVec;	// vectors to store all the tasks of this client
+	//vector<TaskMsg> tasks;
 
-		vector<string> taskVec;	// vectors to store all the tasks of this client
-		//vector<TaskMsg> tasks;
+	timespec start, end;	// start and end time stamps
 
-		timespec start, end;	// start and end time stamps
-
-		ofstream clientLogOS;	// client log output stream
-		//ofstream taskLogOS;	// individual task log output stream
-		ofstream systemLogOS;	// system status log output stream
+	ofstream clientLogOS;	// client log output stream
+	//ofstream taskLogOS;	// individual task log output stream
+	ofstream systemLogOS;	// system status log output stream
 };
 
 #endif /* CLIENT_STUB_H_ */

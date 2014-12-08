@@ -8,8 +8,7 @@
 #include "client_stub.h"
 #include "math.h"
 
-MatrixClient::MatrixClient(const string &configFile) :
-		Peer(configFile) {
+MatrixClient::MatrixClient(const string &configFile) : Peer(configFile) {
 	clock_gettime(0, &start);
 
 	taskVec = read_from_file(config->workloadFile);
@@ -18,20 +17,14 @@ MatrixClient::MatrixClient(const string &configFile) :
 	base.append(num_to_str<int>(schedulerVec.size()));
 	base.append("_");
 	base.append(num_to_str<long>(config->numTaskPerClient));
-
-	string indexStr = num_to_str<int>(get_index());
-	string suffix = base + "_" + indexStr;
+	string suffix = base + "_" + num_to_str<int>(get_index());
 
 	/* only the first client (index=0) is logging */
 	if (config->clientLog == 1 && get_index() == 0) {
 		string clientLogFile("./client_" + suffix);
 		clientLogOS.open(clientLogFile.c_str());
 	}
-	/*if (config->taskLog == 1 && get_index() == 0)
-	 {
-	 string taskLogFile("./task_" + suffix);
-	 taskLogOS.open(taskLogFile.c_str());
-	 }*/
+
 	if (config->systemLog == 1 && get_index() == 0) {
 		string systemLogFile("./system_" + suffix);
 		systemLogOS.open(systemLogFile.c_str());
@@ -47,12 +40,11 @@ MatrixClient::MatrixClient(const string &configFile) :
 
 	if (clientLogOS.is_open()) {
 		clientLogOS << "I am a Matrix Client, it takes me " << diff.tv_sec
-				<< "s, "
-						"and " << diff.tv_nsec << " ns for initialization!"
-				<< endl;
+			<< "s, and " << diff.tv_nsec << " ns for initialization!" << endl;
 	}
 
-	srand (time(NULL));}
+	srand (time(NULL));
+}
 
 MatrixClient::~MatrixClient() {
 
@@ -64,16 +56,13 @@ MatrixClient::~MatrixClient() {
  * */
 void MatrixClient::insert_taskinfo_to_zht(adjList &dagAdjList, inDegree &dagInDegree) {
 #ifdef PRINT_OUT
-	cout << "------------------------------"
-	"------------------------------" << endl;
+	cout << "------------------------------------------------------------" << endl;
 	cout << "Now, I am going to insert task information to ZHT" << endl;
 #endif
 
 	if (clientLogOS.is_open()) {
-		clientLogOS << "-------------------------------"
-				"-----------------------------" << endl;
-		clientLogOS << "Now, I am going to insert "
-				"task information to ZHT" << endl;
+		clientLogOS << "------------------------------------------------------------" << endl;
+		clientLogOS << "Now, I am going to insert task information to ZHT" << endl;
 	}
 
 	clock_gettime(0, &start);
@@ -228,7 +217,7 @@ void MatrixClient::insert_taskinfo_to_zht(adjList &dagAdjList, inDegree &dagInDe
 
 #ifdef PRINT_OUT
 	cout << "I am done, the time taken is:" << diff.tv_sec
-	<< " s, and " << diff.tv_nsec << " ns" << endl;
+			<< " s, and " << diff.tv_nsec << " ns" << endl;
 	cout << "--------------------------------"
 	"----------------------------" << endl;
 #endif
@@ -478,7 +467,6 @@ void MatrixClient::split_task_one(vector<string> taskStrVec, int toScheIdx)
 void *monitoring(void* args) {
 	MatrixClient *mc = (MatrixClient*) args;
 	string key("num tasks done");
-
 	long numAllCore = mc->config->numCorePerExecutor * mc->schedulerVec.size();
 	long numIdleCore = 0;
 	long numTaskWait = 0, numTaskReady = 0;
@@ -498,25 +486,20 @@ void *monitoring(void* args) {
 
 	while (1) {
 		mc->zc.lookup(key, numTaskFinStr);	// lookup how many tasks are done
-		//mc->lookup_wrap(key, numTaskFinStr);
 		numTaskDone = str_to_num<long>(numTaskFinStr);
-
 		cout << "number of task done is:" << numTaskDone << endl;
 		increment++;
 
 		/* log the instant system status */
 		if (mc->systemLogOS.is_open()) {
 			currentTimeUs = get_time_usec();
-
 			for (int i = 0; i < mc->schedulerVec.size(); i++) {
 				string schedulerStat;
 				mc->zc.lookup(mc->schedulerVec.at(i), schedulerStat);
-				//mc->lookup_wrap(mc->schedulerVec.at(i), schedulerStat);
-				if (schedulerStat.empty()) {
+				if (schedulerStat.empty())
 					continue;
-				}
-				Value value = str_to_value(schedulerStat);
 
+				Value value = str_to_value(schedulerStat);
 				numIdleCore += value.numcoreavilable();
 				numTaskWait += value.numtaskwait();
 				numTaskReady += value.numtaskready();
@@ -529,8 +512,7 @@ void *monitoring(void* args) {
 
 			mc->systemLogOS << currentTimeUs << "\t" << numAllCore << "\t"
 					<< numIdleCore << "\t" << numTaskWait << "\t"
-					<< numTaskReady << "\t" << numTaskDone << "\t" << instantThr
-					<< endl;
+					<< numTaskReady << "\t" << numTaskDone << "\t" << instantThr << endl;
 
 			preNumTaskDone = numTaskDone;
 			prevTimeUs = currentTimeUs;
@@ -540,16 +522,13 @@ void *monitoring(void* args) {
 		}
 
 		if (numTaskDone == mc->config->numAllTask)	// all the tasks are done
-				{
 			break;
-		} else {
+		else
 			usleep(mc->config->monitorInterval);	// sleep sometime
-		}
 	}
 
 	clock_gettime(0, &mc->end);
 	timespec diff = time_diff(mc->start, mc->end);
-
 	double time = (double) diff.tv_sec + (double) diff.tv_nsec / 1E9;
 	double throughput = mc->config->numAllTask / time;
 
@@ -609,8 +588,7 @@ void *monitoring(void* args) {
 #endif
 
 	if (mc->clientLogOS.is_open()) {
-		mc->clientLogOS << "The number of ZHT message is:" << mc->numZHTMsg
-				<< endl;
+		mc->clientLogOS << "The number of ZHT message is:" << mc->numZHTMsg << endl;
 		mc->clientLogOS.flush();
 		mc->clientLogOS.close();
 	}
@@ -619,15 +597,13 @@ void *monitoring(void* args) {
 }
 
 void MatrixClient::do_monitoring() {
-	if (get_index() != 0) {
+	if (get_index() != 0)
 		return;
-	}
 
 	pthread_t monThread;
 
-	while (pthread_create(&monThread, NULL, monitoring, this) != 0) {
+	while (pthread_create(&monThread, NULL, monitoring, this) != 0)
 		sleep(1);
-	}
 
 	pthread_join(monThread, NULL);
 }

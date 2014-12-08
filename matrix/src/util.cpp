@@ -13,7 +13,7 @@ Mutex sockMutex = Mutex();
 
 vector<string> tokenize(const std::string &source,
 		const char *delimiter = " ") {
-	tokenMutex.lock();
+	//tokenMutex.lock();
 	vector<string> results;
 	size_t prev = 0, next = 0;
 
@@ -31,7 +31,7 @@ vector<string> tokenize(const std::string &source,
 	if (prev < source.size()) {
 		results.push_back(source.substr(prev));
 	}
-	tokenMutex.unlock();
+	//tokenMutex.unlock();
 	return results;
 }
 
@@ -242,18 +242,16 @@ void print_adjlist(adjList &dagAdjList) {
 	}
 }
 
-void gen_dag_adjlist(adjList &dagAdjList, string &dagType, long dagArg,
-		long numTask) {
-	if (dagType.compare("BOT") == 0) {
+void gen_dag_adjlist(adjList &dagAdjList, string &dagType, long dagArg, long numTask) {
+	if (dagType.compare("BOT") == 0)
 		gen_bot_adjlist(dagAdjList, numTask);
-	} else if (dagType.compare("FanOut") == 0) {
+	else if (dagType.compare("FanOut") == 0)
 		gen_fanout_adjlist(dagAdjList, dagArg, numTask);
-	} else if (dagType.compare("FanIn") == 0) {
+	else if (dagType.compare("FanIn") == 0)
 		gen_fanin_adjlist(dagAdjList, dagArg, numTask);
-	} else if (dagType.compare("Pipeline") == 0) {
+	else if (dagType.compare("Pipeline") == 0)
 		gen_pipeline_adjlist(dagAdjList, dagArg, numTask);
-	}
-	print_adjlist(dagAdjList);
+	//print_adjlist(dagAdjList);
 }
 
 void gen_dag_indegree(adjList &dagAdjList, inDegree &dagInDegree) {
@@ -662,17 +660,12 @@ int Mutex::unlock() {
 
 Peer::Peer(const string &configFile) {
 	config = new Configuration(configFile);
-	//cout << "The host id type is:" << config->hostIdType << endl;
 	set_id(get_host_id(config->hostIdType));
 	schedulerVec = read_from_file(config->schedulerMemFile);
-	for (int i = 0; i < schedulerVec.size(); i++)
-		cout << "The id is:" << schedulerVec.at(i) << endl;
 	set_index(get_self_idx(get_id(), schedulerVec));
 	running = true;
 	numZHTMsg = 0;
 	init_zht_client(config->zhtConfigFile, config->zhtMemFile);
-	//config->numTaskPerClient++;
-	//config->numAllTask++;
 }
 
 Peer::~Peer() {

@@ -8,16 +8,14 @@
 #include <pthread.h>
 #include <string.h>
 
-int send_first(const string &ip, long port, const string &buf)
-{
+int send_first(const string &ip, long port, const string &buf) {
 	int to_sock;
 	struct sockaddr_in dest;
 	memset(&dest, 0, sizeof(struct sockaddr_in)); /*zero the struct*/
 	const char *ipChar = ip.c_str();
 	struct hostent * hinfo = gethostbyname(ipChar);
 
-	if (hinfo == NULL)
-	{
+	if (hinfo == NULL) {
 		printf("getbyname failed!\n");
 		return -1;
 	}
@@ -26,16 +24,15 @@ int send_first(const string &ip, long port, const string &buf)
 	dest.sin_addr = *(struct in_addr *) (hinfo->h_addr); /*set destination IP number*/
 	dest.sin_port = htons(port);
 	to_sock = socket(PF_INET, SOCK_STREAM, 0); //try change here.................................................
-	if (to_sock < 0)
-	{
-		cerr << "TCPProxy::makeClientSocket(): error on ::socket(...):" << to_sock << endl;
+	if (to_sock < 0) {
+		cerr << "TCPProxy::makeClientSocket(): error on ::socket(...):"
+				<< to_sock << endl;
 		return -1;
 	}
-	int ret_con = connect(to_sock, (struct sockaddr *) &dest,
-			sizeof(sockaddr));
-	if (ret_con < 0)
-	{
-		cerr << "TCPProxy::makeClientSocket(): error on ::connect(...):" << ret_con << endl;
+	int ret_con = connect(to_sock, (struct sockaddr *) &dest, sizeof(sockaddr));
+	if (ret_con < 0) {
+		cerr << "TCPProxy::makeClientSocket(): error on ::connect(...):"
+				<< ret_con << endl;
 		return -1;
 	}
 
@@ -44,13 +41,11 @@ int send_first(const string &ip, long port, const string &buf)
 	return to_sock;
 }
 
-int send_bf(int sock, const string &buf)
-{
+int send_bf(int sock, const string &buf) {
 	return send(sock, buf.data(), buf.length(), 0);
 }
 
-int recv_bf(int sock, string &buf)
-{
+int recv_bf(int sock, string &buf) {
 	char bufStr[_BUF_SIZE];
 	memset(bufStr, '\0', sizeof(bufStr));
 
@@ -60,27 +55,22 @@ int recv_bf(int sock, string &buf)
 	return ret;
 }
 
-int send_big(int sock, const string &buf)
-{
+int send_big(int sock, const string &buf) {
 	int length = buf.length();
 	int numSent = 0;
 	string str;
 
-	while (length >= _BUF_SIZE)
-	{
+	while (length >= _BUF_SIZE) {
 		str = buf.substr(numSent, _BUF_SIZE);
 		send_bf(sock, str);
 		numSent += _BUF_SIZE;
 		length -= _BUF_SIZE;
 	}
 
-	if (length > 0)
-	{
+	if (length > 0) {
 		str = buf.substr(numSent, length);
 		str.append("$");
-	}
-	else
-	{
+	} else {
 		str.assign("$");
 	}
 	send_bf(sock, str);
@@ -89,21 +79,18 @@ int send_big(int sock, const string &buf)
 	return numSent;
 }
 
-int recv_big(int sock, string &buf)
-{
+int recv_big(int sock, string &buf) {
 	int count = recv_mul(sock, buf);
 	buf = buf.substr(0, buf.length() - 1);
 	return count;
 }
 
-int send_mul(int sock, const string &buf, bool end)
-{
+int send_mul(int sock, const string &buf, bool end) {
 	string bufUp;
 	bufUp.append(buf);
 	bufUp.append("##");
 
-	if (end)
-	{
+	if (end) {
 		bufUp.append("$");
 	}
 
@@ -111,19 +98,16 @@ int send_mul(int sock, const string &buf, bool end)
 	return send_bf(sock, bufUp);
 }
 
-int recv_mul(int sock, string &buf)
-{
+int recv_mul(int sock, string &buf) {
 	string tmpBuf;
 	int count = recv_bf(sock, tmpBuf);
 	int sum = 0;
 
-	while (count > 0)
-	{
+	while (count > 0) {
 		sum += count;
 		buf.append(tmpBuf);
 		//cout << "The receive is:" << tmpBuf << endl;
-		if (tmpBuf[tmpBuf.length() - 1] == '$')
-		{
+		if (tmpBuf[tmpBuf.length() - 1] == '$') {
 			break;
 		}
 		count = recv_bf(sock, tmpBuf);

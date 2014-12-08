@@ -24,8 +24,8 @@ int main(int argc, char *argv[]) {
 
 	/* generate task dag adjecent list (children) */
 	adjList dagAdjList;
-	gen_dag_adjlist(dagAdjList, mc->config->dagType, mc->config->dagArg,
-			mc->config->numTaskPerClient);
+	gen_dag_adjlist(dagAdjList, mc->config->dagType,
+			mc->config->dagArg, mc->config->numTaskPerClient);
 
 	/* calculate indegrees (number of parents) for every tasks */
 	inDegree dagInDegree;

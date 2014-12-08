@@ -10,17 +10,15 @@
 #include <math.h>
 #include <algorithm>
 
-MatrixScheduler::MatrixScheduler(const string &configFile) :
-		Peer(configFile) {
+MatrixScheduler::MatrixScheduler(const string &configFile) : Peer(configFile) {
 	timespec start, end;
 	clock_gettime(0, &start);
 
 	/* number of neighbors is equal to the
 	 * squared root of all number of schedulers
 	 * */
-	if (schedulerVec.size() == 1) {
+	if (schedulerVec.size() == 1)
 		config->workStealingOn = 0;
-	}
 
 	numNeigh = (int) (sqrt(schedulerVec.size()) + 0.5);
 	neighIdx = new int[numNeigh];
@@ -46,16 +44,14 @@ MatrixScheduler::MatrixScheduler(const string &configFile) :
 	clock_gettime(0, &end);
 
 	if (config->schedulerLog == 1) {
-		string schedulerLogFile(
-				"./scheduler_" + (num_to_str<int>(schedulerVec.size())) + "_"
-						+ num_to_str<long>(config->numTaskPerClient) + "_"
-						+ num_to_str<int>(get_index()));
+		string schedulerLogFile("./scheduler_" + (num_to_str<int>(schedulerVec.size())) +
+				"_" + num_to_str<long>(config->numTaskPerClient) + "_" +
+				num_to_str<int>(get_index()));
 		schedulerLogOS.open(schedulerLogFile.c_str());
 
 		timespec diff = time_diff(start, end);
 		schedulerLogOS << "I am a Matrix Scheduler, it takes me " << diff.tv_sec
-				<< "s, and " << diff.tv_nsec << " ns for initialization!"
-				<< endl;
+				<< "s, and " << diff.tv_nsec << " ns for initialization!" << endl;
 	}
 
 	numIdleCore = config->numCorePerExecutor;
@@ -67,10 +63,8 @@ MatrixScheduler::MatrixScheduler(const string &configFile) :
 	numWSFail = 0;
 
 	waitQueue = deque<TaskMsg>();
-	localQueue =
-			priority_queue<TaskMsg, vector<TaskMsg>, HighPriorityByDataSize>();
-	wsQueue =
-			priority_queue<TaskMsg, vector<TaskMsg>, HighPriorityByDataSize>();
+	localQueue = priority_queue<TaskMsg, vector<TaskMsg>, HighPriorityByDataSize>();
+	wsQueue = priority_queue<TaskMsg, vector<TaskMsg>, HighPriorityByDataSize>();
 	completeQueue = deque<CmpQueueItem>();
 
 	localData = map<string, string>();
@@ -79,8 +73,7 @@ MatrixScheduler::MatrixScheduler(const string &configFile) :
 	cache = true;
 #endif
 
-	string taskLogFile(
-			"./task_" + (num_to_str<int>(schedulerVec.size())) + "_"
+	string taskLogFile("./task_" + (num_to_str<int>(schedulerVec.size())) + "_"
 					+ num_to_str<long>(config->numTaskPerClient) + "_"
 					+ num_to_str<int>(get_index()));
 	taskLogOS.open(taskLogFile.c_str());
@@ -179,8 +172,7 @@ void MatrixScheduler::get_task_from_file() {
 			tm.set_cmd(taskItemStr.at(3));
 			tm.set_datalength(0);
 			long time = get_time_usec();
-			taskTimeEntry.push_back(
-					tm.taskid() + "\tWaitQueueTime\t" + num_to_str<long>(time));
+			taskTimeEntry.push_back(tm.taskid() + "\tWaitQueueTime\t" + num_to_str<long>(time));
 			waitQueue.push_back(tm);
 		}
 
@@ -495,14 +487,12 @@ void *epoll_serving(void *args) {
 
 /* fork epoll server thread */
 void MatrixScheduler::fork_es_thread() {
-	MatrixEpollServer *mes = new MatrixEpollServer(config->schedulerPortNo,
-			this);
+	MatrixEpollServer *mes = new MatrixEpollServer(config->schedulerPortNo, this);
 
 	pthread_t esThread;
 
-	while (pthread_create(&esThread, NULL, epoll_serving, (void*) mes) != 0) {
+	while (pthread_create(&esThread, NULL, epoll_serving, (void*) mes) != 0)
 		sleep(1);
-	}
 }
 
 /* reset the bitmap of neighbors chosen, "false"
@@ -825,7 +815,7 @@ void MatrixScheduler::exec_a_task(TaskMsg &tm) {
 	string dataPiece;
 	for (int i = 0; i < value.parents_size(); i++)
 	{
-		lookup_wrap(value.datanamelist(i), dataPiece);
+		zc.lookup(value.datanamelist(i), dataPiece);
 		data += dataPiece;
 	}
 #else
@@ -902,9 +892,9 @@ void MatrixScheduler::exec_a_task(TaskMsg &tm) {
 	string key = get_id() + tm.taskid();
 
 #ifdef ZHT_STORAGE
-	sockMutex.lock();
+	//sockMutex.lock();
 	zc.insert(key, result);
-	sockMutex.unlock();
+	//sockMutex.unlock();
 #else
 	ldMutex.lock();
 	localData.insert(make_pair(key, result));
