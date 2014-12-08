@@ -33,6 +33,7 @@
 
 #include <string>
 #include <vector>
+#include "zpack.pb.h"
 using namespace std;
 
 #include <arpa/inet.h>
@@ -72,4 +73,6 @@ public:
 	static const uint ID_LEN;
 };
 
+extern string zpack_to_string(Const ZPack &zpack);
+extern ZPack string_to_zpack(Const string &str);
 #endif /* ZHTUTIL_H_ */

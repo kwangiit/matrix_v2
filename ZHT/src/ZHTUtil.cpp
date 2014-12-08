@@ -109,3 +109,11 @@ uint64_t IdHelper::genId() {
 	return HashUtil::genHash(HashUtil::randomString(62).c_str());
 }
 
+extern string zpack_to_string(Const ZPack &zpack) {
+	string str("");
+	if (zpack.has)
+}
+
+extern ZPack string_to_zpack(Const string &str) {
+
+}
