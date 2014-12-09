@@ -186,7 +186,7 @@ string ZHTClient::extract_value(const string &returnStr) {
 
 	string val;
 
-	StrTokenizer strtok(returnStr, ":");
+	//StrTokenizer strtok(returnStr, ":");
 	//StrTokenizer strtok(returnStr, ";");
 	/*
 	 * hello,zht:hello,ZHT ==> zht:ZHT
@@ -214,7 +214,6 @@ string ZHTClient::extract_value(const string &returnStr) {
 
 		ZPack zpack = str_to_zpack(returnStr);
 		//zpack.ParseFromString(returnStr);
-
 		if (zpack.valnull())
 			val = "";
 		else

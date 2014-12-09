@@ -183,15 +183,19 @@ extern string zpack_to_str(const ZPack &zpack) {
 	else
 		str.append("noreplicanum");
 	str.append("//");
+	return str;
 }
 
 extern ZPack str_to_zpack(const string &str) {
 	ZPack zpack;
+	if (str.empty())
+		return zpack;
 	vector<string> vec = zht_tokenize(str, "//");
 	if (vec.size() < 8) {
 		cout << "have some problem, the value to be converted is:" << str
 				<< endl;
-		exit(1);
+		return zpack;
+		//exit(1);
 	}
 
 	if (vec.at(0).compare("noopcode") != 0)
