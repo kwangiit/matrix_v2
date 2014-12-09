@@ -15,19 +15,19 @@ WorkStealPollIntervalUpperBound	1000000
 DataSizeThreshold	1000
 Policy	MDL
 EstimatedTimeThreshold	20
-SchedulerMemlistFile	/home/kwang/Documents/work_kwang/cppprogram/matrix/matrix_v2/matrix/src/memlist
+SchedulerMemlistFile	/home/kwang/Documents/backup/Documents/summer_lanl_2014/matrix/matrix_v2/matrix/src/memlist
 NetworkProtocol	TCP
 DagType	BOT
 DagArgument	0
 HostIdentityType	ip
 
 SubmissionMode	bestcase
-WorkloadFile	/home/kwang/Documents/work_kwang/cppprogram/matrix/matrix_v2/matrix/src/workload
-SchedulerWorkloadPath	/home/kwang/Documents/work_kwang/cppprogram/matrix/matrix_v2/matrix/src/workload_dag
+WorkloadFile	/home/kwang/Documents/backup/Documents/summer_lanl_2014/matrix/matrix_v2/matrix/src/workload
+SchedulerWorkloadPath	/home/kwang/Documents/backup/Documents/summer_lanl_2014/matrix/matrix_v2/matrix/src/workload_dag
 ClientLog	1
 TaskLog	1
 SystemLog	1
 SchedulerLog	1
 
-ZhtMemlistFile	/home/kwang/Documents/work_kwang/cppprogram/matrix/matrix_v2/ZHT/src/neighbor.conf
-ZhtConfigFile	/home/kwang/Documents/work_kwang/cppprogram/matrix/matrix_v2/ZHT/src/zht.conf
+ZhtMemlistFile	/home/kwang/Documents/backup/Documents/summer_lanl_2014/matrix/matrix_v2/ZHT/src/neighbor.conf
+ZhtConfigFile	/home/kwang/Documents/backup/Documents/summer_lanl_2014/matrix/matrix_v2/ZHT/src/zht.conf

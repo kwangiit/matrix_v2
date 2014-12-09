@@ -142,7 +142,7 @@ extern string zpack_to_str(const ZPack &zpack) {
 		str.append("noopcode");
 	str.append("//");
 
-	if (zapck.has_key())
+	if (zpack.has_key())
 		str.append(zpack.key());
 	else
 		str.append("nokey");
