@@ -49,8 +49,8 @@ ZHTUtil::~ZHTUtil() {
 
 HostEntity ZHTUtil::getHostEntityByKey(const string& msg) {
 
-	ZPack zpack;
-	zpack.ParseFromString(msg); //to debug
+	ZPack zpack = str_to_zpack(msg);
+	//zpack.ParseFromString(msg); //to debug
 
 	uint64_t hascode = HashUtil::genHash(zpack.key());
 	size_t node_size = ConfHandler::NeighborVector.size();
