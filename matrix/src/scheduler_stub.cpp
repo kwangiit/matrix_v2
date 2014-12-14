@@ -44,8 +44,8 @@ MatrixScheduler::MatrixScheduler(const string &configFile) : Peer(configFile) {
 	clock_gettime(0, &end);
 
 	if (config->schedulerLog == 1) {
-		string schedulerLogFile("./scheduler_" + (num_to_str<int>(schedulerVec.size())) +
-				"_" + num_to_str<long>(config->numTaskPerClient) + "_" +
+		string schedulerLogFile("./scheduler." + (num_to_str<int>(schedulerVec.size())) +
+				"." + num_to_str<long>(config->numTaskPerClient) + "." +
 				num_to_str<int>(get_index()));
 		schedulerLogOS.open(schedulerLogFile.c_str());
 
@@ -73,8 +73,8 @@ MatrixScheduler::MatrixScheduler(const string &configFile) : Peer(configFile) {
 	cache = true;
 #endif
 
-	string taskLogFile("./task_" + (num_to_str<int>(schedulerVec.size())) + "_"
-					+ num_to_str<long>(config->numTaskPerClient) + "_"
+	string taskLogFile("./task." + (num_to_str<int>(schedulerVec.size())) + "."
+					+ num_to_str<long>(config->numTaskPerClient) + "."
 					+ num_to_str<int>(get_index()));
 	taskLogOS.open(taskLogFile.c_str());
 
@@ -130,8 +130,8 @@ void MatrixScheduler::regist() {
 }
 
 void MatrixScheduler::load_data() {
-	string filePath("./workload_dag/file_" + num_to_str<int>(
-			schedulerVec.size()) + "_" + num_to_str<int>(config->numTaskPerClient));
+	string filePath("./workload_dag/file." + num_to_str<int>(
+			schedulerVec.size()) + "." + num_to_str<int>(config->numTaskPerClient));
 
 	vector<string> fileVec = read_from_file(filePath);
 

@@ -15,18 +15,18 @@ MatrixClient::MatrixClient(const string &configFile) : Peer(configFile) {
 
 	string base("");
 	base.append(num_to_str<int>(schedulerVec.size()));
-	base.append("_");
+	base.append(".");
 	base.append(num_to_str<long>(config->numTaskPerClient));
-	string suffix = base + "_" + num_to_str<int>(get_index());
+	string suffix = base + "." + num_to_str<int>(get_index());
 
 	/* only the first client (index=0) is logging */
 	if (config->clientLog == 1 && get_index() == 0) {
-		string clientLogFile("./client_" + suffix);
+		string clientLogFile("./client." + suffix);
 		clientLogOS.open(clientLogFile.c_str());
 	}
 
 	if (config->systemLog == 1 && get_index() == 0) {
-		string systemLogFile("./system_" + suffix);
+		string systemLogFile("./system." + suffix);
 		systemLogOS.open(systemLogFile.c_str());
 	}
 
@@ -114,13 +114,13 @@ void MatrixClient::insert_taskinfo_to_zht(adjList &dagAdjList, inDegree &dagInDe
 
 	//cout << "file path is:" << filePath << ", and task path is:" << taskPath << endl;
 	/* file that defines file locations */
-	string filePath("./workload_dag/file_" + num_to_str<int>(schedulerVec.size()) +
-			"_" + num_to_str<int>(config->numTaskPerClient));
+	string filePath("./workload_dag/file." + num_to_str<int>(schedulerVec.size()) +
+			"." + num_to_str<int>(config->numTaskPerClient));
 
 	/* task specifications: task input/out datasize,
 	 * task input data files, task type: map/reduce, task length */
-	string taskPath("./workload_dag/task_" + num_to_str<int>(schedulerVec.size()) +
-			"_" + num_to_str<int>(config->numTaskPerClient));
+	string taskPath("./workload_dag/task." + num_to_str<int>(schedulerVec.size()) +
+			"." + num_to_str<int>(config->numTaskPerClient));
 	/*vector<string> fileStr = read_from_file(filePath);
 	 for (int i = 0; i < fileStr.size(); i++)
 	 {
