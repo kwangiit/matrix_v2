@@ -34,6 +34,9 @@
 #include "ZHTUtil.h"
 
 #include <stdio.h>
+#include <iostream>
+
+using namespace std;
 
 Blob::Blob(const string& blob) {
 
@@ -206,7 +209,7 @@ int BdSendBase::bsend(int sock, void *senderAddr) const {
 	for (VI it = _blobs.begin(); it != _blobs.end(); it++) {
 
 		string bstr = it->toString();
-
+		//cout << "The message and size is:" << bstr << "\t" << bstr.size() << endl;
 		if (senderAddr == NULL)
 			count += send(sock, bstr.c_str(), bstr.size(), 0);
 		else

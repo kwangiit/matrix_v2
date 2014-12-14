@@ -78,13 +78,14 @@ bool TCPProxy::sendrecv(const void *sendbuf, const size_t sendcount,
 	/*get mutex to protected shared socket*/
 	pthread_mutex_t *sock_mutex = getSockMutex(he.host, he.port);
 	LockGuard lock(sock_mutex);
-
+	//cout << "I am sending data to someone:" << he.host << "\t" << msg << endl;
 	/*send message to server over client sock fd*/
 	int sentSize = sendTo(sock, sendbuf, sendcount);
 	int sent_bool = sentSize == sendcount;
 
 	/*receive response from server over client sock fd*/
 	recvcount = recvFrom(sock, recvbuf);
+	//printf("I am receiving data from some:%s, and the data is:%s, and the count is:%d\n", he.host.c_str(), (char*)recvbuf, recvcount);
 	int recv_bool = recvcount >= 0;
 
 	/*combine flags as value to be returned*/

@@ -530,7 +530,7 @@ void EpollServer::serve() {
 						//char *buf = (char*) calloc(Env::BUF_SIZE, sizeof(char));
 
 						ssize_t count = recv(edata->fd(), buf, sizeof(buf), 0);
-
+						//printf("I am receiving data:%s, and the count is:%d\n", buf, count);
 						if (count == -1) {
 
 							/* If errno == EAGAIN, that means we have read all
