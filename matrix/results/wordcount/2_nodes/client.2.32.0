@@ -1,0 +1,12 @@
+I am a Matrix Client, it takes me 0s, and 320060 ns for initialization!
+------------------------------------------------------------
+Now, I am going to insert task information to ZHT
+I am done, the time taken is:0 s, and 11700342 ns
+------------------------------------------------------------
+------------------------------------------------------------
+Now, I am waiting until all the schedulers are running!
+It took 2s, and 316821400 ns
+------------------------------------------------------------
+It takes 215s, and 517878579 ns to finish 32 tasks
+The overall throughput is:0.14848
+The number of ZHT message is:680
