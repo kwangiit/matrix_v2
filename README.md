@@ -2,28 +2,29 @@ MATRIX: a MAny-Task computing execution fabRIc at eXascale
 ===============================================================================
 
 
+
 ===============================================================================
 Section 1: MATRIX overview
 
-Primary author: Ke Wang
-Email: kwang22@hawk.iit.edu
-
 MATRIX is a fully-distributed task execution framework for Many-Task Computing data intensive applications. MATRIX delegates a scheduler on each compute node to manage local resources and schedule tasks. MATRIX utilizes a distributed key-value store, i.e. ZHT, for distributed task metadata management. MATRIX implements a data-aware work stealing technique to optimize both load balancing and data-locality. MATRIX aims to deliver high throughput, high efficiency, and low latency for data-intensive applications in both scientific computing and Cloud domains.
+
 ===============================================================================
+
 
 
 ===============================================================================
 Section 2: MATRIX Dependencies
 
-1. Google protocol buffers c binding
+[1] Google protocol buffers c binding
        https://github.com/protobuf-c/protobuf-c
 
-2. Google protocol buffers c++ binding
+[2] Google protocol buffers c++ binding
        https://github.com/google/protobuf
 
-3. ZHT distributed key-value store (no need to download the ZHT codebase, which is included in MATRIX)
+[3] ZHT distributed key-value store (no need to download the ZHT codebase, which is included in MATRIX)
        https://github.com/mierl/ZHT
 ===============================================================================
+
 
 
 ===============================================================================
@@ -45,6 +46,7 @@ Section 3: MATRIX compile and install (single node)
             1. cd $dir/matrix_v2/matrix/src
             2. make
 ===============================================================================
+
 
 
 ===============================================================================
@@ -110,9 +112,8 @@ Section 4: Running MATRIX (single node), assuming the directory to download MATR
                 (1) go to the MATRIX src directory: cd $dir/matrix_v2/matrix/src
                 (2) run MATRIX scheduler: ./scheduler the_matrix_config_file
                 (3) run MATRIX client: ./client the_matrix_config_file
-
-Tips: it is better to write a script to run MATRIX automatically, especially for multiple nodes 
 ===============================================================================
+
 
 
 ===============================================================================
@@ -120,9 +121,9 @@ Section 5: Potential Problems
 
 [1]  google protocol buffer is not compatible
      solutions: recompile the .proto files in the source files of both matrix and ZHT:
-	1. go to the ZHT src folder: cd $dir/matrix_v2/ZHT/src
-	2. compile c++ bindings: protoc --cpp_out=. *.proto
-	3. compile c bindings: protoc-c --c_out=. *.proto
-        4. go to the matrix src folder: cd $dir/matrix_v2/matrix/src
-	5. repeat step 2 and step 4 
+	(1) go to the ZHT src folder: cd $dir/matrix_v2/ZHT/src
+	(2) compile c++ bindings: protoc --cpp_out=. *.proto
+	(3) compile c bindings: protoc-c --c_out=. *.proto
+        (4) go to the matrix src folder: cd $dir/matrix_v2/matrix/src
+	(5) repeat step 2 and step 4 
 ===============================================================================
