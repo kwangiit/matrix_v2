@@ -1,13 +1,13 @@
 NumTaskPerClient	1000
 NumAllTask	1000
-NumMapTask	999
-NumReduceTask	1
+NumMapTask	0
+NumReduceTask	0
 NumCorePerExecutor	1
-MaxTaskPerPkg	50
+MaxTaskPerPkg	100
 
-MonitorInterval	1000000
+MonitorInterval	10000
 SchedulerPortNo	60000
-SleepLength	10000
+SleepLength	100000
 WorkStealOn	1
 WorkStealPollIntervalStart	1000
 WorkStealPollIntervalUpperBound	1000000
@@ -17,8 +17,8 @@ Policy	MDL
 EstimatedTimeThreshold	20
 SchedulerMemlistFile	/home/kwang/Documents/work_kwang/cppprogram/matrix/matrix_v2/matrix/src/memlist
 NetworkProtocol	TCP
-DagType	BOT
-DagArgument	0
+DagType	Pipeline
+DagArgument	10
 HostIdentityType	ip
 
 SubmissionMode	bestcase

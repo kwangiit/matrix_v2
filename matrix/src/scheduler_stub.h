@@ -39,19 +39,19 @@ class MatrixScheduler: public Peer
 		 * */
 		bool recv_task_from_scheduler(int);
 
-		void recv_pushing_task(MatrixMsg&, int, sockaddr);
+		void recv_pushing_task(MatrixMsg&, int);
 
 		/* receive tasks submitted by client */
-		void recv_task_from_client(MatrixMsg&, int, sockaddr);
+		void recv_task_from_client(string&, int);
 
 		/* pack and send tasks to another thief scheduler */
 		void pack_send_task(int, int, sockaddr, bool, deque<TaskMsg>&);
 
 		/* send tasks to another thief scheduler */
-		void send_task(int, sockaddr);
+		void send_task(int);
 
 		/* processing requests received by the epoll server */
-		int proc_req(int, char*, sockaddr);
+		int proc_req(int, char*);
 
 		void fork_es_thread();	// fork epoll server thread
 

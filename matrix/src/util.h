@@ -153,6 +153,11 @@ class Peer
 		void lookup_wrap(const string &key, string &result);
 		void lookup_wrap(const char *key, char *result);
 
+		void send_batch_tasks(vector<TaskMsg>, int, const string&);
+		void recv_batch_tasks(vector<TaskMsg>, int);
+
+		void recv_batch_tasks();
+
 		ZHTClient zc;
 		Configuration *config;
 		vector<string> schedulerVec;

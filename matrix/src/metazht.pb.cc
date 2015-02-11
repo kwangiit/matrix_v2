@@ -32,7 +32,7 @@ void protobuf_AssignDesc_metazht_2eproto() {
       "metazht.proto");
   GOOGLE_CHECK(file != NULL);
   Value_descriptor_ = file->message_type(0);
-  static const int Value_offsets_[16] = {
+  static const int Value_offsets_[17] = {
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Value, id_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Value, indegree_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Value, parents_),
@@ -49,6 +49,7 @@ void protobuf_AssignDesc_metazht_2eproto() {
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Value, numcoreavilable_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Value, numallcore_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Value, outputsize_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Value, submittime_),
   };
   Value_reflection_ =
     ::google::protobuf::internal::GeneratedMessageReflection::NewGeneratedMessageReflection(
@@ -91,7 +92,7 @@ void protobuf_AddDesc_metazht_2eproto() {
   GOOGLE_PROTOBUF_VERIFY_VERSION;
 
   ::google::protobuf::DescriptorPool::InternalAddGeneratedFile(
-    "\n\rmetazht.proto\"\311\002\n\005Value\022\n\n\002id\030\001 \002(\t\022\020\n"
+    "\n\rmetazht.proto\"\335\002\n\005Value\022\n\n\002id\030\001 \002(\t\022\020\n"
     "\010indegree\030\002 \001(\003\022\017\n\007parents\030\003 \003(\t\022\020\n\010chil"
     "dren\030\004 \003(\t\022\024\n\014dataNameList\030\005 \003(\t\022\020\n\010data"
     "Size\030\006 \003(\003\022\023\n\013allDataSize\030\007 \001(\003\022\022\n\ntaskl"
@@ -99,7 +100,8 @@ void protobuf_AddDesc_metazht_2eproto() {
     "rkSteal\030\n \001(\003\022\030\n\020numWorkStealFail\030\013 \001(\003\022"
     "\023\n\013numTaskWait\030\014 \001(\005\022\024\n\014numTaskReady\030\r \001"
     "(\005\022\027\n\017numCoreAvilable\030\016 \001(\005\022\022\n\nnumAllCor"
-    "e\030\017 \001(\005\022\022\n\noutputsize\030\020 \001(\003", 347);
+    "e\030\017 \001(\005\022\022\n\noutputsize\030\020 \001(\003\022\022\n\nsubmitTim"
+    "e\030\021 \001(\003", 367);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "metazht.proto", &protobuf_RegisterTypes);
   Value::default_instance_ = new Value();
@@ -143,6 +145,7 @@ const int Value::kNumTaskReadyFieldNumber;
 const int Value::kNumCoreAvilableFieldNumber;
 const int Value::kNumAllCoreFieldNumber;
 const int Value::kOutputsizeFieldNumber;
+const int Value::kSubmitTimeFieldNumber;
 #endif  // !_MSC_VER
 
 Value::Value()
@@ -177,6 +180,7 @@ void Value::SharedCtor() {
   numcoreavilable_ = 0;
   numallcore_ = 0;
   outputsize_ = GOOGLE_LONGLONG(0);
+  submittime_ = GOOGLE_LONGLONG(0);
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
 }
 
@@ -237,6 +241,7 @@ void Value::Clear() {
   if (_has_bits_[8 / 32] & 65280) {
     ZR_(numtaskfin_, outputsize_);
   }
+  submittime_ = GOOGLE_LONGLONG(0);
 
 #undef OFFSET_OF_FIELD_
 #undef ZR_
@@ -514,6 +519,21 @@ bool Value::MergePartialFromCodedStream(
         } else {
           goto handle_unusual;
         }
+        if (input->ExpectTag(136)) goto parse_submitTime;
+        break;
+      }
+
+      // optional int64 submitTime = 17;
+      case 17: {
+        if (tag == 136) {
+         parse_submitTime:
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   ::google::protobuf::int64, ::google::protobuf::internal::WireFormatLite::TYPE_INT64>(
+                 input, &submittime_)));
+          set_has_submittime();
+        } else {
+          goto handle_unusual;
+        }
         if (input->ExpectAtEnd()) goto success;
         break;
       }
@@ -644,6 +664,11 @@ void Value::SerializeWithCachedSizes(
     ::google::protobuf::internal::WireFormatLite::WriteInt64(16, this->outputsize(), output);
   }
 
+  // optional int64 submitTime = 17;
+  if (has_submittime()) {
+    ::google::protobuf::internal::WireFormatLite::WriteInt64(17, this->submittime(), output);
+  }
+
   if (_internal_metadata_.have_unknown_fields()) {
     ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
         unknown_fields(), output);
@@ -756,6 +781,11 @@ void Value::SerializeWithCachedSizes(
     target = ::google::protobuf::internal::WireFormatLite::WriteInt64ToArray(16, this->outputsize(), target);
   }
 
+  // optional int64 submitTime = 17;
+  if (has_submittime()) {
+    target = ::google::protobuf::internal::WireFormatLite::WriteInt64ToArray(17, this->submittime(), target);
+  }
+
   if (_internal_metadata_.have_unknown_fields()) {
     target = ::google::protobuf::internal::WireFormat::SerializeUnknownFieldsToArray(
         unknown_fields(), target);
@@ -854,6 +884,13 @@ int Value::ByteSize() const {
     }
 
   }
+  // optional int64 submitTime = 17;
+  if (has_submittime()) {
+    total_size += 2 +
+      ::google::protobuf::internal::WireFormatLite::Int64Size(
+        this->submittime());
+  }
+
   // repeated string parents = 3;
   total_size += 1 * this->parents_size();
   for (int i = 0; i < this->parents_size(); i++) {
@@ -955,6 +992,11 @@ void Value::MergeFrom(const Value& from) {
       set_outputsize(from.outputsize());
     }
   }
+  if (from._has_bits_[16 / 32] & (0xffu << (16 % 32))) {
+    if (from.has_submittime()) {
+      set_submittime(from.submittime());
+    }
+  }
   if (from._internal_metadata_.have_unknown_fields()) {
     mutable_unknown_fields()->MergeFrom(from.unknown_fields());
   }
@@ -999,6 +1041,7 @@ void Value::InternalSwap(Value* other) {
   std::swap(numcoreavilable_, other->numcoreavilable_);
   std::swap(numallcore_, other->numallcore_);
   std::swap(outputsize_, other->outputsize_);
+  std::swap(submittime_, other->submittime_);
   std::swap(_has_bits_[0], other->_has_bits_[0]);
   _internal_metadata_.Swap(&other->_internal_metadata_);
   std::swap(_cached_size_, other->_cached_size_);

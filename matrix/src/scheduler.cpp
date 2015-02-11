@@ -12,7 +12,7 @@ using namespace std;
 int main(int argc, char *argv[]) {
 	/* check whether specified a configuration file */
 	if (argc != 2) {
-		fprintf(stderr, "The usage is: client\tconfiguration_file!\n");
+		fprintf(stderr, "The usage is: scheduler\tconfiguration_file!\n");
 		exit(-1);
 	}
 
@@ -21,15 +21,15 @@ int main(int argc, char *argv[]) {
 	/* create a MATRIX scheduler*/
 	MatrixScheduler *ms = new MatrixScheduler(configFileStr);
 
-	ms->fork_es_thread();	// forks the epoll event driven server
-
-	ms->load_data();
-
 	ms->regist();	// regists to ZHT
 
 	ms->wait_all_scheduler();	// waits all the other schedulers are running
 
-	ms->get_task_from_file();
+	ms->fork_es_thread();	// forks the epoll event driven server
+
+//	ms->load_data();
+
+//	ms->get_task_from_file();
 
 	ms->wait_all_task_recv();
 
@@ -48,8 +48,6 @@ int main(int argc, char *argv[]) {
 	}
 
 	ms->fork_record_stat_thread();	// forks recording status thread
-
-	//ms->fork_record_task_thread();
 
 	while (1) {
 		sleep(1);

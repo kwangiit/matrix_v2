@@ -8,7 +8,7 @@
 #include <pthread.h>
 #include <string.h>
 
-int send_first(const string &ip, long port, const string &buf) {
+int create_sock(const string &ip, long port) {
 	int to_sock;
 	struct sockaddr_in dest;
 	memset(&dest, 0, sizeof(struct sockaddr_in)); /*zero the struct*/
@@ -35,10 +35,45 @@ int send_first(const string &ip, long port, const string &buf) {
 				<< ret_con << endl;
 		return -1;
 	}
-
-	send_bf(to_sock, buf);
-
 	return to_sock;
+}
+
+int send_first(const string &ip, long port, const string &buf) {
+	int to_sock = create_sock(ip, port);
+	if (to_sock != -1) {
+		send_bf(to_sock, buf);
+	}
+	return to_sock;
+//
+//	struct sockaddr_in dest;
+//	memset(&dest, 0, sizeof(struct sockaddr_in)); /*zero the struct*/
+//	const char *ipChar = ip.c_str();
+//	struct hostent * hinfo = gethostbyname(ipChar);
+//
+//	if (hinfo == NULL) {
+//		printf("getbyname failed!\n");
+//		return -1;
+//	}
+//
+//	dest.sin_family = PF_INET; /*storing the server info in sockaddr_in structure*/
+//	dest.sin_addr = *(struct in_addr *) (hinfo->h_addr); /*set destination IP number*/
+//	dest.sin_port = htons(port);
+//	to_sock = socket(PF_INET, SOCK_STREAM, 0); //try change here.................................................
+//	if (to_sock < 0) {
+//		cerr << "TCPProxy::makeClientSocket(): error on ::socket(...):"
+//				<< to_sock << endl;
+//		return -1;
+//	}
+//	int ret_con = connect(to_sock, (struct sockaddr *) &dest, sizeof(sockaddr));
+//	if (ret_con < 0) {
+//		cerr << "TCPProxy::makeClientSocket(): error on ::connect(...):"
+//				<< ret_con << endl;
+//		return -1;
+//	}
+//
+//	send_bf(to_sock, buf);
+//
+//	return to_sock;
 }
 
 int send_bf(int sock, const string &buf) {
@@ -93,8 +128,6 @@ int send_mul(int sock, const string &buf, bool end) {
 	if (end) {
 		bufUp.append("$");
 	}
-
-	//cout << "The send is:" << bufUp << endl;
 	return send_bf(sock, bufUp);
 }
 
@@ -106,14 +139,11 @@ int recv_mul(int sock, string &buf) {
 	while (count > 0) {
 		sum += count;
 		buf.append(tmpBuf);
-		//cout << "The receive is:" << tmpBuf << endl;
 		if (tmpBuf[tmpBuf.length() - 1] == '$') {
 			break;
 		}
 		count = recv_bf(sock, tmpBuf);
 	}
-
-	//cout << "The data received is:" << buf << endl;
 	return sum;
 }
 

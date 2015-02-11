@@ -251,6 +251,13 @@ class Value : public ::google::protobuf::Message {
   inline ::google::protobuf::int64 outputsize() const;
   inline void set_outputsize(::google::protobuf::int64 value);
 
+  // optional int64 submitTime = 17;
+  inline bool has_submittime() const;
+  inline void clear_submittime();
+  static const int kSubmitTimeFieldNumber = 17;
+  inline ::google::protobuf::int64 submittime() const;
+  inline void set_submittime(::google::protobuf::int64 value);
+
   // @@protoc_insertion_point(class_scope:Value)
  private:
   inline void set_has_id();
@@ -277,6 +284,8 @@ class Value : public ::google::protobuf::Message {
   inline void clear_has_numallcore();
   inline void set_has_outputsize();
   inline void clear_has_outputsize();
+  inline void set_has_submittime();
+  inline void clear_has_submittime();
 
   ::google::protobuf::internal::InternalMetadataWithArena _internal_metadata_;
   ::google::protobuf::uint32 _has_bits_[1];
@@ -297,6 +306,7 @@ class Value : public ::google::protobuf::Message {
   ::google::protobuf::int32 numcoreavilable_;
   ::google::protobuf::int32 numallcore_;
   ::google::protobuf::int64 outputsize_;
+  ::google::protobuf::int64 submittime_;
   friend void  protobuf_AddDesc_metazht_2eproto();
   friend void protobuf_AssignDesc_metazht_2eproto();
   friend void protobuf_ShutdownFile_metazht_2eproto();
@@ -818,6 +828,30 @@ inline void Value::set_outputsize(::google::protobuf::int64 value) {
   set_has_outputsize();
   outputsize_ = value;
   // @@protoc_insertion_point(field_set:Value.outputsize)
+}
+
+// optional int64 submitTime = 17;
+inline bool Value::has_submittime() const {
+  return (_has_bits_[0] & 0x00010000u) != 0;
+}
+inline void Value::set_has_submittime() {
+  _has_bits_[0] |= 0x00010000u;
+}
+inline void Value::clear_has_submittime() {
+  _has_bits_[0] &= ~0x00010000u;
+}
+inline void Value::clear_submittime() {
+  submittime_ = GOOGLE_LONGLONG(0);
+  clear_has_submittime();
+}
+inline ::google::protobuf::int64 Value::submittime() const {
+  // @@protoc_insertion_point(field_get:Value.submitTime)
+  return submittime_;
+}
+inline void Value::set_submittime(::google::protobuf::int64 value) {
+  set_has_submittime();
+  submittime_ = value;
+  // @@protoc_insertion_point(field_set:Value.submitTime)
 }
 
 

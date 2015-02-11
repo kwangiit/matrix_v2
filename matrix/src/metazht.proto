@@ -18,4 +18,6 @@ message Value
 	optional int32 numAllCore = 15;
 	
 	optional int64 outputsize = 16;
+	
+	optional int64 submitTime = 17;
 }

@@ -20,6 +20,9 @@ extern int send_big(int, const string&);
 extern int recv_big(int, string&);
 extern int send_mul(int, const string&, bool);
 extern int recv_mul(int, string&);
+
+extern int create_sock(const string&, long);
+
 //extern pthread_t create_es_thread(char*, char*);
 
 

@@ -6,6 +6,7 @@
  */
 
 #include "util.h"
+#include "matrix_tcp_proxy_stub.h"
 
 uint _BUF_SIZE = 8192;
 Mutex tokenMutex = Mutex();
@@ -498,6 +499,12 @@ extern string value_to_str(const Value &value) {
 		str.append("nooutputsize");
 	str.append("~~");
 
+	if (value.has_submittime())
+		str.append(num_to_str<long>(value.submittime()));
+	else
+		str.append("nosubmittime");
+	str.append("~~");
+
 	return str;
 }
 
@@ -505,7 +512,7 @@ extern Value str_to_value(const string &str) {
 	Value value;
 	vector<string> vec = tokenize(str, "~~");
 
-	if (vec.size() < 16) {
+	if (vec.size() < 17) {
 		cout << "have some problem, the value to be converted is:" << str
 				<< endl;
 		exit(1);
@@ -582,6 +589,9 @@ extern Value str_to_value(const string &str) {
 
 	if (vec.at(15).compare("nooutputsize") != 0)
 		value.set_outputsize(str_to_num<int>(vec.at(15)));
+
+	if (vec.at(16).compare("nosubmittime") != 0)
+		value.set_submittime(str_to_num<long>(vec.at(16)));
 	return value;
 }
 
@@ -741,22 +751,77 @@ int Peer::get_index() {
 
 void Peer::wait_all_scheduler() {
 	string key("number of scheduler registered");
-	string expValue = num_to_str<int>(schedulerVec.size());
-
-	while (zc.state_change_callback(key, expValue, config->sleepLength) != 0) {
-		usleep(1);
+	string value;
+	zc.lookup(key, value);
+	while (str_to_num<int>(value) != schedulerVec.size()) {
+		usleep(10000);
+		zc.lookup(key, value);
 	}
+
+//	string expValue = num_to_str<int>(schedulerVec.size());
+//
+//	while (zc.state_change_callback(key, expValue, config->sleepLength) != 0) {
+//		usleep(1000);
+//	}
 }
 
 void Peer::wait_all_task_recv() {
 	string key("num tasks recv");
-	string expValue = num_to_str<long>(config->numAllTask);
-
-	while (zc.state_change_callback(key, expValue, config->sleepLength) != 0) {
-		usleep(1);
+	string value;
+	zc.lookup(key, value);
+	while (str_to_num<long>(value) != config->numAllTask) {
+		usleep(10000);
+		zc.lookup(key, value);
 	}
+//	string expValue = num_to_str<long>(config->numAllTask);
+//
+//	while (zc.state_change_callback(key, expValue, config->sleepLength) != 0) {
+//		usleep(1000);
+//	}
 }
 
 void Peer::incre_ZHT_msg_count(long increment) {
 	numZHTMsg += increment;
+}
+
+void Peer::send_batch_tasks(vector<TaskMsg> taskVec,
+		int sockfd, const string& peer) {
+	long numTaskLeft = taskVec.size();
+	long numTaskBeenSent = 0;
+	long numTaskSendPerPkg = config->maxTaskPerPkg;
+
+	MatrixMsg mmNumTask;
+	mmNumTask.set_msgtype(peer + " send tasks");
+	mmNumTask.set_count(numTaskLeft);
+	string strNumTask = mm_to_str(mmNumTask);
+
+	if (numTaskLeft <= 0) {
+		send_mul(sockfd, strNumTask, true);
+	} else {
+		bool end = false;
+		send_mul(sockfd, strNumTask, end);
+		while (numTaskLeft > 0) {
+			if (numTaskLeft <= config->maxTaskPerPkg) {
+				numTaskSendPerPkg = numTaskLeft;
+				end = true;
+			}
+
+			MatrixMsg mmTask;
+			mmTask.set_msgtype(peer + " send tasks");
+			mmTask.set_count(numTaskSendPerPkg);
+
+			for (int i = 0; i < numTaskSendPerPkg; i++) {
+				mmTask.add_tasks(taskmsg_to_str(
+						taskVec.at(i + numTaskBeenSent)));
+			}
+			string strTasks = mm_to_str(mmTask);
+			send_mul(sockfd, strTasks, end);
+			numTaskLeft -= numTaskSendPerPkg;
+			numTaskBeenSent += numTaskSendPerPkg;
+		}
+	}
+}
+
+void Peer::recv_batch_tasks(vector<TaskMsg> , int) {
+
 }

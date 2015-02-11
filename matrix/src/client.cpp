@@ -33,9 +33,6 @@ int main(int argc, char *argv[]) {
 	//adjList dagParentList;
 	//gen_dag_parents(dagAdjList, dagParentList);
 
-	/* insert the task information to ZHT */
-	mc->insert_taskinfo_to_zht(dagAdjList, dagInDegree);
-
 	/* wait until all schedulers have registered to ZHT */
 #ifdef PRINT_OUT
 	cout << "--------------------------------"
@@ -71,11 +68,14 @@ int main(int argc, char *argv[]) {
 				"----------------------------" << endl;
 	}
 
+	/* insert the task information to ZHT */
+	mc->insert_taskinfo_to_zht(dagAdjList, dagInDegree);
+
 	/* initalize tasks by assigning taskId information to each task */
 	mc->init_task();
 
 	/* submit tasks to the schedulers */
-	mc->split_task();
+	mc->submit_task();
 
 	/* do the monitoring to watch th executing progress */
 	mc->do_monitoring();

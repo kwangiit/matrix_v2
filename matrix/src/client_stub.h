@@ -28,18 +28,19 @@ public:
 	void init_task(void);
 
 	/* submit all the tasks to schedulers */
-	void split_task(void);
+	void submit_task(void);
 
 	/* the best case senario where tasks are submitted
 	 * in a interleaved load balanced way
 	 * */
-	void split_task_bc(void);
+	void submit_task_bc(void);
 
 	/* the worst case senario where tasks are submitted
 	 * to just one random chosen scheduler
 	 * */
-	void split_task_wc(void);
-	void split_task_one(vector<string>, int);
+	void submit_task_wc(vector<TaskMsg>, int);
+
+	//void split_task_one(vector<string>, int);
 
 	/* monitoring thread function */
 	//void *monitoring(void*);
@@ -47,7 +48,7 @@ public:
 	void do_monitoring();
 
 	vector<string> taskVec;	// vectors to store all the tasks of this client
-	//vector<TaskMsg> tasks;
+	vector<TaskMsg> tasks;
 
 	timespec start, end;	// start and end time stamps
 
