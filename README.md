@@ -54,6 +54,7 @@ Section 3: MATRIX compile and install (single node)
 [step 4]  go to the matrix directory to compile MATRIX:
 
 	(1) cd $dir/matrix_v2/matrix/src
+	
 	(2) make
 ===============================================================================
 
