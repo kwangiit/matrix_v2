@@ -69,7 +69,7 @@ Section 4: Running MATRIX (single node), assuming the directory to download MATR
 
 	    2. rm -rf memlist
             
-	    3. cat "your_ip_address" >> memlist (e.g. cat "138.32.143.100" >> memlist)
+	    3. echo "your_ip_address" >> memlist (e.g. echo "138.32.143.100" >> memlist)
  
 [step 2]  specify the ZHT membership list of all the servers:
 
@@ -77,7 +77,7 @@ Section 4: Running MATRIX (single node), assuming the directory to download MATR
 
             2. rm -rf neighbor.conf
 
-            3. cat "your_ip_address port_number" >> neighbor.conf (e.g. cat "138.32.143.100 50000" >> neighbor.conf)
+            3. echo "your_ip_address port_number" >> neighbor.conf (e.g. echo "138.32.143.100 50000" >> neighbor.conf)
 
 [step 3]  specify the tasks that client is going to submit:
 
