@@ -182,7 +182,7 @@ Section 5: Potential Problems
 
 	(3) compile c bindings: protoc-c --c_out=. *.proto
 
-        (4) go to the matrix src folder: cd $dir/matrix_v2/matrix/src
+	(4) go to the matrix src folder: cd $dir/matrix_v2/matrix/src
 
-	(5) repeat step 2 and step 4 
+	(5) repeat step 2 and step 3 
 ===============================================================================
