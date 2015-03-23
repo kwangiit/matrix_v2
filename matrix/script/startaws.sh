@@ -38,7 +38,7 @@ echo "done with copying the MATRIX member list file"
 
 #change the system maximum number of open files
 echo "change the system maximum number of open files"
-bash sysChange.sh matrixPath/script
+bash sysChange.sh $matrixPath/script
 echo "done with changing the system maximum number of open files"
 
 #start the zht servers on all the nodes
@@ -48,17 +48,17 @@ echo "zht server has been started"
 
 #generate MATRIX configuration file
 echo "generate MATRIX configuration file"
-bash genConfig.sh $numTaskPerClient $numAllTask $matrixSrcPath $zhtSrcPath $DagType $DagArgument
+bash genConfig.sh $numTaskPerClient $matrixPath/src $zhtSrcPath $DagType $DagArgument 0 0
 echo "MATRIX configuration file has already been generated"
 
 #generate workload
 echo "generate workload"
-bash genWorkload.sh $numTaskPerClient $matrixSrcPath
+bash genWorkload.sh $numTaskPerClient $matrixPath/src
 echo "has generated workload"
 
 #start all MATRIX schedulers
 echo "start all MATRIX schedulers"
-bash startScheduler.sh $matrixSrcPath
+bash startScheduler.sh $matrixPath/src
 echo "MATRIX schedulers have been started"
 
 #start MATRIX client

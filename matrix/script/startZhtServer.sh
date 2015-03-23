@@ -1,38 +1,25 @@
 #!/bin/bash
 
 zhtSrcPath=$1
-numNode=$2
 
-zhtMemFile=$zhtSrcPath
-zhtMemFile+=/neighbor.conf
-
-
-#rm -rf host
-rm -rf $zhtMemFile
+rm -rf $zhtSrcPath/neighbor.conf
 
 IFS=$'\n'
 set -f
 
+#generate the ZHT member list file
 for i in $(cat host); do
-        echo "$i 50000" >> $zhtMemFile
-	#ssh -o 'StrictHostKeyChecking no' -o 'UserKnownHostsFile /dev/null' ~/.ssh/config $i:/home/ubuntu/.ssh/config
+        echo "$i 50000" >> $zhtSrcPath/neighbor.conf
 done
 
-#for i in `seq 1 $numNode`; do
-	#echo node-$i.matrix.usrc.kodiak.nx >> host
-#	echo node-$i.matrix.usrc.kodiak.nx 50000 >> $zhtMemFile
-#done
-
+#copy the ZHT member list to all nodes
 for i in $(cat host); do
-	scp -o 'StrictHostKeyChecking no' -o 'UserKnownHostsFile /dev/null' $zhtMemFile $i:/home/ubuntu/.ssh/config
+	scp -o 'StrictHostKeyChecking no' -o 'UserKnownHostsFile /dev/null' $zhtSrcPath/neighbor.conf $i:$zhtSrcPath
 done
 
-echo $zhtSrcPath/zhtserver -z $zhtSrcPath/zht.conf -n $zhtMemFile
-
-#parallel-ssh -t 0 -o /tmp/ -p 250 -O StrictHostKeyChecking=no -O UserKnownHostsFile=/dev/null --hosts=host "rm -rf /tmp/zht.log"
-
-parallel-ssh -t 0 -o /tmp/ -p 250 -O StrictHostKeyChecking=no -O UserKnownHostsFile=/dev/null --hosts=host "$zhtSrcPath/zhtserver -z $zhtSrcPath/zht.conf -n $zhtMemFile >& /tmp/zht.log" &
+#run the ZHT server on all nodes
+echo "start to run ZHT server on all nodes"
+parallel-ssh -t 0 -o /tmp/ -p 250 -O StrictHostKeyChecking=no -O UserKnownHostsFile=/dev/null --hosts=host "$zhtSrcPath/zhtserver -z $zhtSrcPath/zht.conf -n $zhtSrcPath/neighbor.conf >& /tmp/zht.log" &
+echo "ZHT servers are running"
 
 sleep 3
-
-echo "Hello"
